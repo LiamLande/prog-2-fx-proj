@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SonarLintProjectSettings">
+    <option name="moduleMapping">
+      <map>
+        <entry key="IDATT2003-Mappe-Boardgame" value="my-javafx-app" />
+        <entry key="IDATT2003-Mappe3-Boardgame" value="GameDev" />
+      </map>
+    </option>
+  </component>
+</project>
