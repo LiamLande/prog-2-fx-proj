@@ -5,6 +5,8 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.controller.WindowController;
 import edu.ntnu.idi.bidata.model.BoardGame;
+import edu.ntnu.idi.bidata.controller.WindowController;
+import edu.ntnu.idi.bidata.model.BoardGame;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
