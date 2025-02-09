@@ -1,5 +1,7 @@
 package edu.ntnu.idi.bidata;
 
+import edu.ntnu.idi.bidata.controller.WindowController;
+import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Board;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
