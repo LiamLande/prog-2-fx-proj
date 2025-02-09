@@ -89,4 +89,8 @@ public class BoardGame {
   public Board getBoard() {
     return board;
   }
+
+  public List<Player> getPlayers() {
+    return players;
+  }
 }
