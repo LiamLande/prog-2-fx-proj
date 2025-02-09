@@ -1,5 +1,8 @@
 package edu.ntnu.idi.bidata;
 
+import edu.ntnu.idi.bidata.model.Board;
+import edu.ntnu.idi.bidata.model.BoardGame;
+import edu.ntnu.idi.bidata.model.Player;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
@@ -19,6 +22,13 @@ public class Main extends Application {
     primaryStage.setTitle("JavaFX App");
     primaryStage.setScene(scene);
     primaryStage.show();
+
+    BoardGame game = new BoardGame();
+    game.createBoard();
+    game.createDice();
+    game.addPlayer(new Player("Alice", game));
+    game.addPlayer(new Player("Nick", game));
+    game.play();
   }
 
   public static void main(String[] args) {
