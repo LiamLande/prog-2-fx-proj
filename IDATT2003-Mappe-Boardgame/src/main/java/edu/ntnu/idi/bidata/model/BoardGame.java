@@ -77,14 +77,7 @@ public class BoardGame {
     return null;
   }
 
-  public boolean gameOver() {
-    for (Player player : players) {
-      if (player.getCurrentTile().getTileId() == 99) {
-        return true;
-      }
-    }
-    return false;
-  }
+}
 
   public Board getBoard() {
     return board;
