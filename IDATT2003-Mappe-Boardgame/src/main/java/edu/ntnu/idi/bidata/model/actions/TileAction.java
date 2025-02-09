@@ -1,5 +1,7 @@
 package edu.ntnu.idi.bidata.model.actions;
 
-public class TileAction {
+import edu.ntnu.idi.bidata.model.Player;
 
+public interface TileAction{
+  void perform(Player player);
 }
