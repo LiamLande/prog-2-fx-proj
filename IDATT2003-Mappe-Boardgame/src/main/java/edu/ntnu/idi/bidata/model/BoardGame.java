@@ -53,17 +53,15 @@ public class BoardGame {
   }
 
   public void play() {
-    while (!gameOver()) {
-      for (Player player : players) {
-        currentPlayer = player;
-        int steps = dice.roll();
-        System.out.println(player.getName() + " rolled a " + steps);
-        player.move(steps);
-        System.out.println(player.getName() + " is now on tile " + player.getCurrentTile().getTileId());
-        if (player.getCurrentTile().getTileId() >= 99) {
-          System.out.println(player.getName() + " wins!");
-          return;
-        }
+    for (Player player : players) {
+      currentPlayer = player;
+      int steps = dice.roll();
+      System.out.println(player.getName() + " rolled a " + steps);
+      player.move(steps);
+      System.out.println(player.getName() + " is now on tile " + player.getCurrentTile().getTileId());
+      if (player.getCurrentTile().getTileId() >= 99) {
+        System.out.println(player.getName() + " wins!");
+        return;
       }
     }
   }
