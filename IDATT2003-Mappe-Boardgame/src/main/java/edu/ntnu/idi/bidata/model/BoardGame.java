@@ -68,6 +68,15 @@ public class BoardGame {
     }
   }
 
+  public boolean gameOver() {
+    for (Player player : players) {
+      if (player.getCurrentTile().getTileId() >= 99) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public Player getWinner() {
     for (Player player : players) {
       if (player.getCurrentTile().getTileId() == 99) {
