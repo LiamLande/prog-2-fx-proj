@@ -3,6 +3,7 @@ package edu.ntnu.idi.bidata.model;
 import edu.ntnu.idi.bidata.model.actions.LadderAction;
 import edu.ntnu.idi.bidata.model.actions.SnakeAction;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class BoardGame {
@@ -93,5 +94,9 @@ public class BoardGame {
 
   public Board getBoard() {
     return board;
+  }
+
+  public Dice getDice() {
+    return dice;
   }
 }
