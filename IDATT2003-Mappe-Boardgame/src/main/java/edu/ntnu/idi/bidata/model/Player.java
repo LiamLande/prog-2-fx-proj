@@ -1,46 +1,54 @@
 package edu.ntnu.idi.bidata.model;
 
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
+
+/**
+ * Represents a game player on the board.
+ */
 public class Player {
-  private String name;
-  private Tile currentTile;
+  private final String name;
+  private Tile current;
 
-  public Player(String name, BoardGame game) {
-    this.name = name;
-    this.currentTile = game.getBoard().getTile(0); // Start at the first tile
-  }
-
-  public void placeOnTile(Tile tile) {
-    this.currentTile = tile;
-  }
-
-  public void move(int steps) {
-    if (steps > 0) { // Move forward
-      for (int i = 0; i < steps; i++) {
-        if (currentTile.getNextTile() != null) {
-          currentTile = currentTile.getNextTile();
-        } else {
-          break;
-        }
-      }
-    } else if (steps < 0) { // Move backward
-      for (int i = 0; i < Math.abs(steps); i++) {
-        if (currentTile.getPreviousTile() != null) {
-          currentTile = currentTile.getPreviousTile();
-        } else {
-          break;
-        }
-      }
+  /**
+   * Creates a player starting on the given tile.
+   * @param name must be non‐empty
+   * @param start starting tile, non‐null
+   */
+  public Player(String name, Tile start) {
+    if (name == null || name.isBlank()) {
+      throw new InvalidParameterException("Player name must not be empty");
     }
-
-    currentTile.landPlayer(this); // Trigger tile action (ladder/snake)
-  }
-
-
-  public Tile getCurrentTile() {
-    return currentTile;
+    if (start == null) {
+      throw new InvalidParameterException("Starting tile must not be null");
+    }
+    this.name = name;
+    this.current = start;
   }
 
   public String getName() {
     return name;
+  }
+
+  public Tile getCurrent() {
+    return current;
+  }
+
+  /**
+   * Moves the player by the given steps: positive forward, negative backward.
+   */
+  public void move(int steps) {
+    if (steps > 0) {
+      for (int i = 0; i < steps; i++) {
+        if (current.getNext() == null) break;
+        current = current.getNext();
+      }
+    } else if (steps < 0) {
+      for (int i = 0; i < -steps; i++) {
+        if (current.getPrevious() == null) break;
+        current = current.getPrevious();
+      }
+    }
+    // trigger any special action
+    current.land(this);
   }
 }
