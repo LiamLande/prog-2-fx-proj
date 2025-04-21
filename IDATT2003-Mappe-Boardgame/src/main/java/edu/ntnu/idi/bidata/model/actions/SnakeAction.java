@@ -1,19 +1,34 @@
 package edu.ntnu.idi.bidata.model.actions;
 
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.Player;
 
+/**
+ * Action to move the player backward by a positive number of tiles (snake).
+ */
 public class SnakeAction implements TileAction {
-  private int positionDecrement;
-  private String description;
+  private final int steps;
+  private final String description;
 
-  public SnakeAction(String description, int positionDecrement) {
+  /**
+   * @param description text describing the snake
+   * @param steps positive number of tiles to retreat
+   */
+  public SnakeAction(String description, int steps) {
+    if (description == null || description.isBlank()) {
+      throw new InvalidParameterException("SnakeAction description must not be empty");
+    }
+    if (steps < 1) {
+      throw new InvalidParameterException("SnakeAction steps must be positive");
+    }
     this.description = description;
-    this.positionDecrement = positionDecrement;
+    this.steps = steps;
   }
 
   @Override
   public void perform(Player player) {
+    // optionally log the description
     System.out.println(description);
-    player.move(-positionDecrement); // Move backward
+    player.move(-steps);
   }
 }
