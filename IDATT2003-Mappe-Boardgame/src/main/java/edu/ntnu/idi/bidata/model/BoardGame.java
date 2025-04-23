@@ -1,102 +1,103 @@
+// BoardGame.java
 package edu.ntnu.idi.bidata.model;
 
-import edu.ntnu.idi.bidata.model.actions.LadderAction;
-import edu.ntnu.idi.bidata.model.actions.SnakeAction;
+
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
+import edu.ntnu.idi.bidata.service.GameService;
+import edu.ntnu.idi.bidata.service.SnakesLaddersService;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
+/**
+ * Facade for game setup and play. Delegates to a GameService implementation.
+ */
 public class BoardGame {
   private Board board;
-  private Player currentPlayer;
-  private List<Player> players = new ArrayList<>();
   private Dice dice;
+  private final List<Player> players = new ArrayList<>();
+  private GameService service;
 
+  /**
+   * Must be called after setting board and dice, before adding players.
+   */
+  public void init() {
+    // Default to Snakes & Ladders if not set
+    if (service == null) {
+      service = new SnakesLaddersService();
+    }
+    service.setup(this);
+  }
+
+  /**
+   * Sets the board configuration. Used by factories.
+   */
+  public void setBoard(Board board) {
+    if (board == null) {
+      throw new InvalidParameterException("Board cannot be null");
+    }
+    this.board = board;
+  }
+
+  /**
+   * Sets the dice to use (e.g., number of dice).
+   */
+  public void setDice(Dice dice) {
+    if (dice == null) {
+      throw new InvalidParameterException("Dice cannot be null");
+    }
+    this.dice = dice;
+  }
+
+  /**
+   * Adds a player to this game. init() must have been called.
+   */
   public void addPlayer(Player player) {
+    if (player == null) {
+      throw new InvalidParameterException("Player cannot be null");
+    }
     players.add(player);
   }
 
-  public void createBoard() {
-    board = new Board();
-    // Create 100 tiles for the board
-    for (int i = 0; i < 100; i++) {
-      board.addTile(new Tile(i));
+  /**
+   * Plays one round: each player rolls once.
+   * @return list of roll outcomes in order of players
+   */
+  public List<Integer> playOneRound() {
+    if (service == null) {
+      throw new IllegalStateException("Game not initialized");
     }
-
-    setupLaddersAndSnakes();
+    return service.playOneRound(this);
   }
 
-  private void setupLaddersAndSnakes() {
-    // Ensure all tiles are linked correctly
-    for (int i = 0; i < 100; i++) {
-      board.getTile(i).setNextTile(board.getTile(i + 1));
-      if (i < 99) {
-        board.getTile(i + 1).setPreviousTile(board.getTile(i));
-      }
+  /**
+   * Checks if the game has finished (winner found).
+   */
+  public boolean isFinished() {
+    if (service == null) {
+      throw new IllegalStateException("Game not initialized");
     }
-
-    // Ladders (Move Forward)
-    board.getTile(3).setLandAction(new LadderAction("Ladder to 22!", 19)); // 3 -> 22
-    board.getTile(8).setLandAction(new LadderAction("Ladder to 30!", 22)); // 8 -> 30
-    board.getTile(28).setLandAction(new LadderAction("Ladder to 84!", 56)); // 28 -> 84
-    board.getTile(58).setLandAction(new LadderAction("Ladder to 77!", 19)); // 58 -> 77
-
-    // Snakes (Move Backward)
-    board.getTile(16).setLandAction(new SnakeAction("Snake down to 6!", 10)); // 16 -> 6
-    board.getTile(47).setLandAction(new SnakeAction("Snake down to 26!", 21)); // 47 -> 26
-    board.getTile(62).setLandAction(new SnakeAction("Snake down to 18!", 44)); // 62 -> 18
-    board.getTile(87).setLandAction(new SnakeAction("Snake down to 24!", 63)); // 87 -> 24
+    return service.isFinished(this);
   }
 
-
-  public void createDice() {
-    dice = new Dice(1);
-  }
-
-  public void play() {
-    while (!gameOver()) {
-      for (Player player : players) {
-        currentPlayer = player;
-        int steps = dice.roll();
-        System.out.println(player.getName() + " rolled a " + steps);
-        player.move(steps);
-        System.out.println(player.getName() + " is now on tile " + player.getCurrentTile().getTileId());
-        if (player.getCurrentTile().getTileId() >= 99) {
-          System.out.println(player.getName() + " wins!");
-          return;
-        }
-      }
-    }
-  }
-
-  public boolean gameOver() {
-    for (Player player : players) {
-      if (player.getCurrentTile().getTileId() >= 99) {
-        return true;
-      }
-    }
-    return false;
-  }
-
+  /**
+   * Returns the winner when finished, or null if none.
+   */
   public Player getWinner() {
-    for (Player player : players) {
-      if (player.getCurrentTile().getTileId() == 99) {
-        return player;
-      }
+    if (service == null) {
+      throw new IllegalStateException("Game not initialized");
     }
-    return null;
+    return service.getWinner(this);
   }
 
-    public static String[] generateExampleGame(){
-        return new String[]{"Round 1: John Doe rolled 5 and 6", "Round 2: Jane Doe rolled 2 and 3", "Round 3: John Doe rolled 1 and 4", "Round 4: Jane Doe rolled 2 and 2", "Round 5: John Doe rolled 3 and 6", "Round 6: Jane Doe rolled 1 and 5", "Round 7: John Doe rolled 4 and 6", "Round 8: Jane Doe rolled 1 and 3", "Round 9: John Doe rolled 2 and 5", "Round 10: Jane Doe rolled 1 and 6"};
-    }
+  // Getters for GameService to use
+  public Board getBoard() { return board; }
+  public Dice getDice() { return dice; }
+  public List<Player> getPlayers() { return new ArrayList<>(players); }
 
-
-  public Board getBoard() {
-    return board;
-  }
-
-  public Dice getDice() {
-    return dice;
+  /**
+   * Allows injection of alternative game logic (e.g., monopoly service).
+   */
+  public void setGameService(GameService service) {
+    this.service = service;
   }
 }
