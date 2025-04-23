@@ -1,4 +1,9 @@
 package edu.ntnu.idi.bidata.app;
 
-public class GameVariant {
+/**
+ * Supported game variants.
+ */
+public enum GameVariant {
+  SNAKES_LADDERS,
+  MINI_MONOPOLY
 }
