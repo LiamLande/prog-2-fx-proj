@@ -62,7 +62,7 @@ public class MainApp extends Application {
     // Save names for possible reset
     lastPlayerNames = new ArrayList<>(playerNames);
 
-    BoardGame game = GameFactory.createGame(playerNames);
+    BoardGame game = GameFactory.createGame(playerNames, selectedVariant);
     GameScene gameScene = new GameScene(
         primaryStage,
         game,
