@@ -5,6 +5,7 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Dice;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 import edu.ntnu.idi.bidata.service.SnakesLaddersService;
 
 import java.util.List;
@@ -26,13 +27,15 @@ public final class GameFactory {
 
     switch (variant) {
       case SNAKES_LADDERS:
-        game.setBoard(BoardFactory.createFromJson("/data/boards/snakes_and_ladders.json"));
+        game.setBoard(BoardFactory.createFromJson("/data/boards/snakes_and_ladders.json", variant));
         game.setGameService(new SnakesLaddersService());
         game.setDice(new Dice(1));
         break;
       case MINI_MONOPOLY:
-        game.setBoard(BoardFactory.createFromJson("/data/boards/mini_monopoly.json"));
-        game.setGameService(new MonopolyService());
+        game.setBoard(BoardFactory.createFromJson("/data/boards/mini_monopoly.json", variant));
+        MonopolyService monopolyService = new MonopolyService();
+        game.setGameService(monopolyService);
+        ServiceLocator.setMonopolyService(monopolyService); // Register the service
         game.setDice(new Dice(2)); // Monopoly typically uses two dice
         break;
     }
