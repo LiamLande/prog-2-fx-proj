@@ -1,11 +1,13 @@
 //package edu.ntnu.idi.bidata.view;
 //
 //import edu.ntnu.idi.bidata.controller.GameController;
+//import edu.ntnu.idi.bidata.model.Board;
 //import edu.ntnu.idi.bidata.model.Player;
-//import javafx.animation.KeyFrame;
-//import javafx.animation.KeyValue;
-//import javafx.animation.PathTransition;
-//import javafx.animation.Timeline;
+//import edu.ntnu.idi.bidata.model.Tile;
+//import edu.ntnu.idi.bidata.model.actions.LadderAction;
+//import edu.ntnu.idi.bidata.model.actions.SnakeAction;
+//import edu.ntnu.idi.bidata.model.actions.TileAction;
+//import javafx.animation.PauseTransition;
 //import javafx.application.Platform;
 //import javafx.geometry.Insets;
 //import javafx.geometry.Pos;
@@ -15,8 +17,6 @@
 //import javafx.scene.control.Button;
 //import javafx.scene.control.Label;
 //import javafx.scene.effect.DropShadow;
-//import javafx.scene.effect.Glow;
-//import javafx.scene.image.ImageView;
 //import javafx.scene.layout.*;
 //import javafx.scene.paint.Color;
 //import javafx.scene.shape.*;
@@ -28,34 +28,76 @@
 //import java.util.*;
 //
 ///**
-// * Improved visual representation of the Snakes and Ladders game board
-// * with enhanced graphics and animations
+// * Tile-based visual representation of the Snakes and Ladders game board
+// * with direct placement of snakes and ladders
 // */
-//public class GameBoardView extends BorderPane implements GameController.GameListener {
+//public class DirectSnakesLaddersView extends BorderPane implements GameController.GameListener {
 //
 //    private final GameController gameController;
 //    private final int BOARD_SIZE = 10; // 10x10 grid for 100 tiles
 //    private final int TILE_SIZE = 60;
 //    private final Map<Integer, StackPane> tileViews = new HashMap<>();
-//    private final Map<Player, Circle> playerTokens = new HashMap<>();
-//    private final Map<Player, Text> playerLabels = new HashMap<>();
-//    private final Map<String, Path> specialPaths = new HashMap<>();
 //
-//    private Group tokensGroup;
+//    // Maps players to their current tile IDs
+//    private final Map<Player, Integer> playerPositions = new HashMap<>();
+//
+//    private GridPane tileGrid;
 //    private Label statusLabel;
 //    private Button rollButton;
 //    private Label diceLabel;
 //    private VBox playerInfoPanel;
+//    private Pane pathsLayer;
 //
 //    /**
 //     * Constructor
 //     *
 //     * @param gameController The game controller
 //     */
-//    public GameBoardView(GameController gameController) {
+//    public DirectSnakesLaddersView(GameController gameController) {
 //        this.gameController = gameController;
 //        gameController.addGameListener(this);
 //        setupUI();
+//
+//        // Use a slight delay to ensure layout is complete
+//        PauseTransition delay = new PauseTransition(Duration.millis(100));
+//        delay.setOnFinished(event -> initializeAfterLayout());
+//        delay.play();
+//    }
+//
+//    /**
+//     * Initialize components that require the layout to be complete
+//     */
+//    private void initializeAfterLayout() {
+//        // Debug check to make sure pathsLayer exists
+//        if (pathsLayer == null) {
+//            System.err.println("pathsLayer is null during initialization");
+//            return;
+//        }
+//
+//        // Clear any existing content
+//        pathsLayer.getChildren().clear();
+//
+//        // Create snakes and ladders directly
+//        createDirectSnakesAndLadders();
+//
+//        // Initialize all players at position 0
+//        initializePlayerPositions();
+//
+//        // Debug to verify the paths were added
+//        System.out.println("Number of elements in pathsLayer: " + pathsLayer.getChildren().size());
+//    }
+//
+//    /**
+//     * Initialize all players at the starting position
+//     */
+//    private void initializePlayerPositions() {
+//        List<Player> players = gameController.getPlayers();
+//        for (Player player : players) {
+//            playerPositions.put(player, 0);
+//        }
+//
+//        // Render all players on their tiles
+//        refreshPlayerPositions();
 //    }
 //
 //    /**
@@ -82,13 +124,15 @@
 //    }
 //
 //    /**
-//     * Create the game board with tiles, snakes, and ladders
+//     * Create the game board with tiles and paths layer
 //     *
 //     * @return Pane containing the game board
 //     */
 //    private Pane createGameBoard() {
 //        StackPane boardStack = new StackPane();
 //        boardStack.setPrefSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
+//        boardStack.setMinSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
+//        boardStack.setMaxSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
 //
 //        // Background image or color
 //        Rectangle background = new Rectangle(
@@ -97,8 +141,15 @@
 //                Color.web("#f5f5dc") // Beige background
 //        );
 //
+//        // Create paths layer for snakes and ladders
+//        pathsLayer = new Pane();
+//        pathsLayer.setPrefSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
+//        pathsLayer.setMinSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
+//        pathsLayer.setMaxSize(BOARD_SIZE * TILE_SIZE, BOARD_SIZE * TILE_SIZE);
+//
 //        // Create grid for tiles
-//        GridPane tileGrid = new GridPane();
+//        tileGrid = new GridPane();
+//        tileGrid.setAlignment(Pos.CENTER);
 //
 //        // Create tiles in a snake pattern (from bottom to top, alternating left-to-right and right-to-left)
 //        for (int row = 0; row < BOARD_SIZE; row++) {
@@ -123,20 +174,8 @@
 //            }
 //        }
 //
-//        // Create a group for paths (snakes and ladders)
-//        Group pathsGroup = new Group();
-//
-//        // Add snakes and ladders
-//        addSnakesAndLadders(pathsGroup);
-//
-//        // Create a group for player tokens
-//        tokensGroup = new Group();
-//
-//        // Add player tokens
-//        createPlayerTokens(tokensGroup);
-//
 //        // Stack all layers
-//        boardStack.getChildren().addAll(background, tileGrid, pathsGroup, tokensGroup);
+//        boardStack.getChildren().addAll(background, tileGrid, pathsLayer);
 //
 //        // Add a border to the board
 //        boardStack.setStyle("-fx-border-color: #8B4513; -fx-border-width: 8px; -fx-border-radius: 10px;");
@@ -154,6 +193,8 @@
 //    private StackPane createTileView(int tileNumber) {
 //        StackPane tileView = new StackPane();
 //        tileView.setPrefSize(TILE_SIZE, TILE_SIZE);
+//        tileView.setMinSize(TILE_SIZE, TILE_SIZE);
+//        tileView.setMaxSize(TILE_SIZE, TILE_SIZE);
 //
 //        // Set the background color alternating between light and dark
 //        if ((tileNumber / BOARD_SIZE) % 2 == 0) {
@@ -178,58 +219,164 @@
 //        tileNumberText.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 //        tileNumberText.setFill(Color.web("#8B4513"));
 //
+//        // Add the tile number at the top-left corner
+//        StackPane.setAlignment(tileNumberText, Pos.TOP_LEFT);
+//        StackPane.setMargin(tileNumberText, new Insets(3, 0, 0, 3));
+//
 //        tileView.getChildren().add(tileNumberText);
+//        tileView.setId("tile_" + tileNumber);
 //
 //        return tileView;
 //    }
 //
 //    /**
-//     * Add visual representations of snakes and ladders to the board
-//     *
-//     * @param group The group to add snakes and ladders to
+//     * Create snakes and ladders using the game model configuration
 //     */
-//    private void addSnakesAndLadders(Group group) {
-//        // Ladders
-//        addLadder(group, 3, 22, Color.FORESTGREEN);
-//        addLadder(group, 8, 30, Color.FORESTGREEN);
-//        addLadder(group, 28, 84, Color.FORESTGREEN);
-//        addLadder(group, 58, 77, Color.FORESTGREEN);
-//
-//        // Snakes
-//        addSnake(group, 16, 6, Color.web("#FF4500"));  // OrangeRed
-//        addSnake(group, 47, 26, Color.web("#8B0000")); // DarkRed
-//        addSnake(group, 62, 18, Color.web("#FF4500")); // OrangeRed
-//        addSnake(group, 87, 24, Color.web("#8B0000")); // DarkRed
-//    }
-//
-//    /**
-//     * Add a visual representation of a ladder to the board
-//     *
-//     * @param group The group to add the ladder to
-//     * @param fromTile The starting tile
-//     * @param toTile The ending tile
-//     * @param color The color of the ladder
-//     */
-//    private void addLadder(Group group, int fromTile, int toTile, Color color) {
-//        StackPane startTileView = tileViews.get(fromTile);
-//        StackPane endTileView = tileViews.get(toTile);
-//
-//        if (startTileView == null || endTileView == null) {
+//    private void createDirectSnakesAndLadders() {
+//        if (pathsLayer == null) {
 //            return;
 //        }
 //
-//        // Get center coordinates of tiles
-//        double startX = startTileView.getBoundsInParent().getCenterX();
-//        double startY = startTileView.getBoundsInParent().getCenterY();
-//        double endX = endTileView.getBoundsInParent().getCenterX();
-//        double endY = endTileView.getBoundsInParent().getCenterY();
+//        // Clear any existing content
+//        pathsLayer.getChildren().clear();
 //
-//        // Draw a nicer ladder with parallel lines and rungs
+//        // Get the game board from the controller
+//        Board board = gameController.getGame().getBoard();
+//        if (board == null) {
+//            System.err.println("Game board is null when trying to create snakes and ladders");
+//            return;
+//        }
+//
+//        // Track drawn elements to avoid duplicates
+//        Set<Integer> processedTiles = new HashSet<>();
+//
+//        // Loop through all tiles to find snakes and ladders
+//        for (int i = 0; i < 100; i++) {
+//            if (processedTiles.contains(i)) {
+//                continue;
+//            }
+//
+//            Tile tile = board.getTile(i);
+//            if (tile == null) {
+//                continue;
+//            }
+//
+//            TileAction action = tile.getLandAction();
+//
+//            if (action instanceof LadderAction) {
+//                // For ladders, calculate the destination tile
+//                int fromTile = tile.getTileId();
+//
+//                // Move a player temporarily to calculate the destination
+//                Player tempPlayer = new Player("temp", gameController.getGame());
+//                tempPlayer.setCurrentTile(tile);
+//
+//                // Store current tile before performing action
+//                Tile currentTile = tempPlayer.getCurrentTile();
+//
+//                // Perform the ladder action
+//                action.perform(tempPlayer);
+//
+//                // Get the destination tile
+//                int toTile = tempPlayer.getCurrentTile().getTileId();
+//
+//                // Only draw if there's actually movement
+//                if (toTile > fromTile) {
+//                    drawLadder(fromTile, toTile, Color.FORESTGREEN);
+//                    processedTiles.add(fromTile);
+//                    System.out.println("Drawing ladder from " + fromTile + " to " + toTile);
+//                }
+//
+//                // Reset the temp player's position
+//                tempPlayer.setCurrentTile(currentTile);
+//
+//            } else if (action instanceof SnakeAction) {
+//                // For snakes, calculate the destination tile
+//                int fromTile = tile.getTileId();
+//
+//                // Move a player temporarily to calculate the destination
+//                Player tempPlayer = new Player("temp", gameController.getGame());
+//                tempPlayer.setCurrentTile(tile);
+//
+//                // Store current tile before performing action
+//                Tile currentTile = tempPlayer.getCurrentTile();
+//
+//                // Perform the snake action
+//                action.perform(tempPlayer);
+//
+//                // Get the destination tile
+//                int toTile = tempPlayer.getCurrentTile().getTileId();
+//
+//                // Only draw if there's actually movement
+//                if (toTile < fromTile) {
+//                    drawSnake(fromTile, toTile, fromTile % 2 == 0 ? Color.web("#FF4500") : Color.web("#8B0000"));
+//                    processedTiles.add(fromTile);
+//                    System.out.println("Drawing snake from " + fromTile + " to " + toTile);
+//                }
+//
+//                // Reset the temp player's position
+//                tempPlayer.setCurrentTile(currentTile);
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Draw a ladder directly on the paths layer
+//     *
+//     * @param fromTile Starting tile number
+//     * @param toTile Ending tile number
+//     * @param color Color of the ladder
+//     */
+//    private void drawLadder(int fromTile, int toTile, Color color) {
+//        // Board pattern:
+//        // 9  8  7  6  5  4  3  2  1  0   (top row, right to left)
+//        // 10 11 12 13 14 15 16 17 18 19  (second row, left to right)
+//        // 29 28 27 26 25 24 23 22 21 20  (third row, right to left)
+//        // And so on...
+//
+//        int from = fromTile;
+//        int to = toTile;
+//
+//        // From tile: Calculate row and column
+//        int fromRow = from / BOARD_SIZE;  // Integer division gives row index from top (0-based)
+//        int fromCol;
+//
+//        if (fromRow % 2 == 0) {
+//            // Even rows (0, 2, 4...) go right to left
+//            fromCol = BOARD_SIZE - 1 - (from % BOARD_SIZE);
+//        } else {
+//            // Odd rows (1, 3, 5...) go left to right
+//            fromCol = from % BOARD_SIZE;
+//        }
+//
+//        // To tile: Calculate row and column
+//        int toRow = to / BOARD_SIZE;
+//        int toCol;
+//
+//        if (toRow % 2 == 0) {
+//            // Even rows (0, 2, 4...) go right to left
+//            toCol = BOARD_SIZE - 1 - (to % BOARD_SIZE);
+//        } else {
+//            // Odd rows (1, 3, 5...) go left to right
+//            toCol = to % BOARD_SIZE;
+//        }
+//
+//        // Calculate center coordinates
+//        double startX = fromCol * TILE_SIZE + TILE_SIZE / 2;
+//        double startY = fromRow * TILE_SIZE + TILE_SIZE / 2;
+//        double endX = toCol * TILE_SIZE + TILE_SIZE / 2;
+//        double endY = toRow * TILE_SIZE + TILE_SIZE / 2;
+//
+//        // Debug output
+//        System.out.println("Drawing ladder from tile " + from + " to " + to);
+//        System.out.println("  From: row=" + fromRow + ", col=" + fromCol + " (" + startX + "," + startY + ")");
+//        System.out.println("  To: row=" + toRow + ", col=" + toCol + " (" + endX + "," + endY + ")");
+//
+//        // Create the ladder
 //        Group ladder = new Group();
 //
 //        // Calculate ladder width and angle
 //        double ladderWidth = TILE_SIZE * 0.35;
-//        double ladderLength = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
 //        double angle = Math.atan2(endY - startY, endX - startX);
 //
 //        // Rails
@@ -256,6 +403,7 @@
 //        ladder.getChildren().addAll(leftRail, rightRail);
 //
 //        // Add rungs
+//        double ladderLength = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
 //        int numRungs = (int) (ladderLength / (TILE_SIZE * 0.4)) + 1;
 //
 //        for (int i = 0; i <= numRungs; i++) {
@@ -276,40 +424,63 @@
 //            ladder.getChildren().add(rung);
 //        }
 //
-//        // Create path for animation
-//        Path path = new Path();
-//        path.getElements().add(new MoveTo(startX, startY));
-//        path.getElements().add(new LineTo(endX, endY));
-//        path.setOpacity(0); // Make path invisible
-//
-//        // Store the path for future animation
-//        specialPaths.put("ladder_" + fromTile + "_" + toTile, path);
-//
-//        ladder.getChildren().add(path);
-//        group.getChildren().add(ladder);
+//        // Add the ladder to the paths layer
+//        pathsLayer.getChildren().add(ladder);
 //    }
 //
 //    /**
-//     * Add a visual representation of a snake to the board
+//     * Draw a snake directly on the paths layer
 //     *
-//     * @param group The group to add the snake to
-//     * @param fromTile The starting tile
-//     * @param toTile The ending tile
-//     * @param color The color of the snake
+//     * @param fromTile Starting tile number
+//     * @param toTile Ending tile number
+//     * @param color Color of the snake
 //     */
-//    private void addSnake(Group group, int fromTile, int toTile, Color color) {
-//        StackPane startTileView = tileViews.get(fromTile);
-//        StackPane endTileView = tileViews.get(toTile);
+//    private void drawSnake(int fromTile, int toTile, Color color) {
+//        // Board pattern:
+//        // 9  8  7  6  5  4  3  2  1  0   (top row, right to left)
+//        // 10 11 12 13 14 15 16 17 18 19  (second row, left to right)
+//        // 29 28 27 26 25 24 23 22 21 20  (third row, right to left)
 //
-//        if (startTileView == null || endTileView == null) {
-//            return;
+//        int from = fromTile;
+//        int to = toTile;
+//
+//        // From tile: Calculate row and column
+//        int fromRow = from / BOARD_SIZE;
+//        int fromCol;
+//
+//        if (fromRow % 2 == 0) {
+//            // Even rows (0, 2, 4...) go right to left
+//            fromCol = BOARD_SIZE - 1 - (from % BOARD_SIZE);
+//        } else {
+//            // Odd rows (1, 3, 5...) go left to right
+//            fromCol = from % BOARD_SIZE;
 //        }
 //
-//        // Get center coordinates of tiles
-//        double startX = startTileView.getBoundsInParent().getCenterX();
-//        double startY = startTileView.getBoundsInParent().getCenterY();
-//        double endX = endTileView.getBoundsInParent().getCenterX();
-//        double endY = endTileView.getBoundsInParent().getCenterY();
+//        // To tile: Calculate row and column
+//        int toRow = to / BOARD_SIZE;
+//        int toCol;
+//
+//        if (toRow % 2 == 0) {
+//            // Even rows (0, 2, 4...) go right to left
+//            toCol = BOARD_SIZE - 1 - (to % BOARD_SIZE);
+//        } else {
+//            // Odd rows (1, 3, 5...) go left to right
+//            toCol = to % BOARD_SIZE;
+//        }
+//
+//        // Calculate center coordinates
+//        double startX = fromCol * TILE_SIZE + TILE_SIZE / 2;
+//        double startY = fromRow * TILE_SIZE + TILE_SIZE / 2;
+//        double endX = toCol * TILE_SIZE + TILE_SIZE / 2;
+//        double endY = toRow * TILE_SIZE + TILE_SIZE / 2;
+//
+//        // Debug output
+//        System.out.println("Drawing snake from tile " + from + " to " + to);
+//        System.out.println("  From: row=" + fromRow + ", col=" + fromCol + " (" + startX + "," + startY + ")");
+//        System.out.println("  To: row=" + toRow + ", col=" + toCol + " (" + endX + "," + endY + ")");
+//
+//        // Create the snake
+//        Group snake = new Group();
 //
 //        // Calculate control points for a wavy snake shape
 //        double distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
@@ -375,78 +546,11 @@
 //        Circle rightPupil = new Circle(startX + eyeOffsetX, startY + eyeOffsetY, TILE_SIZE * 0.025);
 //        rightPupil.setFill(Color.BLACK);
 //
-//        // Create a copy of path for animation (with proper path elements for token movement)
-//        Path animPath = new Path();
-//        animPath.getElements().addAll(
-//                new MoveTo(startX, startY),
-//                new QuadCurveTo(
-//                        midX + perpX * distance * 0.3,
-//                        midY + perpY * distance * 0.3,
-//                        midX, midY
-//                ),
-//                new QuadCurveTo(
-//                        midX - perpX * distance * 0.3,
-//                        midY - perpY * distance * 0.3,
-//                        endX, endY
-//                )
-//        );
-//        animPath.setOpacity(0); // Hide the path
+//        // Add all snake elements to the group
+//        snake.getChildren().addAll(snakePath, head, leftEye, leftPupil, rightEye, rightPupil);
 //
-//        // Store the path for future animation
-//        specialPaths.put("snake_" + fromTile + "_" + toTile, animPath);
-//
-//        group.getChildren().addAll(snakePath, head, leftEye, leftPupil, rightEye, rightPupil, animPath);
-//    }
-//
-//    /**
-//     * Create player tokens
-//     *
-//     * @param group The group to add tokens to
-//     */
-//    private void createPlayerTokens(Group group) {
-//        List<Player> players = gameController.getPlayers();
-//        Color[] tokenColors = {
-//                Color.web("#1E90FF"), // DodgerBlue
-//                Color.web("#FF4500"), // OrangeRed
-//                Color.web("#32CD32"), // LimeGreen
-//                Color.web("#FFD700")  // Gold
-//        };
-//
-//        for (int i = 0; i < players.size(); i++) {
-//            Player player = players.get(i);
-//            Color tokenColor = tokenColors[i % tokenColors.length];
-//
-//            // Position at starting tile
-//            StackPane startTile = tileViews.get(0);
-//            double startX = startTile.getBoundsInParent().getCenterX();
-//            double startY = startTile.getBoundsInParent().getCenterY();
-//
-//            // Offset tokens so they don't overlap
-//            double offsetX = (i % 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//            double offsetY = (i / 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//
-//            // Create player token
-//            Circle token = new Circle(TILE_SIZE * 0.2);
-//            token.setFill(tokenColor);
-//            token.setStroke(Color.BLACK);
-//            token.setStrokeWidth(2);
-//            token.setCenterX(startX + offsetX);
-//            token.setCenterY(startY + offsetY);
-//            token.setEffect(new Glow(0.5));
-//
-//            // Add a Text with player's initial for identification
-//            Text playerInitial = new Text(player.getName().substring(0, 1));
-//            playerInitial.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-//            playerInitial.setFill(Color.WHITE);
-//            playerInitial.setX(startX + offsetX - 5);
-//            playerInitial.setY(startY + offsetY + 5);
-//
-//            group.getChildren().addAll(token, playerInitial);
-//
-//            // Store token references
-//            playerTokens.put(player, token);
-//            playerLabels.put(player, playerInitial);
-//        }
+//        // Add the snake to the paths layer
+//        pathsLayer.getChildren().add(snake);
 //    }
 //
 //    /**
@@ -586,6 +690,7 @@
 //     * @param position The new position
 //     */
 //    private void updatePlayerPosition(Player player, int position) {
+//        // Update position in side panel
 //        for (Node node : playerInfoPanel.getChildren()) {
 //            if (node instanceof HBox && node.getId() != null && node.getId().equals("player_" + player.getName())) {
 //                HBox playerBox = (HBox) node;
@@ -605,166 +710,81 @@
 //                break;
 //            }
 //        }
+//
+//        // Update internal position tracking
+//        playerPositions.put(player, position);
+//
+//        // Refresh all player positions on the board
+//        refreshPlayerPositions();
 //    }
 //
 //    /**
-//     * Animate dice roll
-//     *
-//     * @param roll The final dice roll result
+//     * Refresh the display of all player positions on the board
 //     */
-//    private void animateDiceRoll(int roll) {
-//        // Create a simple animation for the dice roll
-//        Random random = new Random();
-//        Timeline timeline = new Timeline();
-//
-//        // Add several keyframes to show random dice faces
-//        for (int i = 0; i < 10; i++) {
-//            final int randomRoll = random.nextInt(6) + 1;
-//            KeyFrame kf = new KeyFrame(Duration.millis(i * 50),
-//                    e -> diceLabel.setText(Integer.toString(randomRoll)));
-//            timeline.getKeyFrames().add(kf);
+//    private void refreshPlayerPositions() {
+//        // First, clear all player tokens from tiles
+//        for (StackPane tile : tileViews.values()) {
+//            // Remove all player tokens while keeping the tile number
+//            tile.getChildren().removeIf(node -> node instanceof FlowPane && "player_tokens".equals(node.getId()));
 //        }
 //
-//        // Add the final keyframe to show the actual roll
-//        KeyFrame finalFrame = new KeyFrame(Duration.millis(500),
-//                e -> diceLabel.setText(Integer.toString(roll)));
-//        timeline.getKeyFrames().add(finalFrame);
+//        // Create a map to track which players are on which tiles
+//        Map<Integer, List<Player>> playersByTile = new HashMap<>();
 //
-//        // Play the animation
-//        timeline.play();
-//    }
+//        // Group players by tile
+//        for (Map.Entry<Player, Integer> entry : playerPositions.entrySet()) {
+//            Player player = entry.getKey();
+//            Integer tileId = entry.getValue();
 //
-//    /**
-//     * Animate player movement on the board
-//     *
-//     * @param player The player to animate
-//     * @param fromTile The starting tile
-//     * @param toTile The ending tile
-//     */
-//    private void animatePlayerMovement(Player player, int fromTile, int toTile) {
-//        // Get player token
-//        Circle token = playerTokens.get(player);
-//        Text label = playerLabels.get(player);
-//
-//        if (token == null || label == null) return;
-//
-//        // If it's a direct move (no snake or ladder)
-//        StackPane destTile = tileViews.get(toTile);
-//        if (destTile == null) return;
-//
-//        double destX = destTile.getBoundsInParent().getCenterX();
-//        double destY = destTile.getBoundsInParent().getCenterY();
-//
-//        // Apply offset based on player index to prevent overlap
-//        List<Player> players = gameController.getPlayers();
-//        int playerIndex = players.indexOf(player);
-//        double offsetX = (playerIndex % 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//        double offsetY = (playerIndex / 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//
-//        // Create movement animation for token
-//        Timeline timeline = new Timeline();
-//        timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0.5),
-//                new KeyValue(token.centerXProperty(), destX + offsetX),
-//                new KeyValue(token.centerYProperty(), destY + offsetY)
-//        ));
-//
-//        // Create animation for player label
-//        Timeline labelTimeline = new Timeline();
-//        labelTimeline.getKeyFrames().add(new KeyFrame(Duration.seconds(0.5),
-//                new KeyValue(label.xProperty(), destX + offsetX - 5),
-//                new KeyValue(label.yProperty(), destY + offsetY + 5)
-//        ));
-//
-//        // Play the animations
-//        timeline.play();
-//        labelTimeline.play();
-//    }
-//
-//    /**
-//     * Animate special action (snake or ladder)
-//     *
-//     * @param player The player
-//     * @param actionType The action type ("snake" or "ladder")
-//     * @param fromTile The tile before action
-//     * @param toTile The tile after action
-//     */
-//    private void animateSpecialAction(Player player, String actionType, int fromTile, int toTile) {
-//        // Get player token
-//        Circle token = playerTokens.get(player);
-//        Text label = playerLabels.get(player);
-//
-//        if (token == null || label == null) return;
-//
-//        // Calculate current and destination coordinates
-//        StackPane startTile = tileViews.get(fromTile);
-//        StackPane endTile = tileViews.get(toTile);
-//
-//        if (startTile == null || endTile == null) return;
-//
-//        double startX = startTile.getBoundsInParent().getCenterX();
-//        double startY = startTile.getBoundsInParent().getCenterY();
-//        double endX = endTile.getBoundsInParent().getCenterX();
-//        double endY = endTile.getBoundsInParent().getCenterY();
-//
-//        // Apply offset based on player index
-//        List<Player> players = gameController.getPlayers();
-//        int playerIndex = players.indexOf(player);
-//        double offsetX = (playerIndex % 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//        double offsetY = (playerIndex / 2) * TILE_SIZE * 0.3 - TILE_SIZE * 0.15;
-//
-//        // Create a path for the animation
-//        Path path = new Path();
-//
-//        if (actionType.equals("ladder")) {
-//            // Straight line for ladder
-//            path.getElements().add(new MoveTo(token.getCenterX(), token.getCenterY()));
-//            path.getElements().add(new LineTo(endX + offsetX, endY + offsetY));
-//        } else {
-//            // Curved path for snake
-//            double midX = (startX + endX) / 2;
-//            double midY = (startY + endY) / 2;
-//            double distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-//            double perpX = -(endY - startY) / distance * (distance * 0.2);
-//            double perpY = (endX - startX) / distance * (distance * 0.2);
-//
-//            path.getElements().add(new MoveTo(token.getCenterX(), token.getCenterY()));
-//            path.getElements().add(new QuadCurveTo(
-//                    midX + perpX, midY + perpY,
-//                    endX + offsetX, endY + offsetY
-//            ));
+//            if (!playersByTile.containsKey(tileId)) {
+//                playersByTile.put(tileId, new ArrayList<>());
+//            }
+//            playersByTile.get(tileId).add(player);
 //        }
 //
-//        // Create path transitions for token and label
-//        PathTransition tokenTransition = new PathTransition();
-//        tokenTransition.setDuration(Duration.seconds(1));
-//        tokenTransition.setPath(path);
-//        tokenTransition.setNode(token);
+//        // Add player tokens to tiles
+//        for (Map.Entry<Integer, List<Player>> entry : playersByTile.entrySet()) {
+//            Integer tileId = entry.getKey();
+//            List<Player> playersOnTile = entry.getValue();
 //
-//        Path labelPath = new Path();
-//        for (PathElement element : path.getElements()) {
-//            if (element instanceof MoveTo) {
-//                MoveTo move = (MoveTo) element;
-//                labelPath.getElements().add(new MoveTo(label.getX(), label.getY()));
-//            } else if (element instanceof LineTo) {
-//                LineTo line = (LineTo) element;
-//                labelPath.getElements().add(new LineTo(line.getX() - 5, line.getY() + 5));
-//            } else if (element instanceof QuadCurveTo) {
-//                QuadCurveTo curve = (QuadCurveTo) element;
-//                labelPath.getElements().add(new QuadCurveTo(
-//                        curve.getControlX() - 5, curve.getControlY() + 5,
-//                        curve.getX() - 5, curve.getY() + 5
-//                ));
+//            StackPane tile = tileViews.get(tileId);
+//            if (tile != null) {
+//                // Container for all player tokens on this tile
+//                FlowPane playerTokensPane = new FlowPane();
+//                playerTokensPane.setId("player_tokens");
+//                playerTokensPane.setAlignment(Pos.CENTER);
+//                playerTokensPane.setHgap(5);
+//                playerTokensPane.setVgap(5);
+//                playerTokensPane.setPrefWrapLength(TILE_SIZE - 10);
+//
+//                // Add each player token
+//                String[] colors = {"#1E90FF", "#FF4500", "#32CD32", "#FFD700"};
+//                List<Player> allPlayers = gameController.getPlayers();
+//
+//                for (Player player : playersOnTile) {
+//                    int playerIndex = allPlayers.indexOf(player);
+//                    Color tokenColor = Color.web(colors[playerIndex % colors.length]);
+//
+//                    // Create a simple circle with player's initial
+//                    StackPane playerToken = new StackPane();
+//                    Circle circle = new Circle(10);
+//                    circle.setFill(tokenColor);
+//                    circle.setStroke(Color.BLACK);
+//                    circle.setStrokeWidth(1.5);
+//
+//                    Text initial = new Text(player.getName().substring(0, 1));
+//                    initial.setFont(Font.font("Arial", FontWeight.BOLD, 10));
+//                    initial.setFill(Color.WHITE);
+//
+//                    playerToken.getChildren().addAll(circle, initial);
+//                    playerTokensPane.getChildren().add(playerToken);
+//                }
+//
+//                // Position the player tokens in the center of the tile
+//                StackPane.setAlignment(playerTokensPane, Pos.CENTER);
+//                tile.getChildren().add(playerTokensPane);
 //            }
 //        }
-//
-//        PathTransition labelTransition = new PathTransition();
-//        labelTransition.setDuration(Duration.seconds(1));
-//        labelTransition.setPath(labelPath);
-//        labelTransition.setNode(label);
-//
-//        // Play the animations
-//        tokenTransition.play();
-//        labelTransition.play();
 //    }
 //
 //    /**
@@ -788,19 +808,19 @@
 //
 //    @Override
 //    public void onRollDice(Player player, int roll) {
-//        animateDiceRoll(roll);
+//        diceLabel.setText(Integer.toString(roll));
 //        statusLabel.setText(player.getName() + " rolled a " + roll);
 //    }
 //
 //    @Override
 //    public void onPlayerMove(Player player, int fromTile, int toTile) {
-//        animatePlayerMovement(player, fromTile, toTile);
 //        updatePlayerPosition(player, toTile);
 //    }
 //
 //    @Override
 //    public void onSpecialAction(Player player, String actionType, int fromTile, int toTile) {
-//        animateSpecialAction(player, actionType, fromTile, toTile);
+//        // Update player position
+//        updatePlayerPosition(player, toTile);
 //
 //        if (actionType.equals("ladder")) {
 //            statusLabel.setText(player.getName() + " climbed a ladder from " + fromTile + " to " + toTile + "!");
