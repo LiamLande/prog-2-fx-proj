@@ -80,4 +80,47 @@ public class Player {
     // trigger any special action
     current.land(this);
   }
+
+
+  //MONEY MANAGEMENT
+
+
+  public void setMoney(Integer money) {
+    if (money == null) {
+      throw new InvalidParameterException("Money must not be null");
+    }
+    if (money < 0) {
+      throw new InvalidParameterException("Money must not be negative");
+    }
+    this.money = money;
+  }
+
+  public void increaseMoney(int amount) {
+    if (money == null) {
+      money = 0;
+    }
+    money += amount;
+  }
+
+  public void decreaseMoney(int amount) {
+    if (money == null || money < amount) {
+      throw new InvalidParameterException("Not enough money");
+    }
+    money -= amount;
+  }
+
+  public int getMoney() {
+    return money != null ? money : 0;
+  }
+
+  // For utility properties
+  public int getLastDiceRoll() {
+    // This should be implemented to track the last dice roll
+    return 0;  // Placeholder
+  }
+
+  public int getUtilitiesOwnedCount() {
+    // Count utilities owned by this player
+    return 0;  // Placeholder
+  }
 }
