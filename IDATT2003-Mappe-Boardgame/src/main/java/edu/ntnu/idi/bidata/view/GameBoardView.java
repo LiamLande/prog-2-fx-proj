@@ -4,8 +4,8 @@
 //import edu.ntnu.idi.bidata.model.Board;
 //import edu.ntnu.idi.bidata.model.Player;
 //import edu.ntnu.idi.bidata.model.Tile;
-//import edu.ntnu.idi.bidata.model.actions.LadderAction;
-//import edu.ntnu.idi.bidata.model.actions.SnakeAction;
+//import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
+//import edu.ntnu.idi.bidata.model.actions.snakes.SnakeAction;
 //import edu.ntnu.idi.bidata.model.actions.TileAction;
 //import javafx.animation.PauseTransition;
 //import javafx.application.Platform;

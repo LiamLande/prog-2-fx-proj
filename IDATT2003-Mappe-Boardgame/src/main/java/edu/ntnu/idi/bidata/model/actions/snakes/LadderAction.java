@@ -1,8 +1,9 @@
-package edu.ntnu.idi.bidata.model.actions;
+package edu.ntnu.idi.bidata.model.actions.snakes;
 
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.Player;
+import edu.ntnu.idi.bidata.model.actions.TileAction;
 
 /**
  * Action to move the player forward by a positive number of tiles (ladder).

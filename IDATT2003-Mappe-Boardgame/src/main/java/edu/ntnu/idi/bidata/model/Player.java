@@ -8,6 +8,7 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 public class Player {
   private final String name;
   private Tile current;
+  private Integer money;
 
   /**
    * Creates a player starting on the given tile.
@@ -24,6 +25,27 @@ public class Player {
     this.name = name;
     this.current = start;
   }
+
+  /**
+   * Creates a player starting on the given tile.
+   * @param name must be non‐empty
+   * @param start starting tile, non‐null
+   */
+  public Player(String name, Tile start, Integer money) {
+    if (name == null || name.isBlank()) {
+      throw new InvalidParameterException("Player name must not be empty");
+    }
+    if (start == null) {
+      throw new InvalidParameterException("Starting tile must not be null");
+    }
+    if (money == null) {
+      throw new InvalidParameterException("Starting Money must not be null");
+    }
+    this.name = name;
+    this.current = start;
+    this.money = money;
+  }
+
 
   public String getName() {
     return name;

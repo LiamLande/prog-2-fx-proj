@@ -1,0 +1,159 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "nextId": 1,
+      "action": {
+        "type": "GoAction",
+        "description": "Collect $200 salary as you pass GO",
+        "reward": 200
+      }
+    },
+    {
+      "id": 1,
+      "nextId": 2,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Mediterranean Avenue",
+        "cost": 60,
+        "rent": 2,
+        "colorGroup": "Brown"
+      }
+    },
+    {
+      "id": 2,
+      "nextId": 3,
+      "action": {
+        "type": "CommunityChestAction",
+        "description": "Draw a Community Chest card"
+      }
+    },
+    {
+      "id": 3,
+      "nextId": 4,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Baltic Avenue",
+        "cost": 60,
+        "rent": 4,
+        "colorGroup": "Brown"
+      }
+    },
+    {
+      "id": 4,
+      "nextId": 5,
+      "action": {
+        "type": "TaxAction",
+        "description": "Pay Income Tax",
+        "amount": 200
+      }
+    },
+    {
+      "id": 5,
+      "nextId": 6,
+      "action": {
+        "type": "RailroadAction",
+        "name": "Reading Railroad",
+        "cost": 200,
+        "rent": 25
+      }
+    },
+    {
+      "id": 6,
+      "nextId": 7,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Oriental Avenue",
+        "cost": 100,
+        "rent": 6,
+        "colorGroup": "Light Blue"
+      }
+    },
+    {
+      "id": 7,
+      "nextId": 8,
+      "action": {
+        "type": "ChanceAction",
+        "description": "Draw a Chance card"
+      }
+    },
+    {
+      "id": 8,
+      "nextId": 9,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Vermont Avenue",
+        "cost": 100,
+        "rent": 6,
+        "colorGroup": "Light Blue"
+      }
+    },
+    {
+      "id": 9,
+      "nextId": 10,
+      "action": {
+        "type": "JailAction",
+        "description": "Just Visiting / In Jail"
+      }
+    },
+    {
+      "id": 10,
+      "nextId": 11,
+      "action": {
+        "type": "PropertyAction",
+        "name": "St. Charles Place",
+        "cost": 140,
+        "rent": 10,
+        "colorGroup": "Pink"
+      }
+    },
+    {
+      "id": 11,
+      "nextId": 12,
+      "action": {
+        "type": "UtilityAction",
+        "name": "Electric Company",
+        "cost": 150
+      }
+    },
+    {
+      "id": 12,
+      "nextId": 13,
+      "action": {
+        "type": "PropertyAction",
+        "name": "States Avenue",
+        "cost": 140,
+        "rent": 10,
+        "colorGroup": "Pink"
+      }
+    },
+    {
+      "id": 13,
+      "nextId": 14,
+      "action": {
+        "type": "GoToJailAction",
+        "description": "Go To Jail",
+        "targetId": 9
+      }
+    },
+    {
+      "id": 14,
+      "nextId": 15,
+      "action": {
+        "type": "FreeParkingAction",
+        "description": "Free Parking"
+      }
+    },
+    {
+      "id": 15,
+      "nextId": 0,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Kentucky Avenue",
+        "cost": 220,
+        "rent": 18,
+        "colorGroup": "Red"
+      }
+    }
+  ]
+}
