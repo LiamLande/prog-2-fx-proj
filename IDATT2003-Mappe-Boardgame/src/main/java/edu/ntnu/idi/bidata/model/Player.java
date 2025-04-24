@@ -55,6 +55,13 @@ public class Player {
     return current;
   }
 
+  public void setCurrent(Tile current) {
+    if (current == null) {
+      throw new InvalidParameterException("Current tile must not be null");
+    }
+    this.current = current;
+  }
+
   /**
    * Moves the player by the given steps: positive forward, negative backward.
    */

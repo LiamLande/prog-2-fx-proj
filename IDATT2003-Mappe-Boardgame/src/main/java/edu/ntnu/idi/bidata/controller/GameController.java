@@ -63,8 +63,16 @@ public class GameController implements BoardGameObserver {
         game.init();
     }
 
-    /** Drive one round; the model will call onRoundPlayed(...) and maybe onGameOver(...) */
-    public void playOneRound() {
-        game.playOneRound();
+    /**
+     * Plays a turn for a specific player
+     *
+     * @param player The player who will take their turn
+     */
+    public void playTurn(Player player) {
+        game.playTurn(player);
+    }
+
+    public BoardGame getGame() {
+        return game;
     }
 }
