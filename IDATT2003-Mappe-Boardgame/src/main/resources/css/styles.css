@@ -1,0 +1,48 @@
+/* styles.css */
+
+/* Root font */
+.root {
+  -fx-font-family: 'Poppins', sans-serif;
+}
+
+/* Big gold gradient title */
+.scene-title {
+  -fx-font-size: 48px;
+  -fx-text-fill: linear-gradient(from 0% 50% to 100% 50%,
+  #FFD700 0%, #FF8C00 100%);
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 8, 0, 0, 2);
+}
+
+/* Player labels */
+.player-label {
+  -fx-font-size: 20px;
+  -fx-text-fill: #FFF8DC;
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 4, 0, 0, 1);
+}
+
+/* Text‐fields */
+.player-input {
+  -fx-background-color: rgba(0, 0, 0, 0.6);
+  -fx-background-radius: 20px;
+  -fx-border-radius: 20px;
+  -fx-border-width: 2px;
+  -fx-border-color: linear-gradient(
+      from 0% 0% to 100% 100%,
+      #FFEFBA 0%, #FFFFFF 50%, #FFEFBA 100%);
+  -fx-prompt-text-fill: derive(-fx-control-inner-background, -50%);
+  -fx-text-fill: white;
+  -fx-font-size: 16px;
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 6, 0, 0, 2);
+}
+
+/* Launch Market button */
+.start-button {
+  -fx-font-size: 24px;
+  -fx-font-weight: bold;
+  -fx-text-fill: white;
+  -fx-background-radius: 12px;
+  -fx-background-color: linear-gradient(
+      from 0% 0% to 0% 100%,
+      #32CD32 0%, #228B22 100%);
+  -fx-effect: dropshadow(gaussian, rgba(0, 100, 0, 0.7), 8, 0, 0, 3);
+}
