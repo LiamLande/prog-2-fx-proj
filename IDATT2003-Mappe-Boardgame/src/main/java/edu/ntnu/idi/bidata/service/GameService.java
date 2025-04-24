@@ -5,28 +5,21 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import java.util.List;
 
-/**
- * Defines core game operations: setup, play a round, and finish detection.
- */
 public interface GameService {
-  /**
-   * Prepares the game for play (e.g., initialize state).
-   */
+
+  /** Called once before any moves; e.g. reset all players to the start tile. */
   void setup(BoardGame game);
 
-  /**
-   * Plays one full round: each player rolls and moves.
-   * @return list of dice rolls in player order
-   */
+  /** Roll & move each player once, returning the list of dice‐rolls in order. */
   List<Integer> playOneRound(BoardGame game);
 
-  /**
-   * Checks if the game has reached its end condition.
-   */
+  /** Roll & move exactly one player; returns that player’s roll. */
+  int playTurn(BoardGame game, Player player);
+
+  /** True as soon as someone has reached the end. */
   boolean isFinished(BoardGame game);
 
-  /**
-   * Returns the winning player if the game is finished, else null.
-   */
+  /** The first player whose current tile is the “finish”; or null. */
   Player getWinner(BoardGame game);
+
 }
