@@ -1,6 +1,4 @@
-// BoardGame.java
 package edu.ntnu.idi.bidata.model;
-
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.service.GameService;
@@ -9,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Facade for game setup and play. Delegates to a GameService implementation.
+ * Facade for game setup and play. Delegates to a GameService implementation and notifies observers.
  */
 public class BoardGame {
   private Board board;
@@ -17,45 +15,38 @@ public class BoardGame {
   private final List<Player> players = new ArrayList<>();
   private GameService service;
 
+  // Observer registry
+  private final List<BoardGameObserver> observers = new ArrayList<>();
+
+  /**
+   * Registers a new observer.
+   */
+  public void addObserver(BoardGameObserver observer) {
+    if (observer == null) {
+      throw new InvalidParameterException("Observer cannot be null");
+    }
+    observers.add(observer);
+  }
+
+  /**
+   * Unregisters an existing observer.
+   */
+  public void removeObserver(BoardGameObserver observer) {
+    observers.remove(observer);
+  }
+
   /**
    * Must be called after setting board and dice, before adding players.
    */
   public void init() {
-    // Default to Snakes & Ladders if not set
     if (service == null) {
       service = new SnakesLaddersService();
     }
     service.setup(this);
-  }
-
-  /**
-   * Sets the board configuration. Used by factories.
-   */
-  public void setBoard(Board board) {
-    if (board == null) {
-      throw new InvalidParameterException("Board cannot be null");
+    // Notify observers that the game is starting
+    for (BoardGameObserver obs : observers) {
+      obs.onGameStart(getPlayers());
     }
-    this.board = board;
-  }
-
-  /**
-   * Sets the dice to use (e.g., number of dice).
-   */
-  public void setDice(Dice dice) {
-    if (dice == null) {
-      throw new InvalidParameterException("Dice cannot be null");
-    }
-    this.dice = dice;
-  }
-
-  /**
-   * Adds a player to this game. init() must have been called.
-   */
-  public void addPlayer(Player player) {
-    if (player == null) {
-      throw new InvalidParameterException("Player cannot be null");
-    }
-    players.add(player);
   }
 
   /**
@@ -66,7 +57,19 @@ public class BoardGame {
     if (service == null) {
       throw new IllegalStateException("Game not initialized");
     }
-    return service.playOneRound(this);
+    List<Integer> rolls = service.playOneRound(this);
+    // Notify observers of the round
+    for (BoardGameObserver obs : observers) {
+      obs.onRoundPlayed(rolls, getPlayers());
+    }
+    // If game ended, notify observers
+    if (isFinished()) {
+      Player winner = getWinner();
+      for (BoardGameObserver obs : observers) {
+        obs.onGameOver(winner);
+      }
+    }
+    return rolls;
   }
 
   /**
@@ -89,7 +92,28 @@ public class BoardGame {
     return service.getWinner(this);
   }
 
-  // Getters for GameService to use
+  // Existing setters and getters...
+  public void setBoard(Board board) {
+    if (board == null) {
+      throw new InvalidParameterException("Board cannot be null");
+    }
+    this.board = board;
+  }
+
+  public void setDice(Dice dice) {
+    if (dice == null) {
+      throw new InvalidParameterException("Dice cannot be null");
+    }
+    this.dice = dice;
+  }
+
+  public void addPlayer(Player player) {
+    if (player == null) {
+      throw new InvalidParameterException("Player cannot be null");
+    }
+    players.add(player);
+  }
+
   public Board getBoard() { return board; }
   public Dice getDice() { return dice; }
   public List<Player> getPlayers() { return new ArrayList<>(players); }

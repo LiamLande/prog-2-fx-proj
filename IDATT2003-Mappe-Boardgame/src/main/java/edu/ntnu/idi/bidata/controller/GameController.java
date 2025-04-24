@@ -1,50 +1,70 @@
 package edu.ntnu.idi.bidata.controller;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
+import edu.ntnu.idi.bidata.model.BoardGameObserver;
 import edu.ntnu.idi.bidata.model.Player;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Orchestrates game flow for UI: handles user actions and notifies listeners of game events.
+ * Orchestrates game flow for UI: subscribes to model events and forwards them to UI listeners.
  */
-public class GameController {
+public class GameController implements BoardGameObserver {
     private final BoardGame game;
-    private final List<GameListener> listeners;
+    private final List<GameListener> listeners = new ArrayList<>();
 
-    public GameController(BoardGame game) {
-        this.game = game;
-        this.listeners = new java.util.ArrayList<>();
-    }
-
+    /**
+     * UI-level listener interface (your existing callbacks).
+     */
     public interface GameListener {
         void onGameStart(List<Player> players);
         void onRoundPlayed(List<Integer> rolls, List<Player> players);
         void onGameOver(Player winner);
     }
 
+    public GameController(BoardGame game) {
+        this.game = game;
+        // Register as an observer on the model
+        game.addObserver(this);
+    }
+
+    /** UI registers here to get callbacks. */
     public void addListener(GameListener listener) {
         listeners.add(listener);
     }
 
-    /**
-     * Starts the game: notifies UI and plays until finished.
-     */
-    public void startGame() {
-        game.init();
-        listeners.forEach(l -> l.onGameStart(game.getPlayers()));
-        if (game.isFinished()) {
-            listeners.forEach(l -> l.onGameOver(game.getWinner()));
-        }
+    /** (Optional) UI can unregister too. */
+    public void removeListener(GameListener listener) {
+        listeners.remove(listener);
     }
 
-    /**
-     * Plays a single round and notifies listeners.
-     */
+    // ---------------------------------------------------
+    // BoardGameObserver callbacks (fired by the model):
+    // ---------------------------------------------------
+
+    @Override
+    public void onGameStart(List<Player> players) {
+        listeners.forEach(l -> l.onGameStart(players));
+    }
+
+    @Override
+    public void onRoundPlayed(List<Integer> rolls, List<Player> players) {
+        listeners.forEach(l -> l.onRoundPlayed(rolls, players));
+    }
+
+    @Override
+    public void onGameOver(Player winner) {
+        listeners.forEach(l -> l.onGameOver(winner));
+    }
+
+    /** Kick off the game; the model will call back onGameStart(...) */
+    public void startGame() {
+        game.init();
+    }
+
+    /** Drive one round; the model will call onRoundPlayed(...) and maybe onGameOver(...) */
     public void playOneRound() {
-        List<Integer> rolls = game.playOneRound();
-        listeners.forEach(l -> l.onRoundPlayed(rolls, game.getPlayers()));
-        if (game.isFinished()) {
-            listeners.forEach(l -> l.onGameOver(game.getWinner()));
-        }
+        game.playOneRound();
     }
 }
