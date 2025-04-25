@@ -56,7 +56,7 @@ public class PlayerCsvReaderWriter {
     }
     List<String[]> rows = new ArrayList<>();
     for (Player p : players) {
-      rows.add(new String[]{p.getName(), String.valueOf(p.getCurrent().getId())});
+      rows.add(new String[]{p.getName(), String.valueOf(p.getCurrentTile().getId())});
     }
     CsvUtils.writeAll(writer, rows);
   }

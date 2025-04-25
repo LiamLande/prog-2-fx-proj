@@ -7,7 +7,7 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
  */
 public class Player {
   private final String name;
-  private Tile current;
+  private Tile currentTile;
   private Integer money;
 
   /**
@@ -23,7 +23,7 @@ public class Player {
       throw new InvalidParameterException("Starting tile must not be null");
     }
     this.name = name;
-    this.current = start;
+    this.currentTile = start;
   }
 
   /**
@@ -42,7 +42,7 @@ public class Player {
       throw new InvalidParameterException("Starting Money must not be null");
     }
     this.name = name;
-    this.current = start;
+    this.currentTile = start;
     this.money = money;
   }
 
@@ -51,8 +51,8 @@ public class Player {
     return name;
   }
 
-  public Tile getCurrent() {
-    return current;
+  public Tile getCurrentTile() {
+    return currentTile;
   }
 
   /**
@@ -61,17 +61,17 @@ public class Player {
   public void move(int steps) {
     if (steps > 0) {
       for (int i = 0; i < steps; i++) {
-        if (current.getNext() == null) break;
-        current = current.getNext();
+        if (currentTile.getNext() == null) break;
+        currentTile = currentTile.getNext();
       }
     } else if (steps < 0) {
       for (int i = 0; i < -steps; i++) {
-        if (current.getPrevious() == null) break;
-        current = current.getPrevious();
+        if (currentTile.getPrevious() == null) break;
+        currentTile = currentTile.getPrevious();
       }
     }
     // trigger any special action
-    current.land(this);
+    currentTile.land(this);
   }
 
 

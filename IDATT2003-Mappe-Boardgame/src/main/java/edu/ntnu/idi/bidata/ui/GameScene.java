@@ -54,7 +54,7 @@ public class GameScene {
     VBox playersBox = new VBox(8);
     playersBox.setPadding(new Insets(5, 0, 0, 0));
     for (Player p : game.getPlayers()) {
-      Label lbl = new Label(p.getName() + ": Tile " + p.getCurrent().getId());
+      Label lbl = new Label(p.getName() + ": Tile " + p.getCurrentTile().getId());
       playerLabels.put(p, lbl);
       playersBox.getChildren().add(lbl);
     }
@@ -111,7 +111,7 @@ public class GameScene {
     for (Map.Entry<Player, Label> entry : playerLabels.entrySet()) {
       Player p = entry.getKey();
       Label lbl = entry.getValue();
-      lbl.setText(p.getName() + ": Tile " + p.getCurrent().getId());
+      lbl.setText(p.getName() + ": Tile " + p.getCurrentTile().getId());
     }
   }
 

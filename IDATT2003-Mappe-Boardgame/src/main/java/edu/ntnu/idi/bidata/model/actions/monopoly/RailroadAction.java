@@ -1,10 +1,8 @@
-
-// --------------------------------------------------
-// Specialized ownable spaces
-// --------------------------------------------------
+package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 
 /**
  * Railroad action: rent depends on the number of railroads the owner holds.
@@ -12,20 +10,20 @@ import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 public class RailroadAction extends PropertyAction {
     private static final int BASE_RENT = 25;
 
-    public RailroadAction(String name, int cost) {
+    public RailroadAction(String name, int cost, int rent) {
         super(name, cost, BASE_RENT);
     }
 
     @Override
     public void perform(Player player) {
+        // In RailroadAction.perform()
         if (getOwner() == null) {
             // TODO: offer purchase
         } else if (!getOwner().equals(player)) {
-            // Determine number of railroads owned
-            int owned = getOwner().getRailroadsOwnedCount(); // implement in Player
+            MonopolyService service = ServiceLocator.getMonopolyService();
+            int owned = service.getRailroadsOwnedCount(getOwner());
             int rentToPay = BASE_RENT * owned;
-            // player.decreaseBalance(rentToPay);
-            // getOwner().increaseBalance(rentToPay);
+            // Payment logic
         }
     }
 }

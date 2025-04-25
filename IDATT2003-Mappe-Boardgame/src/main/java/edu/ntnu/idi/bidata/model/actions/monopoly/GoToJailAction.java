@@ -10,7 +10,6 @@ import edu.ntnu.idi.bidata.service.ServiceLocator;
 public class GoToJailAction implements TileAction {
     private final String description;
     private final int targetId;
-    private final MonopolyService monopolyService;
 
 
     /**
@@ -31,7 +30,7 @@ public class GoToJailAction implements TileAction {
         System.out.println(description);
 
         // Find jail tile by going backward/forward until we find the target ID
-        Tile current = player.getCurrent();
+        Tile current = player.getCurrentTile();
         // First try to find jail by going forward
         while (current != null && current.getId() != targetId) {
             current = current.getNext();
@@ -39,7 +38,7 @@ public class GoToJailAction implements TileAction {
 
         // If not found, try backward
         if (current == null || current.getId() != targetId) {
-            current = player.getCurrent();
+            current = player.getCurrentTile();
             while (current != null && current.getId() != targetId) {
                 current = current.getPrevious();
             }
@@ -48,7 +47,7 @@ public class GoToJailAction implements TileAction {
         // If we found the jail tile, set player's position directly
         if (current != null && current.getId() == targetId) {
             // We need to use the move method to handle any potential jail actions
-            int stepsToJail = calculateSteps(player.getCurrent(), current);
+            int stepsToJail = calculateSteps(player.getCurrentTile(), current);
             player.move(stepsToJail);
             MonopolyService monopolyService = getMonopolyService(); // You'll need to implement this
             if (monopolyService != null) {
