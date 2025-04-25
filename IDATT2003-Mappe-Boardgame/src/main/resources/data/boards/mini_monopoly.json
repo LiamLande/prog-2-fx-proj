@@ -81,24 +81,13 @@
       "id": 8,
       "nextId": 9,
       "action": {
-        "type": "PropertyAction",
-        "name": "Vermont Avenue",
-        "cost": 100,
-        "rent": 6,
-        "colorGroup": "Light Blue"
-      }
-    },
-    {
-      "id": 9,
-      "nextId": 10,
-      "action": {
         "type": "JailAction",
         "description": "Just Visiting / In Jail"
       }
     },
     {
-      "id": 10,
-      "nextId": 11,
+      "id": 9,
+      "nextId": 10,
       "action": {
         "type": "PropertyAction",
         "name": "St. Charles Place",
@@ -108,8 +97,8 @@
       }
     },
     {
-      "id": 11,
-      "nextId": 12,
+      "id": 10,
+      "nextId": 11,
       "action": {
         "type": "UtilityAction",
         "name": "Electric Company",
@@ -117,8 +106,8 @@
       }
     },
     {
-      "id": 12,
-      "nextId": 13,
+      "id": 11,
+      "nextId": 12,
       "action": {
         "type": "PropertyAction",
         "name": "States Avenue",
@@ -128,31 +117,205 @@
       }
     },
     {
+      "id": 12,
+      "nextId": 13,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Virginia Avenue",
+        "cost": 160,
+        "rent": 12,
+        "colorGroup": "Pink"
+      }
+    },
+    {
       "id": 13,
       "nextId": 14,
       "action": {
-        "type": "GoToJailAction",
-        "description": "Go To Jail",
-        "targetId": 9
+        "type": "RailroadAction",
+        "name": "Pennsylvania Railroad",
+        "cost": 200,
+        "rent": 25
       }
     },
     {
       "id": 14,
       "nextId": 15,
       "action": {
+        "type": "PropertyAction",
+        "name": "St. James Place",
+        "cost": 180,
+        "rent": 14,
+        "colorGroup": "Orange"
+      }
+    },
+    {
+      "id": 15,
+      "nextId": 16,
+      "action": {
+        "type": "CommunityChestAction",
+        "description": "Draw a Community Chest card"
+      }
+    },
+    {
+      "id": 16,
+      "nextId": 17,
+      "action": {
         "type": "FreeParkingAction",
         "description": "Free Parking"
       }
     },
     {
-      "id": 15,
-      "nextId": 0,
+      "id": 17,
+      "nextId": 18,
       "action": {
         "type": "PropertyAction",
-        "name": "Kentucky Avenue",
+        "name": "Tennessee Avenue",
+        "cost": 180,
+        "rent": 14,
+        "colorGroup": "Orange"
+      }
+    },
+    {
+      "id": 18,
+      "nextId": 19,
+      "action": {
+        "type": "PropertyAction",
+        "name": "New York Avenue",
+        "cost": 200,
+        "rent": 16,
+        "colorGroup": "Orange"
+      }
+    },
+    {
+      "id": 19,
+      "nextId": 20,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Indiana Avenue",
         "cost": 220,
         "rent": 18,
         "colorGroup": "Red"
+      }
+    },
+    {
+      "id": 20,
+      "nextId": 21,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Illinois Avenue",
+        "cost": 240,
+        "rent": 20,
+        "colorGroup": "Red"
+      }
+    },
+    {
+      "id": 21,
+      "nextId": 22,
+      "action": {
+        "type": "RailroadAction",
+        "name": "B. & O. Railroad",
+        "cost": 200,
+        "rent": 25
+      }
+    },
+    {
+      "id": 22,
+      "nextId": 23,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Atlantic Avenue",
+        "cost": 260,
+        "rent": 22,
+        "colorGroup": "Yellow"
+      }
+    },
+    {
+      "id": 23,
+      "nextId": 24,
+      "action": {
+        "type": "ChanceAction",
+        "description": "Draw a Chance card"
+      }
+    },
+    {
+      "id": 24,
+      "nextId": 25,
+      "action": {
+        "type": "GoToJailAction",
+        "description": "Go To Jail",
+        "targetId": 8
+      }
+    },
+    {
+      "id": 25,
+      "nextId": 26,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Ventnor Avenue",
+        "cost": 260,
+        "rent": 22,
+        "colorGroup": "Yellow"
+      }
+    },
+    {
+      "id": 26,
+      "nextId": 27,
+      "action": {
+        "type": "UtilityAction",
+        "name": "Water Works",
+        "cost": 150
+      }
+    },
+    {
+      "id": 27,
+      "nextId": 28,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Marvin Gardens",
+        "cost": 280,
+        "rent": 24,
+        "colorGroup": "Yellow"
+      }
+    },
+    {
+      "id": 28,
+      "nextId": 29,
+      "action": {
+        "type": "PropertyAction",
+        "name": "Pacific Avenue",
+        "cost": 300,
+        "rent": 26,
+        "colorGroup": "Green"
+      }
+    },
+    {
+      "id": 29,
+      "nextId": 30,
+      "action": {
+        "type": "PropertyAction",
+        "name": "North Carolina Avenue",
+        "cost": 300,
+        "rent": 26,
+        "colorGroup": "Green"
+      }
+    },
+    {
+      "id": 30,
+      "nextId": 31,
+      "action": {
+        "type": "TaxAction",
+        "description": "Pay Luxury Tax",
+        "amount": 100
+      }
+    },
+    {
+      "id": 31,
+      "nextId": 0,
+      "action": {
+        "type": "RailroadAction",
+        "name": "Short Line Railroad",
+        "cost": 200,
+        "rent": 25
       }
     }
   ]

@@ -45,13 +45,13 @@ public class SnakesLaddersService implements GameService {
   @Override
   public boolean isFinished(BoardGame game) {
     return game.getPlayers().stream()
-        .anyMatch(p -> p.getCurrent().getNext() == null);
+        .anyMatch(p -> p.getCurrentTile().getNext() == null);
   }
 
   @Override
   public Player getWinner(BoardGame game) {
     return game.getPlayers().stream()
-        .filter(p -> p.getCurrent().getNext() == null)
+        .filter(p -> p.getCurrentTile().getNext() == null)
         .findFirst()
         .orElse(null);
   }

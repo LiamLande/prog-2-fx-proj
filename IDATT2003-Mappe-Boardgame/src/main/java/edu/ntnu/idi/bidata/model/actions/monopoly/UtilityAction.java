@@ -1,7 +1,8 @@
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 
 /**
  * Utility action: rent is 4x or 10x the dice roll, depending on utilities owned.
@@ -18,8 +19,9 @@ public class UtilityAction extends PropertyAction {
         } else if (!getOwner().equals(player)) {
             // Retrieve last roll from game context or Player
             int roll = player.getLastDiceRoll(); // implement in Player or via context
-            int utilities = getOwner().getUtilitiesOwnedCount(); // implement in Player
-            int multiplier = (utilities == 1 ? 4 : 10);
+            MonopolyService service = ServiceLocator.getMonopolyService();
+            int owned = service.getUtilitiesOwnedCount(getOwner());
+            int multiplier = (owned == 1 ? 4 : 10);
             int rentToPay = roll * multiplier;
             // player.decreaseMoney(rentToPay);
             // getOwner().increaseBalance(rentToPay);
