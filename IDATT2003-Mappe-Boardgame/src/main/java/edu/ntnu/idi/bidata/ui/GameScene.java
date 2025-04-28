@@ -145,7 +145,7 @@ public class GameScene {
   private StackPane createBoardContainer(BoardView board) {
     Group boardGroup = new Group(board);
     Region border = new Region();
-    border.setStyle("-fx-background-color: #E5B85C; -fx-background-radius: 15px; -fx-padding: 15px;");
+    border.setStyle("-fx-background-color: transparent; -fx-background-radius: 15px; -fx-padding: 15px;");
 
     StackPane container = new StackPane(border, boardGroup);
     StackPane.setMargin(boardGroup, new Insets(10));

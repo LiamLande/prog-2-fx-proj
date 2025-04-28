@@ -215,57 +215,55 @@ public class BoardView extends Pane {
     double x1 = start.getX(), y1 = start.getY();
     double x2 = end.getX(), y2 = end.getY();
     double midX = (x1 + x2) / 2;
-
-    // Create a more snake-like path with multiple curves
     double controlDistance = Math.hypot(x2 - x1, y2 - y1) * 0.3;
 
-    // Snake body - using multiple path segments for a more detailed snake
+    // Body of the cobra (a rich brown)
     Path snakePath = new Path();
     snakePath.setStrokeWidth(8);
-    snakePath.setStroke(Color.DARKRED);
+    snakePath.setStroke(Color.SADDLEBROWN);
     snakePath.setStrokeLineCap(StrokeLineCap.ROUND);
     snakePath.setStrokeLineJoin(StrokeLineJoin.ROUND);
     snakePath.setFill(null);
 
-    // Starting point
     snakePath.getElements().add(new MoveTo(x1, y1));
-
-    // Create multiple curves for a more natural snake shape
     double quarter = (y2 - y1) / 4;
-    snakePath.getElements().add(
-        new CubicCurveTo(
-            midX + controlDistance, y1,
-            midX - controlDistance, y1 + quarter,
-            midX, y1 + quarter * 2
-        )
-    );
+    snakePath.getElements().add(new CubicCurveTo(
+        midX + controlDistance, y1,
+        midX - controlDistance, y1 + quarter,
+        midX,            y1 + quarter * 2
+    ));
+    snakePath.getElements().add(new CubicCurveTo(
+        midX + controlDistance, y1 + quarter * 3,
+        midX - controlDistance, y2,
+        x2,                     y2
+    ));
 
-    snakePath.getElements().add(
-        new CubicCurveTo(
-            midX + controlDistance, y1 + quarter * 3,
-            midX - controlDistance, y2,
-            x2, y2
-        )
-    );
+    // Hood/head of the cobra (golden)
+    Circle head = new Circle(x1, y1, 12, Color.GOLDENROD);
+    head.setStroke(Color.SADDLEBROWN);
+    head.setStrokeWidth(3);
 
-    // Create a snake head
-    Circle head = new Circle(x1, y1, 12, Color.RED);
-    head.setStroke(Color.DARKRED);
-    head.setStrokeWidth(2);
-
-    // Create snake eyes
+    // Eyes—smaller, darker
     double eyeOffset = 4;
     Circle leftEye = new Circle(x1 - eyeOffset, y1 - eyeOffset, 3, Color.WHITE);
     Circle rightEye = new Circle(x1 + eyeOffset, y1 - eyeOffset, 3, Color.WHITE);
     Circle leftPupil = new Circle(x1 - eyeOffset, y1 - eyeOffset, 1.5, Color.BLACK);
     Circle rightPupil = new Circle(x1 + eyeOffset, y1 - eyeOffset, 1.5, Color.BLACK);
 
-    // Create a small tail at the end
-    Circle tail = new Circle(x2, y2, 4, Color.DARKRED);
+    // Tail tip matching the body
+    Circle tail = new Circle(x2, y2, 4, Color.SADDLEBROWN);
 
-    snakeGroup.getChildren().addAll(snakePath, tail, head, leftEye, rightEye, leftPupil, rightPupil);
+    snakeGroup.getChildren().addAll(
+        snakePath,
+        tail,
+        head,
+        leftEye, rightEye,
+        leftPupil, rightPupil
+    );
+
     return snakeGroup;
   }
+
 
   private void initializePlayerTokens() {
     Color[] colors = { Color.RED, Color.BLUE, Color.GREEN, Color.PURPLE };
