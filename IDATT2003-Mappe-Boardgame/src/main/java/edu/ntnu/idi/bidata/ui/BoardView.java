@@ -91,7 +91,7 @@ public class BoardView extends Pane {
         });
 
     // 3) place initial tokens
-    Color[] colors = { Color.CORNFLOWERBLUE, Color.CRIMSON, Color.FORESTGREEN, Color.GOLDENROD };
+    Color[] colors = { Color.RED, Color.BLUE, Color.GREEN, Color.PURPLE };
     int i = 0;
     for (Player p : game.getPlayers()) {
       Circle tok = new Circle(12, colors[i++ % colors.length]);
