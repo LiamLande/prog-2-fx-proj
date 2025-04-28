@@ -3,9 +3,12 @@ package edu.ntnu.idi.bidata.ui;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
+import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
+import javafx.scene.Group;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.CubicCurve;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -79,15 +82,59 @@ public class BoardView extends Pane {
           // safe‐guard
           if (!tileCenterX.containsKey(to)) return;
 
-          Line line = new Line(
-              tileCenterX.get(from), tileCenterY.get(from),
-              tileCenterX.get(to),   tileCenterY.get(to)
-          );
-          line.setStroke(t.getAction() instanceof edu.ntnu.idi.bidata.model.actions.snakes.LadderAction
-              ? Color.FORESTGREEN
-              : Color.CRIMSON);
-          line.setStrokeWidth(4);
-          getChildren().add(line);
+          double x1 = tileCenterX.get(from), y1 = tileCenterY.get(from);
+          double x2 = tileCenterX.get(to),   y2 = tileCenterY.get(to);
+          boolean isLadder = t.getAction() instanceof LadderAction;
+
+          if (isLadder) {
+            // compute unit‐perp vector for offsetting the rails
+            double dx = x2 - x1, dy = y2 - y1;
+            double len = Math.hypot(dx, dy);
+            double ux = -dy/len * 8, uy = dx/len * 8;  // 8px offset
+
+            // left and right rails
+            Line rail1 = new Line(x1, y1, x2, y2);
+            Line rail2 = new Line(x1+ux, y1+uy, x2+ux, y2+uy);
+            rail1.setStroke(Color.FORESTGREEN);
+            rail2.setStroke(Color.FORESTGREEN);
+            rail1.setStrokeWidth(4); rail2.setStrokeWidth(4);
+
+            // rungs
+            Group ladder = new Group(rail1, rail2);
+            int rungCount = 5;
+            for (int i = 1; i < rungCount; i++) {
+              double tFrac = i/(double)rungCount;
+              double rx1 = x1 + dx*tFrac + ux;
+              double ry1 = y1 + dy*tFrac + uy;
+              double rx2 = x1 + dx*tFrac - ux;
+              double ry2 = y1 + dy*tFrac - uy;
+              Line rung = new Line(rx1, ry1, rx2, ry2);
+              rung.setStroke(Color.FORESTGREEN);
+              rung.setStrokeWidth(3);
+              ladder.getChildren().add(rung);
+            }
+            getChildren().add(ladder);
+
+          } else {
+            // draw a wiggly snake with a cubic Bézier curve
+            double midX = (x1 + x2)/2, midY = (y1 + y2)/2;
+            CubicCurve snake = new CubicCurve(
+                x1, y1,
+                midX, midY + 40,     // control point 1
+                midX, midY - 40,     // control point 2
+                x2, y2
+            );
+            snake.setStroke(Color.CRIMSON);
+            snake.setStrokeWidth(4);
+            snake.setFill(Color.TRANSPARENT);
+
+            // optionally add a little “head” circle at the start
+            Circle head = new Circle(x1, y1, 6, Color.CRIMSON);
+            head.setStroke(Color.DARKRED);
+            head.setStrokeWidth(2);
+
+            getChildren().addAll(snake, head);
+          }
         });
 
     // 3) place initial tokens
