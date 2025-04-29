@@ -1,11 +1,11 @@
-/* styles.css */
+/* monopoly.css */
 
 /* Root font */
 .root {
   -fx-font-family: 'Poppins', sans-serif;
 }
 
-/* Big gold gradient title */
+/* The big gold title */
 .scene-title {
   -fx-font-size: 48px;
   -fx-text-fill: linear-gradient(from 0% 50% to 100% 50%,
@@ -13,14 +13,14 @@
   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 8, 0, 0, 2);
 }
 
-/* Player labels */
+/* Player labels (Player 1, Player 2, …) */
 .player-label {
   -fx-font-size: 20px;
-  -fx-text-fill: #FFF8DC;
+  -fx-text-fill: #FFF8DC;    /* light wheat */
   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 4, 0, 0, 1);
 }
 
-/* Text‐fields */
+/* The name‐entry fields */
 .player-input {
   -fx-background-color: rgba(0, 0, 0, 0.6);
   -fx-background-radius: 20px;
@@ -35,7 +35,7 @@
   -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 6, 0, 0, 2);
 }
 
-/* Launch Market button */
+/* The “Launch Market” button */
 .start-button {
   -fx-font-size: 24px;
   -fx-font-weight: bold;

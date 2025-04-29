@@ -44,6 +44,10 @@ public class Tile {
     this.action = action;
   }
 
+  public TileAction getAction() {
+    return action;
+  }
+
   /**
    * Called when a player lands here: triggers the action if present.
    */

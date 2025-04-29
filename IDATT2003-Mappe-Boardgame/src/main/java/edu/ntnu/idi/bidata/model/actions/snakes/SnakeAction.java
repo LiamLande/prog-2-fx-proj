@@ -32,4 +32,8 @@ public class SnakeAction implements TileAction {
     System.out.println(description);
     player.move(-steps);
   }
+
+  public int getSteps() {
+    return steps;
+  }
 }

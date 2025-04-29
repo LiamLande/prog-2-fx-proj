@@ -37,10 +37,10 @@ public final class GameFactory {
         break;
     }
 
-    game.init();
     for (String name : playerNames) {
       game.addPlayer(new Player(name, game.getBoard().getTile(0)));
     }
+    game.init();
     return game;
   }
 }
