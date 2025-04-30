@@ -26,7 +26,7 @@ public class MonopolyService implements GameService {
 
         for (Player player : game.getPlayers()) {
             player.setMoney(1500);
-            player.setTile(0);
+            player.setTile(game.getBoard().getTile(0));
         }
 
     }
