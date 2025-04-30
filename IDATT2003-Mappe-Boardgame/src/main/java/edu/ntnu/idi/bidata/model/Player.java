@@ -46,6 +46,12 @@ public class Player {
     this.money = money;
   }
 
+  public void setTile(Tile tile) {
+    if (tile == null) {
+      throw new InvalidParameterException("Tile must not be null");
+    }
+    this.currentTile = tile;
+  }
 
   public String getName() {
     return name;
