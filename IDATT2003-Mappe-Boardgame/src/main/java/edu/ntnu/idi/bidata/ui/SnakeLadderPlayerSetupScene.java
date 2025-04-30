@@ -1,7 +1,6 @@
-// File: PlayerSetupScene.java
+// File: SnakeLadderPlayerSetupScene.java
 package edu.ntnu.idi.bidata.ui;
 
-import edu.ntnu.idi.bidata.app.GameVariant;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,10 +25,10 @@ import java.util.function.Consumer;
 /**
  * Egyptian-themed player setup screen with styled inputs, start button, and home button.
  */
-public class PlayerSetupScene {
+public class SnakeLadderPlayerSetupScene {
   private final Scene scene;
 
-  public PlayerSetupScene(Stage stage,
+  public SnakeLadderPlayerSetupScene(Stage stage,
       Consumer<List<String>> onStart,
       Runnable onHome) {
     // Load background image
