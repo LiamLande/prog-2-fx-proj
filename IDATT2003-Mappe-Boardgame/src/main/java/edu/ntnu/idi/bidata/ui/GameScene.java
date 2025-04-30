@@ -238,7 +238,7 @@ public class GameScene {
       Label name = new Label(p.getName());
       name.setFont(Font.font("Serif", FontWeight.BOLD, 16));
       name.setTextFill(Color.web("#5A3A22"));
-      Label pos = new Label(String.valueOf(p.getCurrent().getId()));
+      Label pos = new Label(String.valueOf(p.getCurrentTile().getId()));
       pos.setFont(Font.font("Serif", FontWeight.NORMAL, 24));
       pos.setTextFill(Color.web("#5A3A22"));
       playerPositionLabels.put(p, pos);
@@ -257,7 +257,7 @@ public class GameScene {
   }
 
   private void updatePlayerPositions() {
-    playerPositionLabels.forEach((p, lbl) -> lbl.setText(String.valueOf(p.getCurrent().getId())));
+    playerPositionLabels.forEach((p, lbl) -> lbl.setText(String.valueOf(p.getCurrentTile().getId())));
   }
 
   private void updateDiceLabel(String txt) {
