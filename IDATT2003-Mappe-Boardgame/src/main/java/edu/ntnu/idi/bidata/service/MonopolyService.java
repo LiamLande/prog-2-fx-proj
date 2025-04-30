@@ -76,6 +76,11 @@ public class MonopolyService implements GameService {
     }
 
     @Override
+    public int playTurn(BoardGame game, Player player) {
+        return 0;
+    }
+
+    @Override
     public boolean isFinished(BoardGame game) {
         // TODO: Define ending condition (e.g., when a player is bankrupt or after N rounds)
         if (game == null) {
