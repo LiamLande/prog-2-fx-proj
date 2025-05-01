@@ -1,8 +1,8 @@
-// File: SnakeLadderPlayerSetupScene.java
 package edu.ntnu.idi.bidata.ui;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -23,44 +23,40 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Egyptian-themed player setup screen with styled inputs, start button, and home button.
+ * Egypt-themed player setup; no longer sets Stage directly.
  */
-public class SnakeLadderPlayerSetupScene {
+public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene {
   private final Scene scene;
 
   public SnakeLadderPlayerSetupScene(Stage stage,
       Consumer<List<String>> onStart,
       Runnable onHome) {
-    // Load background image
     Image bgImg = loadImage("images/player_setup_bg.png");
     ImageView bgView = new ImageView(bgImg);
     bgView.setFitWidth(bgImg.getWidth());
     bgView.setFitHeight(bgImg.getHeight());
     bgView.setPreserveRatio(true);
 
-    // Title
     Label title = new Label("ENTER YOUR LEGENDS' NAMES");
     title.setFont(Font.font("Trajan Pro", FontWeight.BOLD, 36));
-    title.setTextFill(Color.web("#d4af37")); // gold
+    title.setTextFill(Color.web("#d4af37"));
     title.setEffect(new DropShadow(3, Color.BLACK));
 
-    // Input grid
     GridPane grid = new GridPane();
-    grid.setHgap(40);
-    grid.setVgap(30);
-    grid.setAlignment(Pos.CENTER);
+    grid.setHgap(40); grid.setVgap(30); grid.setAlignment(Pos.CENTER);
 
     List<TextField> fields = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
       Label lbl = new Label("Player " + (i+1));
       lbl.setFont(Font.font("Trajan Pro", FontWeight.SEMI_BOLD, 20));
-      lbl.setTextFill(Color.web("#f0e68c")); // khaki
+      lbl.setTextFill(Color.web("#f0e68c"));
 
       TextField tf = new TextField();
       tf.setPromptText("Name...");
       tf.setFont(Font.font(18));
       tf.setPrefWidth(280);
-      tf.setBackground(new Background(new BackgroundFill(Color.color(0,0,0,0.4), new CornerRadii(5), Insets.EMPTY)));
+      tf.setBackground(new Background(new BackgroundFill(
+          Color.color(0,0,0,0.4), new CornerRadii(5), Insets.EMPTY)));
       tf.setStyle("-fx-prompt-text-fill: gray; -fx-text-fill: cyan; -fx-border-color: cyan; -fx-border-radius:5; -fx-background-radius:5;");
       tf.setEffect(new DropShadow(10, Color.CYAN));
 
@@ -71,7 +67,6 @@ public class SnakeLadderPlayerSetupScene {
       fields.add(tf);
     }
 
-    // Start button
     Button startBtn = new Button("START ADVENTURE");
     startBtn.setFont(Font.font("Trajan Pro", FontWeight.BOLD, 24));
     startBtn.setTextFill(Color.WHITE);
@@ -81,7 +76,7 @@ public class SnakeLadderPlayerSetupScene {
     startBtn.setEffect(new DropShadow(5, Color.BLACK));
     startBtn.setOnAction(e -> {
       List<String> names = new ArrayList<>();
-      for (TextField tf: fields) {
+      for (TextField tf : fields) {
         String nm = tf.getText().trim();
         if (!nm.isEmpty()) names.add(nm);
       }
@@ -95,17 +90,14 @@ public class SnakeLadderPlayerSetupScene {
       }
     });
 
-    // Home button (icon)
     Image homeImg = loadImage("images/home_icon.png");
     ImageView homeView = new ImageView(homeImg);
-    homeView.setFitWidth(40);
-    homeView.setPreserveRatio(true);
+    homeView.setFitWidth(40); homeView.setPreserveRatio(true);
     Button homeBtn = new Button();
     homeBtn.setGraphic(homeView);
     homeBtn.setBackground(Background.EMPTY);
     homeBtn.setOnAction(e -> onHome.run());
 
-    // Layout
     VBox content = new VBox(30, title, grid, startBtn);
     content.setAlignment(Pos.CENTER);
 
@@ -114,17 +106,18 @@ public class SnakeLadderPlayerSetupScene {
     StackPane.setMargin(homeBtn, new Insets(20));
 
     scene = new Scene(root, bgImg.getWidth(), bgImg.getHeight());
-    stage.setScene(scene);
-    stage.setTitle("Player Setup");
+    UiStyles.apply(scene);
   }
+
+  public Parent getRoot() { return scene.getRoot(); }
+  public Scene getScene() { return scene; }
 
   private Image loadImage(String path) {
     InputStream is = getClass().getClassLoader().getResourceAsStream(path);
-    if (is == null) throw new RuntimeException("Resource not found: " + path);
+    if (is == null) throw new RuntimeException("Image not found: " + path);
     return new Image(is);
   }
 
-  public Scene getScene() {
-    return scene;
-  }
+  @Override public void onShow() { }
+  @Override public void onHide() { }
 }
