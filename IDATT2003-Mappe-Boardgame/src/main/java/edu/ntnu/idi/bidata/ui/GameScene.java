@@ -7,34 +7,26 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Main game view: board + side panel, responsive to window size and custom background.
+ * No longer sets the stage directly; managed by SceneManager.
  */
-public class GameScene {
+public class GameScene implements SceneManager.ControlledScene {
   private final GameController controller;
   private final BoardView boardView;
   private VBox playerStatusPane;
@@ -46,51 +38,42 @@ public class GameScene {
   private Button rollButton;
   private int lastRoll;
 
-  public GameScene(Stage stage, BoardGame game, Runnable onNewGame, Runnable onHome) {
+  public GameScene(Stage stage,
+      BoardGame game,
+      Runnable onNewGame,
+      Runnable onHome) {
+    // Initialize controller and first player
     controller = new GameController(game);
     currentPlayer = game.getPlayers().getFirst();
 
-    // 1) root layout with game background image
+    // Root layout with custom background
     BorderPane root = new BorderPane();
-    // Load and set background image
     Image bgImg = new Image(
         getClass().getClassLoader().getResourceAsStream("images/sl_game_background.jpg")
     );
-    BackgroundSize bgSize = new BackgroundSize(
-        1.0, 1.0,
-        true, true,
-        false, true
-    );
-    BackgroundImage bgImage = new BackgroundImage(
-        bgImg,
-        BackgroundRepeat.NO_REPEAT,
-        BackgroundRepeat.NO_REPEAT,
-        BackgroundPosition.CENTER,
-        bgSize
-    );
+    BackgroundSize bgSize = new BackgroundSize(1.0, 1.0, true, true, false, true);
+    BackgroundImage bgImage = new BackgroundImage(bgImg,
+        BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+        BackgroundPosition.CENTER, bgSize);
     root.setBackground(new Background(bgImage));
 
-    // 2) raw board view
+    // Board view and container
     BoardView bv = new BoardView(game);
     this.boardView = bv;
-
-    // 3) wrap board in responsive container
     StackPane boardContainer = createBoardContainer(bv);
 
-    // 4) side panel for controls and status
+    // Side panel for title, status, controls
     VBox sidePanel = createSidePanel(game.getPlayers(), onNewGame, onHome);
 
-    // assemble
+    // Assemble layout
     root.setCenter(boardContainer);
     root.setRight(sidePanel);
     root.setPadding(new Insets(20));
 
-    // 5) scene
+    // Create scene (but do not set on stage)
     scene = new Scene(root, 1100, 800);
-    stage.setScene(scene);
-    stage.setTitle("Ancient Journey");
 
-    // 6) listen to game events
+    // Listen to game events
     controller.addListener(new GameController.GameListener() {
       @Override
       public void onGameStart(List<Player> players) {
@@ -120,13 +103,13 @@ public class GameScene {
         updateDiceLabel("🏆");
         updatePlayerPositions();
         rollButton.setDisable(true);
-        // reset all
+        // Reset styles
         for (Player p : controller.getGame().getPlayers()) {
           HBox box = (HBox) playerStatusPane.getChildren()
               .get(controller.getGame().getPlayers().indexOf(p));
           box.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px; -fx-padding: 10px;");
         }
-        // highlight winner
+        // Highlight winner
         HBox winBox = (HBox) playerStatusPane.getChildren()
             .get(controller.getGame().getPlayers().indexOf(winner));
         winBox.setStyle("-fx-background-color: #FFD700; -fx-background-radius: 10px; -fx-padding: 10px;");
@@ -139,9 +122,19 @@ public class GameScene {
     });
   }
 
-  /**
-   * Wraps a raw BoardView in a scalable container with a gold border.
-   */
+  /** Returns the root Parent for SceneManager swapping. */
+  public Parent getRoot() { return scene.getRoot(); }
+
+  /** Returns the Scene instance for sizing and styling. */
+  public Scene getScene() { return scene; }
+
+  /** Starts the game by initializing model and firing first event. */
+  public void start() { controller.startGame(); }
+
+  @Override public void onShow() { }
+  @Override public void onHide() { }
+
+  /** Wraps the BoardView in a responsive StackPane with border. */
   private StackPane createBoardContainer(BoardView board) {
     Group boardGroup = new Group(board);
     Region border = new Region();
@@ -152,7 +145,7 @@ public class GameScene {
     container.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
     ChangeListener<Number> resizer = (obs, old, nw) -> {
-      double availW = container.getWidth()  - 30;
+      double availW = container.getWidth() - 30;
       double availH = container.getHeight() - 30;
       double scale = Math.min(availW, availH) / 600;
       boardGroup.setScaleX(scale);
@@ -160,24 +153,23 @@ public class GameScene {
     };
     container.widthProperty().addListener(resizer);
     container.heightProperty().addListener(resizer);
-
     return container;
   }
 
-  // --- rest of side-panel and helper methods unchanged from original ---
-
-  private VBox createSidePanel(List<Player> players, Runnable onNewGame, Runnable onHome) {
+  /** Builds the side panel with title, player statuses, dice and controls. */
+  private VBox createSidePanel(List<Player> players,
+      Runnable onNewGame,
+      Runnable onHome) {
     VBox sidePanel = new VBox(20);
     sidePanel.setAlignment(Pos.TOP_CENTER);
     sidePanel.setPadding(new Insets(0, 0, 0, 20));
     sidePanel.setPrefWidth(300);
 
-    // title box
+    // Title section
     VBox titleBox = new VBox(5);
     titleBox.setAlignment(Pos.CENTER);
     titleBox.setPadding(new Insets(20));
     titleBox.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
-
     Label titleLabel = new Label("Ancient Journey");
     titleLabel.setFont(Font.font("Serif", FontWeight.BOLD, 32));
     titleLabel.setTextFill(Color.web("#5A3A22"));
@@ -186,6 +178,7 @@ public class GameScene {
     subtitleLabel.setTextFill(Color.web("#5A3A22"));
     titleBox.getChildren().addAll(titleLabel, subtitleLabel);
 
+    // Player status
     playerStatusPane = new VBox(10);
     playerStatusPane.setAlignment(Pos.CENTER);
     createPlayerStatusBoxes(players);
@@ -194,6 +187,7 @@ public class GameScene {
     playerSection.setPadding(new Insets(20));
     playerSection.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
 
+    // Dice controls
     diceLabel = new Label("⚄");
     diceLabel.setFont(Font.font("Serif", FontWeight.BOLD, 48));
     diceLabel.setTextFill(Color.web("#5A3A22"));
@@ -206,6 +200,7 @@ public class GameScene {
     diceBox.setPadding(new Insets(20));
     diceBox.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
 
+    // New Game / Home buttons
     Button newGameBtn = new Button("New Game");
     styleButton(newGameBtn);
     newGameBtn.setOnAction(e -> onNewGame.run());
@@ -221,6 +216,7 @@ public class GameScene {
     return sidePanel;
   }
 
+  /** Initializes player status boxes with tokens and position labels. */
   private void createPlayerStatusBoxes(List<Player> players) {
     playerStatusPane.getChildren().clear();
     playerPositionLabels.clear();
@@ -249,6 +245,7 @@ public class GameScene {
     }
   }
 
+  /** Applies consistent styling and hover effects to buttons. */
   private void styleButton(Button btn) {
     btn.setFont(Font.font("Serif", FontWeight.BOLD, 16));
     btn.setStyle("-fx-background-color: #E5B85C; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand;");
@@ -256,14 +253,17 @@ public class GameScene {
     btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #E5B85C; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand;"));
   }
 
+  /** Refreshes all player position labels from the model. */
   private void updatePlayerPositions() {
     playerPositionLabels.forEach((p, lbl) -> lbl.setText(String.valueOf(p.getCurrent().getId())));
   }
 
+  /** Updates the dice face label text. */
   private void updateDiceLabel(String txt) {
     diceLabel.setText(txt);
   }
 
+  /** Highlights the current player and resets others. */
   private void highlightCurrentPlayer() {
     List<Player> players = controller.getGame().getPlayers();
     for (int i = 0; i < players.size(); i++) {
@@ -272,15 +272,6 @@ public class GameScene {
     }
     int idx = players.indexOf(currentPlayer);
     HBox curr = (HBox) playerStatusPane.getChildren().get(idx);
-    curr.setStyle("-fx-background-color: #FFE7B3; -fx-background-radius: 10px; " +
-        "-fx-border-color: #E5B85C; -fx-border-width: 2px; -fx-border-radius: 10px; -fx-padding: 10px;");
-  }
-
-  public void start() {
-    controller.startGame();
-  }
-
-  public Scene getScene() {
-    return scene;
+    curr.setStyle("-fx-background-color: #FFE7B3; -fx-background-radius: 10px; -fx-border-color: #E5B85C; -fx-border-width: 2px; -fx-border-radius: 10px; -fx-padding: 10px;");
   }
 }
