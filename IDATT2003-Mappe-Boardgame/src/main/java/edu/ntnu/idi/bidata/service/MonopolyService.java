@@ -44,13 +44,14 @@ public class MonopolyService implements GameService {
             player.setMoney(1500);
             player.setTile(game.getBoard().getTile(0));
         }
+        //Remove mapping of player to properties
+        playerProperties.clear();
 
         this.game = game;
         if (game == null) {
             throw new InvalidParameterException("Game cannot be null");
         }
-        // TODO: Place players on GO, give $1500, clear properties, etc.
-        throw new UnsupportedOperationException("MonopolyService.setup() not implemented");
+//        throw new UnsupportedOperationException("MonopolyService.setup() not implemented");
     }
 
     @Override
@@ -63,7 +64,7 @@ public class MonopolyService implements GameService {
             int roll = game.getDice().roll();
             rolls.add(roll);
             player.move(roll);
-
+            //PRINT ALL MONEY
             // TODO: Perform actions based on the new position
             // Example: Check if the player lands on a property, chance, community chest, etc.
             // PropertyAction.perform(player);  // Placeholder for actual action handling
@@ -98,6 +99,7 @@ public class MonopolyService implements GameService {
 
         // Move the player (this triggers land() which executes tile actions)
         player.move(roll);
+        System.out.println(player.getName() + " has " + player.getMoney() + " dollars.");
 
         return roll;
     }
