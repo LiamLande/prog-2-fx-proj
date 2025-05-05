@@ -1,5 +1,6 @@
 package edu.ntnu.idi.bidata.ui;
 
+import java.awt.Taskbar;
 import java.util.Objects;
 import javafx.application.Application;
 import javafx.scene.image.Image;
@@ -24,9 +25,16 @@ public class MainApp extends Application {
   public void start(Stage primaryStage) {
     this.primaryStage = primaryStage;
 
-    Image image = new Image(
-        Objects.requireNonNull(getClass().getResourceAsStream("/images/game-icon.png")));
-    primaryStage.getIcons().add(image);
+    if (Taskbar.isTaskbarSupported()) {
+      try {
+        java.awt.Image dockIcon = javax.imageio.ImageIO.read(
+            Objects.requireNonNull(
+                getClass().getClassLoader().getResourceAsStream("images/game-icon.png")));
+        Taskbar.getTaskbar().setIconImage(dockIcon);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
 
     // Initialize SceneManager
     SceneManager mgr = SceneManager.getInstance();
