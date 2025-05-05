@@ -65,7 +65,7 @@ public class Player {
     if (current == null) {
       throw new InvalidParameterException("Current tile must not be null");
     }
-    this.current = current;
+    this.currentTile = current;
   }
 
   /**

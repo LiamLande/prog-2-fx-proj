@@ -2,6 +2,8 @@ package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.TileAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 
 public class ChanceAction implements TileAction {
     private final String description;
@@ -10,9 +12,13 @@ public class ChanceAction implements TileAction {
         this.description = description;
     }
 
+    // In ChanceAction.java
     @Override
     public void perform(Player player) {
-        // TODO: Implement drawing a Chance card
-        // This would likely trigger a UI event or callback
+        System.out.println(description);
+        MonopolyService service = ServiceLocator.getMonopolyService();
+        if (service != null) {
+            service.drawChanceCard(player);
+        }
     }
 }
