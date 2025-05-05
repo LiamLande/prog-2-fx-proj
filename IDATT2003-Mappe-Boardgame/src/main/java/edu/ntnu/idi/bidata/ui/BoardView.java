@@ -290,7 +290,7 @@ public class BoardView extends Pane {
   public void refresh() {
     // Update token positions based on player locations
     for (Player player : game.getPlayers()) {
-      int tileId = player.getCurrent().getId();
+      int tileId = player.getCurrentTile().getId();
       Point2D position = tilePositions.get(tileId);
 
       if (position != null && playerTokens.containsKey(player)) {

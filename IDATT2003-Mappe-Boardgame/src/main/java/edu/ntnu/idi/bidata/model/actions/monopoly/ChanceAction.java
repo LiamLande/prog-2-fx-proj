@@ -2,15 +2,23 @@ package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.TileAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 
 public class ChanceAction implements TileAction {
+    private final String description;
 
+    public ChanceAction(String description) {
+        this.description = description;
+    }
 
-
+    // In ChanceAction.java
     @Override
     public void perform(Player player) {
-        //Chance action in monopoly, draw a chance card
-        //This is a placeholder implementation
-
+        System.out.println(description);
+        MonopolyService service = ServiceLocator.getMonopolyService();
+        if (service != null) {
+            service.drawChanceCard(player);
+        }
     }
 }

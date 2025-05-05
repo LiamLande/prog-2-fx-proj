@@ -7,7 +7,7 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
  */
 public class Player {
   private final String name;
-  private Tile current;
+  private Tile currentTile;
   private Integer money;
 
   /**
@@ -23,7 +23,7 @@ public class Player {
       throw new InvalidParameterException("Starting tile must not be null");
     }
     this.name = name;
-    this.current = start;
+    this.currentTile = start;
   }
 
   /**
@@ -42,24 +42,30 @@ public class Player {
       throw new InvalidParameterException("Starting Money must not be null");
     }
     this.name = name;
-    this.current = start;
+    this.currentTile = start;
     this.money = money;
   }
 
+  public void setTile(Tile tile) {
+    if (tile == null) {
+      throw new InvalidParameterException("Tile must not be null");
+    }
+    this.currentTile = tile;
+  }
 
   public String getName() {
     return name;
   }
 
-  public Tile getCurrent() {
-    return current;
+  public Tile getCurrentTile() {
+    return currentTile;
   }
 
   public void setCurrent(Tile current) {
     if (current == null) {
       throw new InvalidParameterException("Current tile must not be null");
     }
-    this.current = current;
+    this.currentTile = current;
   }
 
   /**
@@ -68,16 +74,59 @@ public class Player {
   public void move(int steps) {
     if (steps > 0) {
       for (int i = 0; i < steps; i++) {
-        if (current.getNext() == null) break;
-        current = current.getNext();
+        if (currentTile.getNext() == null) break;
+        currentTile = currentTile.getNext();
       }
     } else if (steps < 0) {
       for (int i = 0; i < -steps; i++) {
-        if (current.getPrevious() == null) break;
-        current = current.getPrevious();
+        if (currentTile.getPrevious() == null) break;
+        currentTile = currentTile.getPrevious();
       }
     }
     // trigger any special action
-    current.land(this);
+    currentTile.land(this);
+  }
+
+
+  //MONEY MANAGEMENT
+
+
+  public void setMoney(Integer money) {
+    if (money == null) {
+      throw new InvalidParameterException("Money must not be null");
+    }
+    if (money < 0) {
+      throw new InvalidParameterException("Money must not be negative");
+    }
+    this.money = money;
+  }
+
+  public void increaseMoney(int amount) {
+    if (money == null) {
+      money = 0;
+    }
+    money += amount;
+  }
+
+  public void decreaseMoney(int amount) {
+    if (money == null || money < amount) {
+      throw new InvalidParameterException("Not enough money");
+    }
+    money -= amount;
+  }
+
+  public int getMoney() {
+    return money != null ? money : 0;
+  }
+
+  // For utility properties
+  public int getLastDiceRoll() {
+    // This should be implemented to track the last dice roll
+    return 0;  // Placeholder
+  }
+
+  public int getUtilitiesOwnedCount() {
+    // Count utilities owned by this player
+    return 0;  // Placeholder
   }
 }
