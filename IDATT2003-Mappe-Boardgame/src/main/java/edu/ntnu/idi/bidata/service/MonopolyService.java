@@ -1,12 +1,13 @@
 package edu.ntnu.idi.bidata.service;
 
-import edu.ntnu.idi.bidata.exception.InvalidParameterException
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Card;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.RailroadAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.UtilityAction;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
