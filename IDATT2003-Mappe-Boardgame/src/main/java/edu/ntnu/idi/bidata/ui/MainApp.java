@@ -1,6 +1,8 @@
 package edu.ntnu.idi.bidata.ui;
 
+import java.util.Objects;
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import edu.ntnu.idi.bidata.app.GameVariant;
 import edu.ntnu.idi.bidata.factory.GameFactory;
@@ -21,6 +23,10 @@ public class MainApp extends Application {
   @Override
   public void start(Stage primaryStage) {
     this.primaryStage = primaryStage;
+
+    Image image = new Image(
+        Objects.requireNonNull(getClass().getResourceAsStream("/images/game-icon.png")));
+    primaryStage.getIcons().add(image);
 
     // Initialize SceneManager
     SceneManager mgr = SceneManager.getInstance();
