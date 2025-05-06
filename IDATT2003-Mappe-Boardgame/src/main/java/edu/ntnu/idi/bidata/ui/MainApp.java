@@ -2,10 +2,10 @@ package edu.ntnu.idi.bidata.ui;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import javafx.scene.Scene;
 import edu.ntnu.idi.bidata.app.GameVariant;
 import edu.ntnu.idi.bidata.factory.GameFactory;
 import edu.ntnu.idi.bidata.model.BoardGame;
-import javafx.scene.Scene;
 
 import java.util.List;
 
@@ -14,99 +14,113 @@ import java.util.List;
  * Handles scene transitions and game flow via SceneManager.
  */
 public class MainApp extends Application {
-  private Stage primaryStage;
-  private GameVariant selectedVariant;
-  private List<String> lastPlayerNames;
+    private Stage primaryStage;
+    private GameVariant selectedVariant;
+    private List<String> lastPlayerNames;
 
-  @Override
-  public void start(Stage primaryStage) {
-    this.primaryStage = primaryStage;
+    @Override
+    public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
 
-    // Initialize SceneManager
-    SceneManager mgr = SceneManager.getInstance();
-    mgr.initialize(primaryStage);
+        // Initialize SceneManager
+        SceneManager mgr = SceneManager.getInstance();
+        mgr.initialize(primaryStage);
 
-    // Define New Game action to clear and rebuild the game scene
-    Runnable newGameAction = () -> {
-      mgr.clear("game");        // Remove old cached GameScene
-      mgr.show("game");         // Rebuild and show a fresh GameScene
-    };
+        // Define New Game action to clear and rebuild the appropriate game scene
+        Runnable newGameAction = () -> {
+            String key = (selectedVariant == GameVariant.SNAKES_LADDERS) ? "slGame" : "monoGame";
+            mgr.clear(key);
+            mgr.show(key);
+        };
 
-    // Define Home action to reset game state and return to selection screen
-    Runnable homeAction = () -> {
-      // Clear game scene cache
-      mgr.clear("game");
-      // Reset selected variant and player list
-      selectedVariant = null;
-      lastPlayerNames = null;
-      // Show selection scene
-      mgr.show("selection");
-    };
+        // Define Home action to reset state and return to selection screen
+        Runnable homeAction = () -> {
+            // Clear both possible game scenes
+            mgr.clear("slGame");
+            mgr.clear("monoGame");
+            selectedVariant = null;
+            lastPlayerNames = null;
+            mgr.show("selection");
+        };
 
-    // 1) Selection scene registration
-    mgr.register("selection", () ->
-        new SelectionScene(
-            primaryStage,
-            variant -> {
-              this.selectedVariant = variant;
-              mgr.show(getSetupKey(variant));
-            }
-        ).getScene()
-    );
+        // 1) Selection scene registration
+        mgr.register("selection", () ->
+                new SelectionScene(
+                        primaryStage,
+                        variant -> {
+                            this.selectedVariant = variant;
+                            mgr.show(getSetupKey(variant));
+                        }
+                ).getScene()
+        );
 
-    // 2) Snake & Ladder setup scene
-    mgr.register("slSetup", () ->
-        new SnakeLadderPlayerSetupScene(
-            primaryStage,
-            names -> {
-              this.lastPlayerNames = names;
-              mgr.show("game");
-            },
-            homeAction
-        ).getScene()
-    );
+        // 2) Snake & Ladder setup scene
+        mgr.register("slSetup", () ->
+                new SnakeLadderPlayerSetupScene(
+                        primaryStage,
+                        names -> {
+                            this.lastPlayerNames = names;
+                            mgr.show("slGame");
+                        },
+                        homeAction
+                ).getScene()
+        );
 
-    // 3) Monopoly setup scene
-    mgr.register("monoSetup", () ->
-        new MonopolyPlayerSetupScene(
-            primaryStage,
-            names -> {
-              this.lastPlayerNames = names;
-              mgr.show("game");
-            },
-            homeAction
-        ).getScene()
-    );
+        // 3) Monopoly setup scene
+        mgr.register("monoSetup", () ->
+                new MonopolyPlayerSetupScene(
+                        primaryStage,
+                        names -> {
+                            this.lastPlayerNames = names;
+                            mgr.show("monoGame");
+                        },
+                        homeAction
+                ).getScene()
+        );
 
-    // 4) Game scene registration with newGameAction and homeAction
-    mgr.register("game", () -> {
-      BoardGame game = GameFactory.createGame(lastPlayerNames, selectedVariant);
-      GameScene gs = new GameScene(
-          primaryStage,
-          game,
-          newGameAction,          // Restart current game
-          homeAction              // Reset to home and clear state
-      );
-      gs.start();
-      return gs.getScene();
-    });
+        // 4a) Snakes & Ladders game scene
+        mgr.register("slGame", () -> {
+            BoardGame game = GameFactory.createGame(lastPlayerNames, GameVariant.SNAKES_LADDERS);
+            GameScene gs = new GameScene(
+                    primaryStage,
+                    game,
+                    newGameAction,
+                    homeAction
+            );
+            gs.start();
+            return gs.getScene();
+        });
 
-    // Show initial scene
-    mgr.show("selection");
-    primaryStage.setTitle("Board Game Suite");
-    primaryStage.show();
-  }
+        // 4b) Monopoly game scene
+        mgr.register("monoGame", () -> {
+            BoardGame game = GameFactory.createGame(lastPlayerNames, GameVariant.MINI_MONOPOLY);
+            MonopolyGameScene mgs = new MonopolyGameScene(
+                    primaryStage,
+                    game,
+                    newGameAction,
+                    homeAction
+            );
+            mgs.start();
+            return mgs.getScene();
+        });
 
-  /** Maps variant identifiers to their respective setup scene keys. */
-  private String getSetupKey(GameVariant variant) {
-    switch (variant) {
-      case SNAKES_LADDERS: return "slSetup";
-      case MINI_MONOPOLY:  return "monoSetup";
-      default: throw new IllegalArgumentException("Unknown variant: " + variant);
+        // Kick off initial scene
+        mgr.show("selection");
+        primaryStage.setTitle("Board Game Suite");
+        primaryStage.show();
     }
-  }
 
-  public static void main(String[] args) {
-    launch(args);
-  }
+    /** Maps variant identifiers to their respective setup scene keys. */
+    private String getSetupKey(GameVariant variant) {
+        switch (variant) {
+            case SNAKES_LADDERS: return "slSetup";
+            case MINI_MONOPOLY:  return "monoSetup";
+            default:
+                throw new IllegalArgumentException("Unknown variant: " + variant);
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 }
