@@ -61,7 +61,7 @@ public class Player {
     return currentTile;
   }
 
-  public void setCurrent(Tile current) {
+  public void setCurrentTile(Tile current) {
     if (current == null) {
       throw new InvalidParameterException("Current tile must not be null");
     }

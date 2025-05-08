@@ -22,4 +22,10 @@ public interface GameService {
   /** The first player whose current tile is the “finish”; or null. */
   Player getWinner(BoardGame game);
 
+  /**
+   * Gets the player whose turn it is currently.
+   * @param game The BoardGame instance.
+   * @return The current Player.
+   */
+  Player getCurrentPlayer(BoardGame game); // <<< ADD THIS LINE
 }

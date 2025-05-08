@@ -16,6 +16,7 @@ public class BoardGame {
   private final List<Player> players = new ArrayList<>();
   private GameService service;
   private final List<BoardGameObserver> observers = new ArrayList<>();
+  private boolean gameInitialized = false;
 
   // --- Observer registration ---
   public void addObserver(BoardGameObserver observer) {
@@ -45,15 +46,10 @@ public class BoardGame {
       throw new IllegalStateException("At least one player must be added before init()");
     }
 
-    // 2) pick a service if none injected
-    if (service == null) {
-      service = new SnakesLaddersService();
-    }
-
-    // 3) let the service do its setup (placing players on start, etc.)
+    // 2) let the service do its setup
     service.setup(this);
-
-    // 4) notify observers
+    this.gameInitialized = true; // Mark as initialized AFTER service.setup() completes
+    // 3) notify observers
     notifyGameStart();
   }
 
@@ -96,6 +92,14 @@ public class BoardGame {
     return service.isFinished(this);
   }
 
+  /**
+   * Checks if the game has been initialized.
+   * @return true if init() has been successfully called and completed, false otherwise.
+   */
+  public boolean isGameStarted() {
+    return this.gameInitialized;
+  }
+
   public Player getWinner() {
     requireInitialized();
     return service.getWinner(this);
@@ -136,6 +140,22 @@ public class BoardGame {
   public List<Player> getPlayers() {
     // defensive copy
     return new ArrayList<>(players);
+  }
+
+  /**
+   * Gets the current player whose turn it is.
+   * Delegated to the GameService.
+   * @return The current Player, or null if not applicable or game not started.
+   */
+  public Player getCurrentPlayer() {
+    if (!isGameStarted()) {
+      return null;
+    }
+    // requireInitialized(); // or this, if you prefer to throw an exception
+    if (service == null) { // Should be caught by requireInitialized or isGameStarted
+      throw new IllegalStateException("GameService not available, game might not be fully initialized.");
+    }
+    return service.getCurrentPlayer(this);
   }
 
   // --- Internals & notification helpers ---
