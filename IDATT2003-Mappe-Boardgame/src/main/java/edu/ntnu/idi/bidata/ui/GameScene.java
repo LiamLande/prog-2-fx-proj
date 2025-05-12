@@ -3,6 +3,7 @@ package edu.ntnu.idi.bidata.ui;
 import edu.ntnu.idi.bidata.controller.GameController; // Assuming GameController is in this package
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
+import java.util.Objects;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,40 +30,51 @@ import java.util.Map;
  */
 public class GameScene implements SceneManager.ControlledScene {
   private final GameController controller;
-  private final BoardGame gameModel; // Store game model for UI updates reading player data
-  private final BoardView boardView;
+  private final BoardGame gameModel;
+  private BoardView boardView; // Made non-final to allow re-creation or theme passing
   private VBox playerStatusPane;
   private final Map<Player, Label> playerPositionLabels = new HashMap<>();
-  private final Map<Player, Circle> playerTokenUIs = new HashMap<>(); // Renamed to avoid confusion
+  private final Map<Player, Circle> playerTokenUIs = new HashMap<>();
   private final Scene scene;
   private Label diceLabel;
   private Button rollButton;
 
-  // Runnables for external navigation, handled by a higher-level coordinator
   private final Runnable onNewGameCallback;
   private final Runnable onHomeCallback;
+  private final SnakeLadderPlayerSetupScene.Theme theme; // Store the theme
 
-  public GameScene(Stage stage, // Kept for SceneManager compatibility
-                   GameController gameController,
-                   BoardGame gameModel,
-                   Runnable onNewGame,
-                   Runnable onHome) {
+  // Path constants for background images
+  private static final String EGYPT_GAME_BG = "images/sl_game_background.jpg";
+  private static final String JUNGLE_GAME_BG = "images/jungle_game_background.png"; // Ensure this exists
+
+  public GameScene(Stage stage,
+      GameController gameController,
+      BoardGame gameModel,
+      Runnable onNewGame,
+      Runnable onHome,
+      SnakeLadderPlayerSetupScene.Theme gameTheme) { // Added theme parameter
     this.controller = gameController;
-    this.gameModel = gameModel; // Keep a reference to the model for reading display data
+    this.gameModel = gameModel;
     this.onNewGameCallback = onNewGame;
     this.onHomeCallback = onHome;
+    this.theme = gameTheme; // Store the passed theme
 
     BorderPane root = new BorderPane();
+
+    // Load background image based on theme
+    String bgPath = (this.theme == SnakeLadderPlayerSetupScene.Theme.JUNGLE) ? JUNGLE_GAME_BG : EGYPT_GAME_BG;
     Image bgImg = new Image(
-            getClass().getClassLoader().getResourceAsStream("images/sl_game_background.jpg")
+        Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(bgPath),
+            "Could not load background image: " + bgPath)
     );
     BackgroundSize bgSize = new BackgroundSize(1.0, 1.0, true, true, false, true);
     BackgroundImage bgImage = new BackgroundImage(bgImg,
-            BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
-            BackgroundPosition.CENTER, bgSize);
+        BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+        BackgroundPosition.CENTER, bgSize);
     root.setBackground(new Background(bgImage));
 
-    this.boardView = new BoardView(this.gameModel);
+    // Pass theme to BoardView constructor
+    this.boardView = new BoardView(this.gameModel, this.theme);
     StackPane boardContainer = createBoardContainer(this.boardView);
     VBox sidePanel = createSidePanel(this.gameModel.getPlayers());
 
@@ -71,9 +83,6 @@ public class GameScene implements SceneManager.ControlledScene {
     root.setPadding(new Insets(20));
 
     scene = new Scene(root, 1100, 800);
-
-    // The controller will call public methods on this GameScene to update UI.
-    // No GameListener implementation here anymore.
   }
 
   /**

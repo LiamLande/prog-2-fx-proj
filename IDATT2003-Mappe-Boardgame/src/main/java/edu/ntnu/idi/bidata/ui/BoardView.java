@@ -34,34 +34,37 @@ import java.util.Map;
  * when player positions or other dynamic elements need updating.
  */
 public class BoardView extends Pane {
-  private static final double SIZE = 600; // Assuming this was defined elsewhere
+  private static final double SIZE = 600;
 
   private final BoardGame game;
   private final Map<Integer, Point2D> tilePositions = new HashMap<>();
   private final Map<Player, Circle> playerTokens = new HashMap<>();
+  private final SnakeLadderPlayerSetupScene.Theme theme; // Store the theme
 
-  private final Image lightTileImg;
-  private final Image darkTileImg;
+  // Tile image paths
+  private static final String EGYPT_TILE_LIGHT = "images/sl-tile-light.png";
+  private static final String EGYPT_TILE_DARK = "images/sl-tile-dark.png";
+  private static final String JUNGLE_TILE_LIGHT = "images/jungle-tile-light.png"; // Ensure this exists
+  private static final String JUNGLE_TILE_DARK = "images/jungle-tile-dark.png";   // Ensure this exists
 
-  public BoardView(BoardGame game) {
+  private Image lightTileImg; // Now initialized based on theme
+  private Image darkTileImg;  // Now initialized based on theme
+
+  public BoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) { // Added theme parameter
     this.game = game;
+    this.theme = boardTheme; // Store the theme
     setPrefSize(SIZE, SIZE);
 
-    lightTileImg = new Image(Objects.requireNonNull(
-            getClass().getClassLoader().getResourceAsStream("images/sl-tile-light.png"),
-            "Could not find images/sl-tile-light.png in classloader"));
-
-    darkTileImg  = new Image(Objects.requireNonNull(
-            getClass().getClassLoader().getResourceAsStream("images/sl-tile-dark.png"),
-            "Could not find images/sl-tile-dark.png in classloader"));
+    loadThemeSpecificTileImages(); // Load tile images based on theme
 
     initializeBoardVisuals();
     drawSnakesAndLadders();
     initializePlayerTokenVisuals();
-    refresh(); // Initial draw of dynamic elements
+    refresh();
   }
 
   private void initializeBoardVisuals() {
+    // ... (rest of the method is the same, it will use the theme-loaded lightTileImg and darkTileImg)
     int tileCount = game.getBoard().getTiles().size();
     int boardSize = (int) Math.sqrt(tileCount);
     double cellSize = SIZE / boardSize;
@@ -100,12 +103,31 @@ public class BoardView extends Pane {
 
   private Rectangle createTileBackground(double x, double y, double size, boolean isLight) {
     Rectangle bg = new Rectangle(x - size/2, y - size/2, size, size);
-    Image img = isLight ? lightTileImg : darkTileImg;
+    Image img = isLight ? lightTileImg : darkTileImg; // Uses theme-loaded images
     ImagePattern pat = new ImagePattern(img, 0, 0, size, size, false);
     bg.setFill(pat);
     bg.setStroke(Color.DARKGRAY);
     bg.setStrokeWidth(1);
     return bg;
+  }
+
+  private void loadThemeSpecificTileImages() {
+    String lightPath, darkPath;
+    if (this.theme == SnakeLadderPlayerSetupScene.Theme.JUNGLE) {
+      lightPath = JUNGLE_TILE_LIGHT;
+      darkPath = JUNGLE_TILE_DARK;
+    } else { // Default to EGYPT
+      lightPath = EGYPT_TILE_LIGHT;
+      darkPath = EGYPT_TILE_DARK;
+    }
+
+    lightTileImg = new Image(Objects.requireNonNull(
+        getClass().getClassLoader().getResourceAsStream(lightPath),
+        "Could not find image: " + lightPath));
+
+    darkTileImg  = new Image(Objects.requireNonNull(
+        getClass().getClassLoader().getResourceAsStream(darkPath),
+        "Could not find image: " + darkPath));
   }
 
   private Text createTileNumber(int id, double x, double y) {
