@@ -24,10 +24,8 @@ import java.util.List;
  */
 public class GameController implements BoardGameObserver {
     private final BoardGame gameModel;
-    private SceneManager.ControlledScene activeView; // The current active game scene (GameScene or MonopolyGameScene)
+    private SceneManager.ControlledScene activeView;
     private Player currentPlayer;
-
-    // Services - could be injected or fetched via ServiceLocator
     private MonopolyService monopolyService;
     // private SnakesLaddersService snakesLaddersService; // If needed for other complex S&L logic
 

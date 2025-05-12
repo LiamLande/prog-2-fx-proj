@@ -4,23 +4,22 @@ import edu.ntnu.idi.bidata.app.GameVariant;
 import edu.ntnu.idi.bidata.file.BoardJsonReaderWriter;
 import edu.ntnu.idi.bidata.model.Board;
 import edu.ntnu.idi.bidata.exception.JsonParseException;
+import edu.ntnu.idi.bidata.ui.SnakeLadderPlayerSetupScene; // Import Theme enum
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Factory for creating Board instances, optionally from JSON configurations.
- */
 public final class BoardFactory {
-  private BoardFactory() { /* non-instantiable */ }
+  private BoardFactory() { }
 
   /**
    * Loads a Board from a JSON resource on the classpath.
-   * @param resourcePath path to .json file (e.g. "/data/boards/snakes_and_ladders.json")
+   * @param resourcePath path to .json file
+   * @param variant the game variant
    * @return deserialized Board
    */
-  public static Board createFromJson(String resourcePath, GameVariant variant) {
+  public static Board createFromJson(String resourcePath, GameVariant variant, SnakeLadderPlayerSetupScene.Theme theme) {
     try (Reader reader = new InputStreamReader(
         BoardFactory.class.getResourceAsStream(resourcePath),
         StandardCharsets.UTF_8)) {
@@ -29,5 +28,4 @@ public final class BoardFactory {
       throw new JsonParseException("Failed to load board from JSON: " + resourcePath, e);
     }
   }
-
 }
