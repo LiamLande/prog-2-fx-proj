@@ -2,6 +2,8 @@ package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.TileAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 
 public class CommunityChestAction implements TileAction {
     private final String description;
@@ -12,7 +14,10 @@ public class CommunityChestAction implements TileAction {
 
     @Override
     public void perform(Player player) {
-        // TODO: Implement drawing a Community Chest card
-        // This would likely trigger a UI event or callback
+        System.out.println(description);
+        MonopolyService service = ServiceLocator.getMonopolyService();
+        if (service != null) {
+            service.drawCommunityChestCard(player);
+        }
     }
 }

@@ -27,7 +27,7 @@ public class Dice {
   /**
    * Rolls all dice and returns the sum of their face values.
    */
-  public int roll() {
+  public int rollDie() {
     return dice.stream()
         .mapToInt(Die::roll)
         .sum();

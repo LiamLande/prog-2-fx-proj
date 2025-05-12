@@ -30,6 +30,8 @@ import java.util.Map;
 /**
  * Renders any BoardGame loaded from JSON as a square grid of tiles
  * in a serpentine pattern, including snakes & ladders and player tokens.
+ * The refresh() method should be called by an external controller or parent view
+ * when player positions or other dynamic elements need updating.
  */
 public class BoardView extends Pane {
   private static final double SIZE = 600; // Assuming this was defined elsewhere
@@ -46,30 +48,26 @@ public class BoardView extends Pane {
     setPrefSize(SIZE, SIZE);
 
     lightTileImg = new Image(Objects.requireNonNull(
-        getClass().getClassLoader().getResourceAsStream("images/sl-tile-light.png"),
-        "Could not find images/sl-tile-light.png in classloader"));
+            getClass().getClassLoader().getResourceAsStream("images/sl-tile-light.png"),
+            "Could not find images/sl-tile-light.png in classloader"));
 
     darkTileImg  = new Image(Objects.requireNonNull(
-        getClass().getClassLoader().getResourceAsStream("images/sl-tile-dark.png"),
-        "Could not find images/sl-tile-dark.png in classloader"));
+            getClass().getClassLoader().getResourceAsStream("images/sl-tile-dark.png"),
+            "Could not find images/sl-tile-dark.png in classloader"));
 
-
-
-
-    initializeBoard();
+    initializeBoardVisuals();
     drawSnakesAndLadders();
-    initializePlayerTokens();
-    refresh();
+    initializePlayerTokenVisuals();
+    refresh(); // Initial draw of dynamic elements
   }
 
-  private void initializeBoard() {
+  private void initializeBoardVisuals() {
     int tileCount = game.getBoard().getTiles().size();
     int boardSize = (int) Math.sqrt(tileCount);
     double cellSize = SIZE / boardSize;
 
     for (Tile tile : game.getBoard().getTiles().values()) {
       int id = tile.getId();
-      // compute row/col exactly as in calculateTilePosition
       int row = id / boardSize;
       int offset = id % boardSize;
       int col = (row % 2 == 0 ? offset : (boardSize - 1 - offset));
@@ -77,7 +75,6 @@ public class BoardView extends Pane {
       Point2D pos = calculateTilePosition(id, boardSize, cellSize);
       tilePositions.put(id, pos);
 
-      // use (row + col)%2 for checker pattern
       boolean isLightTile = (row + col) % 2 == 0;
       Rectangle bg = createTileBackground(pos.getX(), pos.getY(), cellSize, isLightTile);
       Text num = createTileNumber(id, pos.getX(), pos.getY());
@@ -90,9 +87,7 @@ public class BoardView extends Pane {
   private Point2D calculateTilePosition(int id, int boardSize, double cellSize) {
     int row = id / boardSize;
     int offset = id % boardSize;
-    // Serpentine pattern
     int col = (row % 2 == 0) ? offset : (boardSize - 1 - offset);
-    // Flip Y so id=0 is bottom-left
     int uiRow = boardSize - 1 - row;
 
     double x = col * cellSize;
@@ -106,13 +101,7 @@ public class BoardView extends Pane {
   private Rectangle createTileBackground(double x, double y, double size, boolean isLight) {
     Rectangle bg = new Rectangle(x - size/2, y - size/2, size, size);
     Image img = isLight ? lightTileImg : darkTileImg;
-    // create an ImagePattern that exactly covers one cell
-    ImagePattern pat = new ImagePattern(img,
-        0, 0,
-        size, size,
-        false
-
-    );
+    ImagePattern pat = new ImagePattern(img, 0, 0, size, size, false);
     bg.setFill(pat);
     bg.setStroke(Color.DARKGRAY);
     bg.setStrokeWidth(1);
@@ -123,77 +112,64 @@ public class BoardView extends Pane {
     Text num = new Text(String.valueOf(id));
     num.setFont(Font.font(14));
     num.setFill(Color.DARKSLATEGRAY);
-    num.setX(x - 12);  // Adjust for better centering
-    num.setY(y + 5);   // Adjust for better centering
+    num.setX(x - 12);
+    num.setY(y + 5);
     return num;
   }
 
   private void drawSnakesAndLadders() {
     game.getBoard().getTiles().values().stream()
-        .filter(tile -> tile.getAction() != null)
-        .forEach(tile -> {
-          int fromTileId = tile.getId();
-
-          if (tile.getAction() instanceof LadderAction action) {
-            int toTileId = fromTileId + action.getSteps();
-            drawLadder(fromTileId, toTileId);
-          } else if (tile.getAction() instanceof SnakeAction action) {
-            int toTileId = fromTileId - action.getSteps();
-            drawSnake(fromTileId, toTileId);
-          }
-        });
+            .filter(tile -> tile.getAction() != null)
+            .forEach(tile -> {
+              int fromTileId = tile.getId();
+              if (tile.getAction() instanceof LadderAction action) {
+                int toTileId = fromTileId + action.getSteps();
+                drawLadder(fromTileId, toTileId);
+              } else if (tile.getAction() instanceof SnakeAction action) {
+                int toTileId = fromTileId - action.getSteps();
+                drawSnake(fromTileId, toTileId);
+              }
+            });
   }
 
   private void drawLadder(int fromTileId, int toTileId) {
     if (!tilePositions.containsKey(fromTileId) || !tilePositions.containsKey(toTileId)) {
       return;
     }
-
     Point2D start = tilePositions.get(fromTileId);
     Point2D end = tilePositions.get(toTileId);
-
-    // Create a ladder with better visual appearance
-    Group ladder = createLadder(start, end);
+    Group ladder = createLadderVisual(start, end);
     getChildren().add(ladder);
   }
 
-  private Group createLadder(Point2D start, Point2D end) {
+  private Group createLadderVisual(Point2D start, Point2D end) {
     Group ladder = new Group();
-
     double x1 = start.getX(), y1 = start.getY();
     double x2 = end.getX(), y2 = end.getY();
-
-    // Calculate perpendicular vector for rail offset
     double dx = x2 - x1, dy = y2 - y1;
     double length = Math.hypot(dx, dy);
-    double railOffset = 10;  // Slightly wider ladder
+    double railOffset = 10;
     double ux = -dy/length * railOffset;
     double uy = dx/length * railOffset;
 
-    // Left and right rails
     Line leftRail = new Line(x1 - ux, y1 - uy, x2 - ux, y2 - uy);
     Line rightRail = new Line(x1 + ux, y1 + uy, x2 + ux, y2 + uy);
-
     leftRail.setStroke(Color.GOLD);
     rightRail.setStroke(Color.GOLD);
     leftRail.setStrokeWidth(5);
     rightRail.setStrokeWidth(5);
-
     ladder.getChildren().addAll(leftRail, rightRail);
 
-    // Add rungs
-    int rungCount = (int)(length / 40) + 3;  // Dynamic rung count based on ladder length
+    int rungCount = (int)(length / 40) + 3;
     for (int i = 0; i <= rungCount; i++) {
       double fraction = i / (double)rungCount;
       double rx = x1 + dx * fraction;
       double ry = y1 + dy * fraction;
-
       Line rung = new Line(rx - ux, ry - uy, rx + ux, ry + uy);
       rung.setStroke(Color.GOLDENROD);
       rung.setStrokeWidth(4);
       ladder.getChildren().add(rung);
     }
-
     return ladder;
   }
 
@@ -201,71 +177,45 @@ public class BoardView extends Pane {
     if (!tilePositions.containsKey(fromTileId) || !tilePositions.containsKey(toTileId)) {
       return;
     }
-
     Point2D start = tilePositions.get(fromTileId);
     Point2D end = tilePositions.get(toTileId);
-
-    Group snake = createSnake(start, end);
+    Group snake = createSnakeVisual(start, end);
     getChildren().add(snake);
   }
 
-  private Group createSnake(Point2D start, Point2D end) {
+  private Group createSnakeVisual(Point2D start, Point2D end) {
     Group snakeGroup = new Group();
-
     double x1 = start.getX(), y1 = start.getY();
     double x2 = end.getX(), y2 = end.getY();
     double midX = (x1 + x2) / 2;
     double controlDistance = Math.hypot(x2 - x1, y2 - y1) * 0.3;
 
-    // Body of the cobra (a rich brown)
     Path snakePath = new Path();
     snakePath.setStrokeWidth(8);
     snakePath.setStroke(Color.SADDLEBROWN);
     snakePath.setStrokeLineCap(StrokeLineCap.ROUND);
     snakePath.setStrokeLineJoin(StrokeLineJoin.ROUND);
     snakePath.setFill(null);
-
     snakePath.getElements().add(new MoveTo(x1, y1));
     double quarter = (y2 - y1) / 4;
-    snakePath.getElements().add(new CubicCurveTo(
-        midX + controlDistance, y1,
-        midX - controlDistance, y1 + quarter,
-        midX,            y1 + quarter * 2
-    ));
-    snakePath.getElements().add(new CubicCurveTo(
-        midX + controlDistance, y1 + quarter * 3,
-        midX - controlDistance, y2,
-        x2,                     y2
-    ));
+    snakePath.getElements().add(new CubicCurveTo(midX + controlDistance, y1, midX - controlDistance, y1 + quarter, midX, y1 + quarter * 2));
+    snakePath.getElements().add(new CubicCurveTo(midX + controlDistance, y1 + quarter * 3, midX - controlDistance, y2, x2, y2));
 
-    // Hood/head of the cobra (golden)
     Circle head = new Circle(x1, y1, 12, Color.GOLDENROD);
     head.setStroke(Color.SADDLEBROWN);
     head.setStrokeWidth(3);
-
-    // Eyes—smaller, darker
     double eyeOffset = 4;
     Circle leftEye = new Circle(x1 - eyeOffset, y1 - eyeOffset, 3, Color.WHITE);
     Circle rightEye = new Circle(x1 + eyeOffset, y1 - eyeOffset, 3, Color.WHITE);
     Circle leftPupil = new Circle(x1 - eyeOffset, y1 - eyeOffset, 1.5, Color.BLACK);
     Circle rightPupil = new Circle(x1 + eyeOffset, y1 - eyeOffset, 1.5, Color.BLACK);
-
-    // Tail tip matching the body
     Circle tail = new Circle(x2, y2, 4, Color.SADDLEBROWN);
-
-    snakeGroup.getChildren().addAll(
-        snakePath,
-        tail,
-        head,
-        leftEye, rightEye,
-        leftPupil, rightPupil
-    );
-
+    snakeGroup.getChildren().addAll(snakePath, tail, head, leftEye, rightEye, leftPupil, rightPupil);
     return snakeGroup;
   }
 
 
-  private void initializePlayerTokens() {
+  private void initializePlayerTokenVisuals() {
     Color[] colors = { Color.RED, Color.BLUE, Color.GREEN, Color.PURPLE };
     int playerIndex = 0;
 
@@ -273,22 +223,22 @@ public class BoardView extends Pane {
       Circle token = new Circle(12, colors[playerIndex++ % colors.length]);
       token.setStroke(Color.BLACK);
       token.setStrokeWidth(2);
-
-      // Add a subtle shadow effect
       DropShadow shadow = new DropShadow();
       shadow.setRadius(5);
       shadow.setOffsetX(2);
       shadow.setOffsetY(2);
       shadow.setColor(Color.color(0, 0, 0, 0.5));
       token.setEffect(shadow);
-
       playerTokens.put(player, token);
       getChildren().add(token);
     }
   }
 
+  /**
+   * Refreshes the positions of dynamic elements on the board, primarily player tokens.
+   * This method should be called when the game state changes (e.g., after a player moves).
+   */
   public void refresh() {
-    // Update token positions based on player locations
     for (Player player : game.getPlayers()) {
       int tileId = player.getCurrentTile().getId();
       Point2D position = tilePositions.get(tileId);

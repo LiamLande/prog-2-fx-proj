@@ -1,4 +1,3 @@
-// service/SnakesLaddersService.java
 package edu.ntnu.idi.bidata.service;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
@@ -7,52 +6,97 @@ import edu.ntnu.idi.bidata.model.Tile;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Snakes & Ladders game logic (Level 1).
- */
 public class SnakesLaddersService implements GameService {
+  private int currentPlayerIndex = -1; // Index in the game.getPlayers() list
 
   @Override
   public void setup(BoardGame game) {
-    // put every player on the “start” tile
     Tile start = game.getBoard().getStart();
     for (Player p : game.getPlayers()) {
-      p.setCurrent(start);
+      p.setCurrentTile(start); // Use setCurrentTile for clarity if Player has it
     }
+    if (!game.getPlayers().isEmpty()) {
+      this.currentPlayerIndex = 0; // First player starts
+    } else {
+      this.currentPlayerIndex = -1;
+    }
+  }
+
+  @Override
+  public Player getCurrentPlayer(BoardGame game) {
+    if (this.currentPlayerIndex >= 0 && this.currentPlayerIndex < game.getPlayers().size()) {
+      return game.getPlayers().get(this.currentPlayerIndex);
+    }
+    return null;
   }
 
   @Override
   public List<Integer> playOneRound(BoardGame game) {
     List<Integer> rolls = new ArrayList<>();
-    for (Player player : game.getPlayers()) {
-      int roll = game.getDice().roll();
-      player.move(roll);          // assumes Player.move applies snakes/ladders
+    // Note: playOneRound implies each player in the list gets one turn *in order*.
+    // The currentPlayerIndex might not be directly used here if the loop iterates all players.
+    // However, if playOneRound is a sequence of individual turns, currentPlayerIndex IS relevant.
+    // For simplicity, let's assume it's a sequence of individual turns for this example.
+
+    int initialPlayerIndexOfRound = this.currentPlayerIndex; // Store who started this round
+    if (initialPlayerIndexOfRound == -1 && !game.getPlayers().isEmpty()) initialPlayerIndexOfRound = 0;
+
+
+    for (int i = 0; i < game.getPlayers().size(); i++) {
+      Player currentPlayerForTurn = game.getPlayers().get(initialPlayerIndexOfRound);
+      this.currentPlayerIndex = initialPlayerIndexOfRound; // Set for this turn
+
+      int roll = game.getDice().rollDie();
+      currentPlayerForTurn.move(roll); // Assumes Player.move applies snakes/ladders
       rolls.add(roll);
+
       if (isFinished(game)) {
+        // Winner found, no need to advance player for next turn as game is over
         break;
       }
+      // Advance for the next iteration within this round
+      initialPlayerIndexOfRound = (initialPlayerIndexOfRound + 1) % game.getPlayers().size();
+    }
+    // After the round, set currentPlayerIndex for the *start* of the next round
+    if (!isFinished(game) && !game.getPlayers().isEmpty()) {
+      this.currentPlayerIndex = initialPlayerIndexOfRound; // Who is next after this round
     }
     return rolls;
   }
 
   @Override
   public int playTurn(BoardGame game, Player player) {
-    int roll = game.getDice().roll();
-    player.move(roll);
+    // Ensure the player passed IS the current player according to our index
+    if (game.getPlayers().isEmpty() || !player.equals(game.getPlayers().get(this.currentPlayerIndex))) {
+      // Or, if you trust the controller, find the index of 'player' and set it.
+      int newIndex = game.getPlayers().indexOf(player);
+      if (newIndex == -1) {
+        throw new IllegalArgumentException("Player " + player.getName() + " is not in the game or not their turn.");
+      }
+      this.currentPlayerIndex = newIndex;
+    }
+
+    int roll = game.getDice().rollDie();
+    player.move(roll); // Player.move handles tile actions internally
+
+    // Advance to the next player for the *next* turn
+    if (!isFinished(game) && !game.getPlayers().isEmpty()) {
+      this.currentPlayerIndex = (this.currentPlayerIndex + 1) % game.getPlayers().size();
+    }
     return roll;
   }
 
   @Override
   public boolean isFinished(BoardGame game) {
     return game.getPlayers().stream()
-        .anyMatch(p -> p.getCurrentTile().getNext() == null);
+            .anyMatch(p -> p.getCurrentTile().getNext() == null); // Assuming getNext being null means end
   }
 
   @Override
   public Player getWinner(BoardGame game) {
     return game.getPlayers().stream()
-        .filter(p -> p.getCurrentTile().getNext() == null)
-        .findFirst()
-        .orElse(null);
+            .filter(p -> p.getCurrentTile().getNext() == null)
+            .findFirst()
+            .orElse(null);
   }
 }
