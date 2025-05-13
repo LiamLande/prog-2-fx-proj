@@ -1,23 +1,19 @@
 package edu.ntnu.idi.bidata.factory;
 
 import edu.ntnu.idi.bidata.app.GameVariant;
-// import edu.ntnu.idi.bidata.file.CardJsonReaderWriter; // Not used in this snippet
 import edu.ntnu.idi.bidata.model.BoardGame;
-// import edu.ntnu.idi.bidata.model.Card; // Not used in this snippet
 import edu.ntnu.idi.bidata.model.Dice;
 import edu.ntnu.idi.bidata.model.Player;
+import edu.ntnu.idi.bidata.model.Tile;
 import edu.ntnu.idi.bidata.service.CardService;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
 import edu.ntnu.idi.bidata.service.SnakesLaddersService;
-import edu.ntnu.idi.bidata.ui.SnakeLadderPlayerSetupScene; // Import Theme enum
+import edu.ntnu.idi.bidata.ui.SnakeLadderPlayerSetupScene;
+import edu.ntnu.idi.bidata.ui.PlayerSetupData;
 
-// import java.io.IOException; // Not used in this snippet
-// import java.io.InputStreamReader; // Not used in this snippet
-// import java.io.Reader; // Not used in this snippet
 import java.util.List;
-// import java.util.Map; // Not used in this snippet
-
+import java.util.stream.Collectors;
 
 /**
  * Factory to create a configured BoardGame instance from dynamic inputs.
@@ -25,48 +21,102 @@ import java.util.List;
 public final class GameFactory {
   private GameFactory() { }
 
-  // Overload createGame for non-themed games or default theme
-  public static BoardGame createGame(List<String> playerNames, GameVariant variant) {
-    // For S&L, default to EGYPT theme if no theme is specified
-    SnakeLadderPlayerSetupScene.Theme defaultTheme = SnakeLadderPlayerSetupScene.Theme.EGYPT;
-    if (variant == GameVariant.SNAKES_LADDERS) {
-      return createGame(playerNames, variant, defaultTheme);
-    }
-    // For Monopoly, theme is not currently used, so proceed as before
-    return createThemedGameInternal(playerNames, variant, null); // Pass null for theme if not S&L
-  }
-
+  // --- Public Factory Methods ---
 
   /**
-   * Builds a game using a JSON-configured board and user-supplied players, considering theme for S&L.
-   * @param playerNames list of player names
-   * @param variant the game variant
-   * @param theme the theme for Snakes & Ladders (can be null for other variants)
-   * @return initialized BoardGame (need to call init() before play)
+   * Creates a Snakes & Ladders game using detailed player setup including piece identifiers and theme.
+   *
+   * @param playerSetupDetails List of PlayerSetupData containing names and piece identifiers.
+   * @param theme              The theme for Snakes & Ladders.
+   * @return An initialized BoardGame.
    */
-  public static BoardGame createGame(List<String> playerNames, GameVariant variant, SnakeLadderPlayerSetupScene.Theme theme) {
-    return createThemedGameInternal(playerNames, variant, theme);
+  public static BoardGame createSnakesLaddersGameWithDetails(
+      List<PlayerSetupData> playerSetupDetails,
+      SnakeLadderPlayerSetupScene.Theme theme) {
+    // Directly call the internal method that handles PlayerSetupData for S&L
+    return createThemedGameInternal(GameVariant.SNAKES_LADDERS, theme, playerSetupDetails, null);
   }
 
-  private static BoardGame createThemedGameInternal(List<String> playerNames, GameVariant variant, SnakeLadderPlayerSetupScene.Theme theme) {
+  /**
+   * Creates a game (typically Monopoly or S&L with default pieces) using only player names.
+   * This is the general purpose creator.
+   *
+   * @param playerNames List of player names.
+   * @param variant     The game variant.
+   * @return An initialized BoardGame.
+   */
+  public static BoardGame createGame(List<String> playerNames, GameVariant variant) {
+    if (variant == GameVariant.SNAKES_LADDERS) {
+      // For S&L, if only names are provided, use default theme and default pieces
+      SnakeLadderPlayerSetupScene.Theme defaultTheme = SnakeLadderPlayerSetupScene.Theme.EGYPT;
+      List<PlayerSetupData> details = playerNames.stream()
+          .map(name -> new PlayerSetupData(name, Player.DEFAULT_PIECE_IDENTIFIER))
+          .collect(Collectors.toList());
+      // Call the specific S&L method, which then calls the internal one
+      return createSnakesLaddersGameWithDetails(details, defaultTheme);
+    } else {
+      // For Monopoly or other variants not using themes or detailed setup here
+      return createThemedGameInternal(variant, null, null, playerNames);
+    }
+  }
+
+  /**
+   * Creates a Snakes and Ladders game using player names and a theme, assigning default pieces.
+   * This method can be kept if there's a specific use case for it, but ensure its name or
+   * parameters differ enough from the one taking PlayerSetupData if it also had a List parameter.
+   * To avoid the original clash, this method could also be renamed or one of its parameters changed.
+   * Given the solution above (renaming the one with PlayerSetupData), this one *might* be okay
+   * if it's only called with List<String>. However, to be safe, let's make it also more specific
+   * or rely on the general createGame(List<String>, GameVariant) to handle S&L with defaults.
+   *
+   * Let's make this method also call the specific S&L creator to centralize logic.
+   */
+  public static BoardGame createGame(List<String> playerNames, GameVariant variant, SnakeLadderPlayerSetupScene.Theme theme) {
+    if (variant != GameVariant.SNAKES_LADDERS) {
+      // If it's not S&L, but theme is provided, it's a bit ambiguous.
+      // This path should ideally go through createGame(playerNames, variant) which handles non-S&L
+      // or S&L with default theme. If a specific theme is given for non-S&L, that's a design question.
+      // For now, assuming this is primarily for S&L.
+      throw new IllegalArgumentException("Themed game creation with List<String> is primarily for S&L. Use createGame(playerNames, variant) for other types.");
+    }
+    List<PlayerSetupData> details = playerNames.stream()
+        .map(name -> new PlayerSetupData(name, Player.DEFAULT_PIECE_IDENTIFIER))
+        .collect(Collectors.toList());
+    return createSnakesLaddersGameWithDetails(details, theme);
+  }
+
+
+  // --- Internal Game Creation Logic ---
+  // This internal method is now called by the more specific public methods.
+  private static BoardGame createThemedGameInternal(
+      GameVariant variant,
+      SnakeLadderPlayerSetupScene.Theme theme,       // Can be null if not S&L
+      List<PlayerSetupData> slPlayerSetupDetails,    // For S&L, can be null if monopolyPlayerNames is used
+      List<String> monopolyPlayerNames) {            // For Monopoly, can be null if slPlayerSetupDetails is used
+
     BoardGame game = new BoardGame();
     String boardJsonPath;
 
     switch (variant) {
       case SNAKES_LADDERS:
+        if (slPlayerSetupDetails == null || slPlayerSetupDetails.isEmpty()) {
+          throw new IllegalArgumentException("PlayerSetupData must be provided for Snakes & Ladders.");
+        }
         if (theme == SnakeLadderPlayerSetupScene.Theme.JUNGLE) {
           boardJsonPath = "/data/boards/snakes_and_ladders_JUNGLE.json";
-        } else { // Default to EGYPT or if theme is null
+        } else {
           boardJsonPath = "/data/boards/snakes_and_ladders.json";
         }
-        game.setBoard(BoardFactory.createFromJson(boardJsonPath, variant, theme)); // Pass theme to BoardFactory
+        game.setBoard(BoardFactory.createFromJson(boardJsonPath, variant, theme));
         game.setGameService(new SnakesLaddersService());
         game.setDice(new Dice(2));
         break;
       case MINI_MONOPOLY:
+        if (monopolyPlayerNames == null || monopolyPlayerNames.isEmpty()) {
+          throw new IllegalArgumentException("Player names must be provided for Mini Monopoly.");
+        }
         boardJsonPath = "/data/boards/mini_monopoly.json";
-        // Monopoly currently doesn't use theme for board creation in this setup
-        game.setBoard(BoardFactory.createFromJson(boardJsonPath, variant, null)); // Pass null theme
+        game.setBoard(BoardFactory.createFromJson(boardJsonPath, variant, null));
         MonopolyService monopolyService = new MonopolyService();
         game.setGameService(monopolyService);
         ServiceLocator.setMonopolyService(monopolyService);
@@ -78,16 +128,26 @@ public final class GameFactory {
         throw new IllegalArgumentException("Unsupported game variant: " + variant);
     }
 
-    for (String name : playerNames) {
-      // Ensure getTile(0) exists on the loaded board
-      if (game.getBoard() != null && game.getBoard().getTile(0) != null) {
-        game.addPlayer(new Player(name, game.getBoard().getTile(0)));
-      } else {
-        System.err.println("Error: Board or starting tile 0 not found for player " + name);
-        // Handle error, perhaps throw exception or skip player
+    Tile startTile = null;
+    if (game.getBoard() != null) {
+      startTile = game.getBoard().getTile(0);
+    }
+
+    if (startTile == null) {
+      System.err.println("Error: Board or starting tile 0 not found for game variant: " + variant + ". Cannot add players.");
+    } else {
+      if (variant == GameVariant.SNAKES_LADDERS && slPlayerSetupDetails != null) {
+        for (PlayerSetupData detail : slPlayerSetupDetails) {
+          game.addPlayer(new Player(detail.name(), startTile, detail.pieceIdentifier()));
+        }
+      } else if (variant == GameVariant.MINI_MONOPOLY && monopolyPlayerNames != null) {
+        for (String name : monopolyPlayerNames) {
+          game.addPlayer(new Player(name, startTile, Player.DEFAULT_PIECE_IDENTIFIER, 1500));
+        }
       }
     }
-    game.init(); // Initialize game (e.g., set current player)
+
+    game.init();
     return game;
   }
 }

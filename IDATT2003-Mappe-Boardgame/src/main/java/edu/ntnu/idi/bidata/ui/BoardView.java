@@ -5,15 +5,16 @@ import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
 import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SnakeAction;
-import java.util.Objects;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView; // Added
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
+import javafx.scene.shape.Circle; // Can be kept for fallback or removed
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.MoveTo;
@@ -26,92 +27,37 @@ import javafx.scene.text.Text;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-/**
- * Renders any BoardGame loaded from JSON as a square grid of tiles
- * in a serpentine pattern, including snakes & ladders and player tokens.
- * The refresh() method should be called by an external controller or parent view
- * when player positions or other dynamic elements need updating.
- */
 public class BoardView extends Pane {
-  private static final double SIZE = 600;
+  private static final double SIZE = 600; // Board size
+  private static final double TOKEN_SIZE = 30; // Desired player token image size on board
 
   private final BoardGame game;
   private final Map<Integer, Point2D> tilePositions = new HashMap<>();
-  private final Map<Player, Circle> playerTokens = new HashMap<>();
-  private final SnakeLadderPlayerSetupScene.Theme theme; // Store the theme
+  private final Map<Player, ImageView> playerTokenViews = new HashMap<>(); // Changed from Circle
+  private final SnakeLadderPlayerSetupScene.Theme theme;
 
-  // Tile image paths
-  private static final String EGYPT_TILE_LIGHT = "images/sl-tile-light.png";
-  private static final String EGYPT_TILE_DARK = "images/sl-tile-dark.png";
-  private static final String JUNGLE_TILE_LIGHT = "images/jungle-tile-light.png"; // Ensure this exists
-  private static final String JUNGLE_TILE_DARK = "images/jungle-tile-dark.png";   // Ensure this exists
+  private static final String EGYPT_TILE_LIGHT = "/images/sl-tile-light.png";
+  private static final String EGYPT_TILE_DARK = "/images/sl-tile-dark.png";
+  private static final String JUNGLE_TILE_LIGHT = "/images/jungle-tile-light.png";
+  private static final String JUNGLE_TILE_DARK = "/images/jungle-tile-dark.png";
 
-  private Image lightTileImg; // Now initialized based on theme
-  private Image darkTileImg;  // Now initialized based on theme
+  private Image lightTileImg, darkTileImg;
 
-  public BoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) { // Added theme parameter
+  public BoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
     this.game = game;
-    this.theme = boardTheme; // Store the theme
+    this.theme = boardTheme;
     setPrefSize(SIZE, SIZE);
-
-    loadThemeSpecificTileImages(); // Load tile images based on theme
-
-    initializeBoardVisuals();
-    drawSnakesAndLadders();
-    initializePlayerTokenVisuals();
-    refresh();
+    loadThemeSpecificTileImages();
+    initializeBoardVisuals(); // Tiles and numbers
+    drawSnakesAndLadders();   // Snakes and ladders
+    // Player tokens will be initialized/refreshed by initializePlayerTokenVisuals() or refresh()
+    // which should be called after players are added to the game model.
   }
 
-  private void initializeBoardVisuals() {
-    // ... (rest of the method is the same, it will use the theme-loaded lightTileImg and darkTileImg)
-    int tileCount = game.getBoard().getTiles().size();
-    int boardSize = (int) Math.sqrt(tileCount);
-    double cellSize = SIZE / boardSize;
-
-    for (Tile tile : game.getBoard().getTiles().values()) {
-      int id = tile.getId();
-      int row = id / boardSize;
-      int offset = id % boardSize;
-      int col = (row % 2 == 0 ? offset : (boardSize - 1 - offset));
-
-      Point2D pos = calculateTilePosition(id, boardSize, cellSize);
-      tilePositions.put(id, pos);
-
-      boolean isLightTile = (row + col) % 2 == 0;
-      Rectangle bg = createTileBackground(pos.getX(), pos.getY(), cellSize, isLightTile);
-      Text num = createTileNumber(id, pos.getX(), pos.getY());
-
-      getChildren().addAll(bg, num);
-    }
-  }
-
-
-  private Point2D calculateTilePosition(int id, int boardSize, double cellSize) {
-    int row = id / boardSize;
-    int offset = id % boardSize;
-    int col = (row % 2 == 0) ? offset : (boardSize - 1 - offset);
-    int uiRow = boardSize - 1 - row;
-
-    double x = col * cellSize;
-    double y = uiRow * cellSize;
-    double centerX = x + cellSize / 2;
-    double centerY = y + cellSize / 2;
-
-    return new Point2D(centerX, centerY);
-  }
-
-  private Rectangle createTileBackground(double x, double y, double size, boolean isLight) {
-    Rectangle bg = new Rectangle(x - size/2, y - size/2, size, size);
-    Image img = isLight ? lightTileImg : darkTileImg; // Uses theme-loaded images
-    ImagePattern pat = new ImagePattern(img, 0, 0, size, size, false);
-    bg.setFill(pat);
-    bg.setStroke(Color.DARKGRAY);
-    bg.setStrokeWidth(1);
-    return bg;
-  }
-
-  private void loadThemeSpecificTileImages() {
+  private void loadThemeSpecificTileImages() { /* ... Same as before ... */
     String lightPath, darkPath;
     if (this.theme == SnakeLadderPlayerSetupScene.Theme.JUNGLE) {
       lightPath = JUNGLE_TILE_LIGHT;
@@ -120,38 +66,87 @@ public class BoardView extends Pane {
       lightPath = EGYPT_TILE_LIGHT;
       darkPath = EGYPT_TILE_DARK;
     }
-
-    lightTileImg = new Image(Objects.requireNonNull(
-        getClass().getClassLoader().getResourceAsStream(lightPath),
-        "Could not find image: " + lightPath));
-
-    darkTileImg  = new Image(Objects.requireNonNull(
-        getClass().getClassLoader().getResourceAsStream(darkPath),
-        "Could not find image: " + darkPath));
+    try {
+      lightTileImg = new Image(Objects.requireNonNull(getClass().getResourceAsStream(lightPath),"Could not find image: " + lightPath));
+      darkTileImg  = new Image(Objects.requireNonNull(getClass().getResourceAsStream(darkPath),"Could not find image: " + darkPath));
+    } catch (Exception e) {
+      System.err.println("Error loading tile images for theme: " + theme);
+      // Consider fallback solid colors if images fail
+      lightTileImg = null; // Or a default placeholder image
+      darkTileImg = null;  // Or a default placeholder image
+    }
   }
+  private void initializeBoardVisuals() { /* ... Same as before ... */
+    int tileCount = game.getBoard().getTiles().size();
+    int boardSize = (int) Math.sqrt(tileCount);
+    double cellSize = SIZE / boardSize;
 
-  private Text createTileNumber(int id, double x, double y) {
-    Text num = new Text(String.valueOf(id));
+    for (Tile tile : game.getBoard().getTiles().values()) {
+      int id = tile.getId();
+      Point2D pos = calculateTilePosition(id, boardSize, cellSize);
+      tilePositions.put(id, pos);
+
+      int row = id / boardSize; // Mathematical row
+      int offset = id % boardSize;
+      int col = (row % 2 == 0 ? offset : (boardSize - 1 - offset)); // Mathematical col
+      boolean isLightTile = (row + col) % 2 == 0; // Use mathematical row/col for pattern
+
+      Rectangle bg = createTileBackground(pos.getX() - cellSize / 2, pos.getY() - cellSize / 2, cellSize, isLightTile); // Use calculated X,Y for top-left
+      Text num = createTileNumber(id, pos.getX(), pos.getY()); // Use center X,Y for number positioning
+      getChildren().addAll(bg, num);
+    }
+  }
+  private Point2D calculateTilePosition(int id, int boardSize, double cellSize) { /* ... Same as before ... */
+    int row = id / boardSize; // 0-indexed logical row from bottom
+    int offset = id % boardSize; // 0-indexed offset in the logical row
+    int col; // 0-indexed logical column from left
+    if (row % 2 == 0) { // Even rows (0, 2, ...) go left to right
+      col = offset;
+    } else { // Odd rows (1, 3, ...) go right to left
+      col = boardSize - 1 - offset;
+    }
+    // Convert to UI coordinates (0,0 at top-left)
+    int uiRow = boardSize - 1 - row;
+    double x = col * cellSize + cellSize / 2; // Center of the tile
+    double y = uiRow * cellSize + cellSize / 2; // Center of the tile
+    return new Point2D(x, y);
+  }
+  private Rectangle createTileBackground(double x, double y, double size, boolean isLight) { /* ... Same ... */
+    Rectangle bg = new Rectangle(x, y, size, size); // x, y is top-left
+    Image imgToUse = isLight ? lightTileImg : darkTileImg;
+    if (imgToUse != null) {
+      ImagePattern pat = new ImagePattern(imgToUse, 0, 0, 1, 1, true); // Use relative coords for pattern
+      bg.setFill(pat);
+    } else {
+      bg.setFill(isLight ? Color.BEIGE : Color.BURLYWOOD); // Fallback colors
+    }
+    bg.setStroke(Color.DARKGRAY);
+    bg.setStrokeWidth(1);
+    return bg;
+  }
+  private Text createTileNumber(int id, double centerX, double centerY) { /* ... Same ... */
+    Text num = new Text(String.valueOf(id + 1)); // Display 1-indexed numbers
     num.setFont(Font.font(14));
     num.setFill(Color.DARKSLATEGRAY);
-    num.setX(x - 12);
-    num.setY(y + 5);
+    // Adjust to center text within the tile based on its bounds
+    num.setX(centerX - num.getLayoutBounds().getWidth() / 2);
+    num.setY(centerY + num.getLayoutBounds().getHeight() / 4); // Approximation for baseline
     return num;
   }
 
   private void drawSnakesAndLadders() {
     game.getBoard().getTiles().values().stream()
-            .filter(tile -> tile.getAction() != null)
-            .forEach(tile -> {
-              int fromTileId = tile.getId();
-              if (tile.getAction() instanceof LadderAction action) {
-                int toTileId = fromTileId + action.getSteps();
-                drawLadder(fromTileId, toTileId);
-              } else if (tile.getAction() instanceof SnakeAction action) {
-                int toTileId = fromTileId - action.getSteps();
-                drawSnake(fromTileId, toTileId);
-              }
-            });
+        .filter(tile -> tile.getAction() != null)
+        .forEach(tile -> {
+          int fromTileId = tile.getId();
+          if (tile.getAction() instanceof LadderAction action) {
+            int toTileId = fromTileId + action.getSteps();
+            drawLadder(fromTileId, toTileId);
+          } else if (tile.getAction() instanceof SnakeAction action) {
+            int toTileId = fromTileId - action.getSteps();
+            drawSnake(fromTileId, toTileId);
+          }
+        });
   }
 
   private void drawLadder(int fromTileId, int toTileId) {
@@ -236,39 +231,84 @@ public class BoardView extends Pane {
     return snakeGroup;
   }
 
+  /**
+   * Initializes or re-initializes player token visuals (ImageViews).
+   * Should be called after players are known and game starts.
+   */
+  public void initializePlayerTokenVisuals() {
+    // Remove existing token ImageViews from the pane
+    playerTokenViews.values().forEach(getChildren()::remove);
+    playerTokenViews.clear();
 
-  private void initializePlayerTokenVisuals() {
-    Color[] colors = { Color.RED, Color.BLUE, Color.GREEN, Color.PURPLE };
-    int playerIndex = 0;
+    if (game.getPlayers() == null) return;
 
     for (Player player : game.getPlayers()) {
-      Circle token = new Circle(12, colors[playerIndex++ % colors.length]);
-      token.setStroke(Color.BLACK);
-      token.setStrokeWidth(2);
-      DropShadow shadow = new DropShadow();
-      shadow.setRadius(5);
+      ImageView tokenView = new ImageView();
+      tokenView.setFitWidth(TOKEN_SIZE);
+      tokenView.setFitHeight(TOKEN_SIZE);
+      tokenView.setPreserveRatio(true);
+
+      Optional<PieceUIData> pieceDataOpt = SnakeLadderPlayerSetupScene.AVAILABLE_PIECES.stream()
+          .filter(pd -> pd.getIdentifier().equals(player.getPieceIdentifier()))
+          .findFirst();
+
+      if (pieceDataOpt.isPresent()) {
+        Image playerImage = pieceDataOpt.get().getImage(TOKEN_SIZE); // Get image of correct size
+        if (playerImage != null) {
+          tokenView.setImage(playerImage);
+        } else {
+          System.err.println("BoardView: Image for piece " + player.getPieceIdentifier() + " is null. Player: " + player.getName());
+          setFallbackTokenVisual(tokenView, player); // Use a fallback
+        }
+      } else {
+        System.err.println("BoardView: PieceUIData not found for identifier: " + player.getPieceIdentifier() + ". Player: " + player.getName());
+        setFallbackTokenVisual(tokenView, player); // Use a fallback
+      }
+
+      DropShadow shadow = new DropShadow(5, Color.color(0,0,0,0.5));
       shadow.setOffsetX(2);
       shadow.setOffsetY(2);
-      shadow.setColor(Color.color(0, 0, 0, 0.5));
-      token.setEffect(shadow);
-      playerTokens.put(player, token);
-      getChildren().add(token);
+      tokenView.setEffect(shadow);
+
+      playerTokenViews.put(player, tokenView);
+      getChildren().add(tokenView); // Add to pane's children
     }
+    refresh(); // Position them correctly
   }
 
-  /**
-   * Refreshes the positions of dynamic elements on the board, primarily player tokens.
-   * This method should be called when the game state changes (e.g., after a player moves).
-   */
-  public void refresh() {
-    for (Player player : game.getPlayers()) {
-      int tileId = player.getCurrentTile().getId();
-      Point2D position = tilePositions.get(tileId);
+  private void setFallbackTokenVisual(ImageView tokenView, Player player) {
+    // This method could create a colored circle/rectangle and convert it to an Image
+    // or use a pre-defined placeholder image. For simplicity, we'll not draw anything
+    // or you can load a 'unknown_piece.png'.
+    // For now, the ImageView will be empty if image is null.
+    System.err.println("Fallback for player " + player.getName() + " with piece " + player.getPieceIdentifier());
+  }
 
-      if (position != null && playerTokens.containsKey(player)) {
-        Circle token = playerTokens.get(player);
-        token.setCenterX(position.getX());
-        token.setCenterY(position.getY());
+
+  public void refresh() {
+    if (game.getPlayers() == null || playerTokenViews.isEmpty() && !game.getPlayers().isEmpty()) {
+      // If tokens are not initialized but players exist, initialize them.
+      // This handles cases where BoardView is created before players are fully in the model.
+      initializePlayerTokenVisuals();
+      if (playerTokenViews.isEmpty() && !game.getPlayers().isEmpty()) {
+        System.err.println("BoardView refresh: Tokens still not initialized after attempt. Players might not have piece identifiers or images.");
+        return; // Avoid NPE if initialization still fails
+      }
+    }
+
+
+    for (Player player : game.getPlayers()) {
+      if (player.getCurrentTile() == null) continue;
+
+      int tileId = player.getCurrentTile().getId(); // 0-indexed
+      Point2D position = tilePositions.get(tileId); // Center of the tile
+
+      if (position != null && playerTokenViews.containsKey(player)) {
+        ImageView tokenView = playerTokenViews.get(player);
+        // Position ImageView so its center aligns with the tile's center (position)
+        tokenView.setX(position.getX() - tokenView.getFitWidth() / 2);
+        tokenView.setY(position.getY() - tokenView.getFitHeight() / 2);
+        tokenView.toFront(); // Bring player tokens to the front
       }
     }
   }
