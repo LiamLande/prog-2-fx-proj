@@ -13,13 +13,14 @@ import java.util.List;
 
 /**
  * Reads and writes players to/from CSV format.
- * Each line: name,startingTileId
+ * Each line: name,startingTileId,pieceIdentifier
  */
 public class PlayerCsvReaderWriter {
 
   /**
    * Reads players from the given CSV Reader.
-   * Expects each row to have two columns: name, tileId.
+   * Expects each row to have up to three columns: name, tileId, pieceIdentifier.
+   * pieceIdentifier is optional for backward compatibility.
    */
   public static List<Player> readAll(Reader reader) throws IOException {
     if (reader == null) {
@@ -28,15 +29,10 @@ public class PlayerCsvReaderWriter {
     List<Player> players = new ArrayList<>();
     List<String[]> rows = CsvUtils.readAll(reader);
 
-    // Create a single, reusable placeholder start tile for all players read.
-    // The tile ID from the CSV (row[1]) is parsed but not directly used to
-    // create a complex Tile object linked to a board here, as the purpose
-    // in the setup scene is primarily to get names.
-    // We still need *a* non-null tile for the Player constructor.
-    Tile placeholderStartTile = null; // Initialize to null
+    Tile placeholderStartTile;
 
     for (String[] row : rows) {
-      if (row.length < 2) {
+      if (row.length < 2) { // Minimum 2 columns for name and tileId
         System.err.println("Skipping malformed CSV row (less than 2 columns): " + String.join(",", row));
         continue;
       }
@@ -46,39 +42,35 @@ public class PlayerCsvReaderWriter {
         continue;
       }
 
-      int tileIdFromCsv; // We still parse it, though not used to create a complex tile here.
+      int tileIdFromCsv;
       try {
         tileIdFromCsv = Integer.parseInt(row[1].trim());
       } catch (NumberFormatException e) {
-        // If tileId is invalid, we could skip or throw a more specific error.
-        // For robustness in setup, let's log and continue, or use a default ID for the placeholder.
         System.err.println("Invalid tileId format for player '" + name + "'. Using default for placeholder. Error: " + e.getMessage());
-        tileIdFromCsv = 0; // Default if parsing fails for the placeholder's ID
+        tileIdFromCsv = 0; // Default if parsing fails
       }
 
-      // Ensure placeholderStartTile is created (once is enough, or per player if ID matters for placeholder)
-      // For simplicity, let's use the ID from the CSV (or default 0 if parse failed)
-      // for the placeholder tile, even though its connections (next/prev) won't be set.
+      // Extract piece identifier (new) - column 3
+      String pieceIdentifier = Player.DEFAULT_PIECE_IDENTIFIER; // Default from Player class
+      if (row.length >= 3 && row[2] != null && !row[2].trim().isEmpty()) {
+        pieceIdentifier = row[2].trim();
+      } else if (row.length < 3) {
+        System.err.println("Piece identifier missing for player '" + name + "'. Using default: " + pieceIdentifier);
+      }
+
+
       try {
         placeholderStartTile = new Tile(tileIdFromCsv);
       } catch (InvalidParameterException e) {
-        // This might happen if new Tile(id) itself throws for some IDs, e.g., negative.
-        // The Tile constructor check is "id < 0".
         System.err.println("Could not create placeholder tile for player '" + name + "' with ID " + tileIdFromCsv + ". Error: " + e.getMessage() + ". Skipping player.");
-        continue; // Skip this player if placeholder tile can't be made
+        continue;
       }
 
-
-      // Create Player with the non-null placeholder start tile.
-      // The actual tileId from the CSV is not critical for the PlayerSetupScene's use case
-      // which is just to display names. The game loading logic would handle actual tile placement.
       try {
-        Player player = new Player(name, placeholderStartTile);
-        // The tileIdFromCsv could be stored as an attribute on Player if needed later
-        // before actual game board placement, e.g., player.setInitialTileId(tileIdFromCsv);
+        // Use the constructor that accepts pieceIdentifier
+        Player player = new Player(name, placeholderStartTile, pieceIdentifier);
         players.add(player);
       } catch (InvalidParameterException e) {
-        // Catch exception from Player constructor (e.g. if name is now blank after trim, though checked above)
         System.err.println("Could not create player '" + name + "'. Error: " + e.getMessage() + ". Skipping player.");
       }
     }
@@ -86,7 +78,7 @@ public class PlayerCsvReaderWriter {
   }
 
   /**
-   * Writes players to CSV. Each line: name,currentTileId
+   * Writes players to CSV. Each line: name,currentTileId,pieceIdentifier
    */
   public static void writeAll(Writer writer, List<Player> players) throws IOException {
     if (writer == null) {
@@ -97,14 +89,14 @@ public class PlayerCsvReaderWriter {
     }
     List<String[]> rows = new ArrayList<>();
     for (Player p : players) {
-      if (p.getCurrentTile() == null) {
-        // This should not happen if players are correctly initialized.
-        // Handle defensively: write a default tile ID or skip.
-        System.err.println("Warning: Player '" + p.getName() + "' has a null currentTile. Writing with default tile ID 0.");
-        rows.add(new String[]{p.getName(), "0"});
+      String tileIdStr = "0";
+      if (p.getCurrentTile() != null) {
+        tileIdStr = String.valueOf(p.getCurrentTile().getId());
       } else {
-        rows.add(new String[]{p.getName(), String.valueOf(p.getCurrentTile().getId())});
+        System.err.println("Warning: Player '" + p.getName() + "' has a null currentTile. Writing with default tile ID 0.");
       }
+      // Add piece identifier to the row
+      rows.add(new String[]{p.getName(), tileIdStr, p.getPieceIdentifier()});
     }
     CsvUtils.writeAll(writer, rows);
   }
