@@ -9,42 +9,54 @@ public class Player {
   private final String name;
   private Tile currentTile;
   private Integer money;
+  private String pieceIdentifier;
+
+  // Change from private to public static final
+  public static final String DEFAULT_PIECE_IDENTIFIER = "default_token";
 
   /**
-   * Creates a player starting on the given tile.
+   * Creates a player starting on the given tile with a default piece.
    * @param name must be non‐empty
    * @param start starting tile, non‐null
    */
   public Player(String name, Tile start) {
-    if (name == null || name.isBlank()) {
-      throw new InvalidParameterException("Player name must not be empty");
-    }
-    if (start == null) {
-      throw new InvalidParameterException("Starting tile must not be null");
-    }
-    this.name = name;
-    this.currentTile = start;
+    this(name, start, DEFAULT_PIECE_IDENTIFIER, null);
   }
 
   /**
-   * Creates a player starting on the given tile.
+   * Creates a player starting on the given tile with a specified piece.
    * @param name must be non‐empty
    * @param start starting tile, non‐null
+   * @param pieceIdentifier identifier for the player's piece
    */
-  public Player(String name, Tile start, Integer money) {
+  public Player(String name, Tile start, String pieceIdentifier) {
+    this(name, start, pieceIdentifier, null);
+  }
+
+
+  /**
+   * Creates a player starting on the given tile, with a specified piece and money.
+   * This is the most comprehensive constructor.
+   * @param name must be non‐empty
+   * @param start starting tile, non‐null
+   * @param pieceIdentifier identifier for the player's piece
+   * @param money initial amount of money (can be null if not applicable)
+   */
+  public Player(String name, Tile start, String pieceIdentifier, Integer money) {
     if (name == null || name.isBlank()) {
       throw new InvalidParameterException("Player name must not be empty");
     }
     if (start == null) {
       throw new InvalidParameterException("Starting tile must not be null");
     }
-    if (money == null) {
-      throw new InvalidParameterException("Starting Money must not be null");
-    }
+
     this.name = name;
     this.currentTile = start;
+    this.pieceIdentifier = (pieceIdentifier == null || pieceIdentifier.isBlank()) ? DEFAULT_PIECE_IDENTIFIER : pieceIdentifier.trim();
     this.money = money;
   }
+
+  // ... (rest of the Player class remains the same as the previous version)
 
   public void setTile(Tile tile) {
     if (tile == null) {
@@ -68,9 +80,14 @@ public class Player {
     this.currentTile = current;
   }
 
-  /**
-   * Moves the player by the given steps: positive forward, negative backward.
-   */
+  public String getPieceIdentifier() {
+    return pieceIdentifier;
+  }
+
+  public void setPieceIdentifier(String pieceIdentifier) {
+    this.pieceIdentifier = (pieceIdentifier == null || pieceIdentifier.isBlank()) ? DEFAULT_PIECE_IDENTIFIER : pieceIdentifier.trim();
+  }
+
   public void move(int steps) {
     if (steps > 0) {
       for (int i = 0; i < steps; i++) {
@@ -83,17 +100,15 @@ public class Player {
         currentTile = currentTile.getPrevious();
       }
     }
-    // trigger any special action
-    currentTile.land(this);
+    if (currentTile != null) {
+      currentTile.land(this);
+    }
   }
-
-
-  //MONEY MANAGEMENT
-
 
   public void setMoney(Integer money) {
     if (money == null) {
-      throw new InvalidParameterException("Money must not be null");
+      this.money = money;
+      return;
     }
     if (money < 0) {
       throw new InvalidParameterException("Money must not be negative");
@@ -102,31 +117,28 @@ public class Player {
   }
 
   public void increaseMoney(int amount) {
-    if (money == null) {
-      money = 0;
+    if (this.money == null) {
+      this.money = 0;
     }
-    money += amount;
+    this.money += amount;
   }
 
   public void decreaseMoney(int amount) {
-    if (money == null || money < amount) {
-      throw new InvalidParameterException("Not enough money");
+    if (this.money == null || this.money < amount) {
+      throw new InvalidParameterException("Not enough money or money not initialized.");
     }
-    money -= amount;
+    this.money -= amount;
   }
 
   public int getMoney() {
     return money != null ? money : 0;
   }
 
-  // For utility properties
   public int getLastDiceRoll() {
-    // This should be implemented to track the last dice roll
-    return 0;  // Placeholder
+    return 0;
   }
 
   public int getUtilitiesOwnedCount() {
-    // Count utilities owned by this player
-    return 0;  // Placeholder
+    return 0;
   }
 }
