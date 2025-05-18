@@ -3,6 +3,7 @@ package edu.ntnu.idi.bidata.ui;
 import edu.ntnu.idi.bidata.controller.GameController;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
+import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction; // Import
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,12 +12,14 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip; // Import
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +40,15 @@ public class GameScene implements SceneManager.ControlledScene {
   private final Runnable onNewGameCallback, onHomeCallback;
   private final SnakeLadderPlayerSetupScene.Theme theme;
 
+  // Schrödinger UI elements
+  private Button schrodingerObserveButton;
+  private Button schrodingerIgnoreButton;
+  private VBox schrodingerChoiceBox;
+  private Label gameMessageLabel; // For general game messages
+
   private static final String EGYPT_GAME_BG = "/images/sl_game_background.jpg";
   private static final String JUNGLE_GAME_BG = "/images/jungle_game_background.png";
   private static final double SIDE_PANEL_PIECE_SIZE = 24;
-
 
   public GameScene(Stage stage, GameController gameController, BoardGame gameModel,
       Runnable onNewGame, Runnable onHome, SnakeLadderPlayerSetupScene.Theme gameTheme) {
@@ -53,37 +61,39 @@ public class GameScene implements SceneManager.ControlledScene {
     BorderPane root = new BorderPane();
     String bgPath = (this.theme == SnakeLadderPlayerSetupScene.Theme.JUNGLE) ? JUNGLE_GAME_BG : EGYPT_GAME_BG;
     try {
-      Image bgImg = new Image(Objects.requireNonNull(getClass().getResourceAsStream(bgPath), "Background image not found: " + bgPath));
-      BackgroundImage bgImage = new BackgroundImage(bgImg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(1.0, 1.0, true, true, false, true));
-      root.setBackground(new Background(bgImage));
+      Image bgImg = new Image(Objects.requireNonNull(getClass().getResourceAsStream(bgPath),"Bg image not found"));
+      BackgroundImage bg = new BackgroundImage(bgImg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+          BackgroundPosition.CENTER, new BackgroundSize(1.0,1.0,true,true,false,true));
+      root.setBackground(new Background(bg));
     } catch (Exception e) {
-      System.err.println("Failed to load background image for GameScene: " + bgPath + ". " + e.getMessage());
-      root.setStyle("-fx-background-color: #DEB887;"); // Fallback color
+      System.err.println("Failed to load GameScene background: " + bgPath + ". " + e.getMessage());
+      root.setStyle("-fx-background-color: #D2B48C;"); // Tan fallback
     }
-
 
     this.boardView = new BoardView(this.gameModel, this.theme);
     StackPane boardContainer = createBoardContainer(this.boardView);
-    VBox sidePanel = createSidePanel(); // Players will be passed via model during refresh
+    VBox sidePanel = createSidePanel();
 
     root.setCenter(boardContainer);
     root.setRight(sidePanel);
     root.setPadding(new Insets(20));
-
     scene = new Scene(root, 1100, 800);
   }
 
   public void initializeView() {
-    updateDiceLabel("⚄");
-    createPlayerStatusBoxes(gameModel.getPlayers()); // Create status boxes with current players
-    updatePlayerStatusDisplay(); // Update positions
-    if (gameModel.getCurrentPlayer() != null) {
-      highlightCurrentPlayer(gameModel.getCurrentPlayer());
-    } else if (!gameModel.getPlayers().isEmpty()){
-      highlightCurrentPlayer(gameModel.getPlayers().getFirst());
+    updateDiceLabel("⚀"); // Initial dice face
+    createPlayerStatusBoxes(gameModel.getPlayers()); // Create/recreate based on current model
+    updatePlayerStatusDisplay();
+    hideSchrodingerChoice(); // Ensure hidden on fresh view init
+
+    Player current = gameModel.getCurrentPlayer();
+    if (current != null) {
+      highlightCurrentPlayer(current);
+    } else if (!gameModel.getPlayers().isEmpty()) {
+      highlightCurrentPlayer(gameModel.getPlayers().getFirst()); // Highlight first if no current (e.g. pre-game)
     }
-    setRollButtonEnabled(true);
-    boardView.initializePlayerTokenVisuals(); // Crucial: Tell BoardView to create its tokens
+    setRollButtonEnabled(!gameModel.isFinished()); // Enable roll if game not over
+    boardView.initializePlayerTokenVisuals();
     boardView.refresh();
   }
 
@@ -94,84 +104,99 @@ public class GameScene implements SceneManager.ControlledScene {
 
   private StackPane createBoardContainer(BoardView board) {
     Group boardGroup = new Group(board);
-    Region border = new Region(); // Used for padding/styling effect
-    border.setStyle("-fx-background-color: transparent; -fx-background-radius: 15px; -fx-padding: 15px;"); // Example style
+    StackPane container = new StackPane(boardGroup); // Simplified, add border/padding via CSS if needed
+    StackPane.setMargin(boardGroup, new Insets(10));
+    container.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Let board dictate size initially
 
-    StackPane container = new StackPane(border, boardGroup);
-    StackPane.setMargin(boardGroup, new Insets(10)); // Margin for the board itself within the border
-    container.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE); // Allow container to grow
-
-    // Resizing logic for the board
     ChangeListener<Number> resizer = (obs, oldVal, newVal) -> {
-      double availableWidth = container.getWidth() - (2 * StackPane.getMargin(boardGroup).getLeft()) - (border.getInsets().getLeft() + border.getInsets().getRight());
-      double availableHeight = container.getHeight() - (2 * StackPane.getMargin(boardGroup).getTop()) - (border.getInsets().getTop() + border.getInsets().getBottom());
-
-      if (availableWidth <=0 || availableHeight <= 0) return;
-
-      double scale = Math.min(availableWidth / board.getPrefWidth(), availableHeight / board.getPrefHeight());
+      double W = container.getWidth() - 20; // -20 for margins
+      double H = container.getHeight() - 20;
+      if (W <= 0 || H <= 0 || board.getPrefWidth() <=0 || board.getPrefHeight() <=0) return;
+      double scale = Math.min(W / board.getPrefWidth(), H / board.getPrefHeight());
       boardGroup.setScaleX(scale);
       boardGroup.setScaleY(scale);
     };
-
     container.widthProperty().addListener(resizer);
     container.heightProperty().addListener(resizer);
     return container;
   }
 
   private VBox createSidePanel() {
-    VBox sidePanel = new VBox(20);
+    VBox sidePanel = new VBox(15); // Adjusted spacing
     sidePanel.setAlignment(Pos.TOP_CENTER);
-    sidePanel.setPadding(new Insets(0, 0, 0, 20));
-    sidePanel.setPrefWidth(300);
+    sidePanel.setPadding(new Insets(10, 10, 10, 20)); // Top, Right, Bottom, Left
+    sidePanel.setPrefWidth(320); // Slightly wider
+    sidePanel.setStyle("-fx-background-color: rgba(245, 235, 218, 0.85); -fx-background-radius: 10px;"); // Semi-transparent
 
-    VBox titleBox = new VBox(5);
-    titleBox.setAlignment(Pos.CENTER);
-    titleBox.setPadding(new Insets(20));
-    titleBox.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
+    // Title
     Label titleLabel = new Label("Ancient Journey");
-    titleLabel.setFont(Font.font("Serif", FontWeight.BOLD, 32));
+    titleLabel.setFont(Font.font("Serif", FontWeight.BOLD, 30));
     titleLabel.setTextFill(Color.web("#5A3A22"));
-    Label subtitleLabel = new Label("A Game of Destiny and Fortune");
-    subtitleLabel.setFont(Font.font("Serif", FontWeight.NORMAL, 16));
-    subtitleLabel.setTextFill(Color.web("#5A3A22"));
-    titleBox.getChildren().addAll(titleLabel, subtitleLabel);
+    VBox titleBox = new VBox(titleLabel);
+    titleBox.setAlignment(Pos.CENTER);
+    titleBox.setPadding(new Insets(10,0,5,0));
 
+    // Player Status Pane
+    playerStatusPane = new VBox(8); // Spacing between player entries
+    playerStatusPane.setAlignment(Pos.TOP_LEFT); // Align player entries to top-left
+    playerStatusPane.setPadding(new Insets(5));
 
-    playerStatusPane = new VBox(10);
-    playerStatusPane.setAlignment(Pos.CENTER_LEFT);
-    playerStatusPane.setPadding(new Insets(10));
+    // ScrollPane for player status if many players
+    // ScrollPane playerScrollPane = new ScrollPane(playerStatusPane);
+    // playerScrollPane.setFitToWidth(true);
+    // playerScrollPane.setPrefHeight(200); // Example height
+    // playerScrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
 
-    VBox playerSection = new VBox(15, new Label("Players:"), playerStatusPane);
-    playerSection.setAlignment(Pos.TOP_CENTER);
-    playerSection.setPadding(new Insets(20));
-    playerSection.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
-
-
-    diceLabel = new Label("⚄");
+    // Dice Display and Roll Button
+    diceLabel = new Label("⚀");
     diceLabel.setFont(Font.font("Serif", FontWeight.BOLD, 48));
     diceLabel.setTextFill(Color.web("#5A3A22"));
     rollButton = new Button("Roll Dice");
     styleButton(rollButton);
     rollButton.setOnAction(e -> controller.handleRollDiceRequest());
-    rollButton.setPrefWidth(150);
+    rollButton.setPrefWidth(160);
     VBox diceBox = new VBox(10, diceLabel, rollButton);
     diceBox.setAlignment(Pos.CENTER);
-    diceBox.setPadding(new Insets(20));
-    diceBox.setStyle("-fx-background-color: #F5EBDA; -fx-background-radius: 10px;");
+    diceBox.setPadding(new Insets(10,0,10,0));
 
+    // Schrödinger Controls
+    schrodingerObserveButton = new Button("Open the Box!");
+    styleButton(schrodingerObserveButton, Color.web("#FF6347"), Color.web("#E0523A")); // Tomato color
+    schrodingerObserveButton.setTooltip(new Tooltip("Reveal the box's mysterious content!"));
+    schrodingerObserveButton.setOnAction(e -> controller.handleObserveSchrodingerBoxRequest());
 
+    schrodingerIgnoreButton = new Button("Ignore & Move On");
+    styleButton(schrodingerIgnoreButton, Color.web("#708090"), Color.web("#596773")); // Slate gray color
+    schrodingerIgnoreButton.setTooltip(new Tooltip("Leave the box untouched and end your special action."));
+    schrodingerIgnoreButton.setOnAction(e -> controller.handleIgnoreSchrodingerBoxRequest());
+
+    schrodingerChoiceBox = new VBox(10, new Label("A Choice Awaits!"), schrodingerObserveButton, schrodingerIgnoreButton);
+    schrodingerChoiceBox.setAlignment(Pos.CENTER);
+    schrodingerChoiceBox.setPadding(new Insets(10));
+    schrodingerChoiceBox.setStyle("-fx-background-color: rgba(211, 211, 211, 0.9); -fx-background-radius: 8px; -fx-border-color: #808080; -fx-border-width: 1px;");
+    hideSchrodingerChoice(); // Initially hidden
+
+    // Game Message Label
+    gameMessageLabel = new Label("Welcome to the game!");
+    gameMessageLabel.setWrapText(true);
+    gameMessageLabel.setFont(Font.font("Serif", FontWeight.NORMAL, 14));
+    gameMessageLabel.setTextFill(Color.web("#4A4A4A"));
+    gameMessageLabel.setPadding(new Insets(5));
+    gameMessageLabel.setStyle("-fx-background-color: rgba(255, 250, 240, 0.9); -fx-background-radius: 5px;"); // FloralWhite
+    gameMessageLabel.setMinHeight(40); // Ensure space for messages
+
+    // Game Controls
     Button newGameBtn = new Button("New Game");
     styleButton(newGameBtn);
     newGameBtn.setOnAction(e -> onNewGameCallback.run());
-    newGameBtn.setPrefWidth(200);
     Button homeBtn = new Button("Return Home");
     styleButton(homeBtn);
     homeBtn.setOnAction(e -> onHomeCallback.run());
-    homeBtn.setPrefWidth(200);
-    VBox controlsBox = new VBox(15, newGameBtn, homeBtn);
-    controlsBox.setAlignment(Pos.CENTER);
+    HBox gameControlsBox = new HBox(15, newGameBtn, homeBtn);
+    gameControlsBox.setAlignment(Pos.CENTER);
+    gameControlsBox.setPadding(new Insets(10,0,10,0));
 
-    sidePanel.getChildren().addAll(titleBox, playerSection, diceBox, controlsBox);
+    sidePanel.getChildren().addAll(titleBox, playerStatusPane /*or playerScrollPane*/, diceBox, schrodingerChoiceBox, gameMessageLabel, gameControlsBox);
     return sidePanel;
   }
 
@@ -179,102 +204,130 @@ public class GameScene implements SceneManager.ControlledScene {
     playerStatusPane.getChildren().clear();
     playerPositionLabels.clear();
     sidePanelPieceViews.clear();
-
     if (players == null) return;
 
     for (Player p : players) {
-      HBox box = new HBox(10); // Spacing between elements in the player row
-      box.setAlignment(Pos.CENTER_LEFT);
-      box.setPadding(new Insets(8)); // Padding within each player's box
-      box.setStyle("-fx-background-color: #FFF9E0; -fx-background-radius: 8px;");
+      HBox playerBox = new HBox(8);
+      playerBox.setAlignment(Pos.CENTER_LEFT);
+      playerBox.setPadding(new Insets(6));
+      playerBox.setStyle("-fx-background-color: rgba(255, 249, 224, 0.8); -fx-background-radius: 6px;"); // Light beige
 
       ImageView pieceView = new ImageView();
       pieceView.setFitWidth(SIDE_PANEL_PIECE_SIZE);
       pieceView.setFitHeight(SIDE_PANEL_PIECE_SIZE);
       pieceView.setPreserveRatio(true);
-
       Optional<PieceUIData> pieceDataOpt = SnakeLadderPlayerSetupScene.AVAILABLE_PIECES.stream()
           .filter(pd -> pd.getIdentifier().equals(p.getPieceIdentifier()))
           .findFirst();
-
-      if (pieceDataOpt.isPresent()) {
-        Image pieceImage = pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE);
-        if (pieceImage != null) {
-          pieceView.setImage(pieceImage);
-        } else { /* TODO: Handle missing image, e.g. placeholder */ }
-      } else { /* TODO: Handle missing PieceUIData */ }
+      if (pieceDataOpt.isPresent() && pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE) != null) {
+        pieceView.setImage(pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE));
+      } else { /* Set a placeholder or leave empty */ }
       sidePanelPieceViews.put(p, pieceView);
 
-      Label nameLabel = new Label(p.getName());
-      nameLabel.setFont(Font.font("Serif", FontWeight.BOLD, 16));
-      nameLabel.setTextFill(Color.web("#5A3A22"));
+      Label nameLbl = new Label(p.getName());
+      nameLbl.setFont(Font.font("Serif", FontWeight.BOLD, 15));
+      nameLbl.setTextFill(Color.web("#5A3A22"));
+      nameLbl.setMinWidth(80); // Give some min width for names
 
-      Label posLabel = new Label("Tile: " + (p.getCurrentTile() != null ? p.getCurrentTile().getId() + 1 : "N/A")); // Display 1-indexed
-      posLabel.setFont(Font.font("Serif", FontWeight.NORMAL, 14));
-      posLabel.setTextFill(Color.web("#5A3A22"));
-      playerPositionLabels.put(p, posLabel);
+      Label posLbl = new Label("Tile: " + (p.getCurrentTile() != null ? (p.getCurrentTile().getId() + 1) : "N/A"));
+      posLbl.setFont(Font.font("Serif", FontWeight.NORMAL, 14));
+      posLbl.setTextFill(Color.web("#5A3A22"));
+      playerPositionLabels.put(p, posLbl);
 
-      VBox playerInfo = new VBox(3, nameLabel, posLabel); // Text info
-      box.getChildren().addAll(pieceView, playerInfo);
-      playerStatusPane.getChildren().add(box);
+      VBox textInfo = new VBox(2, nameLbl, posLbl);
+      playerBox.getChildren().addAll(pieceView, textInfo);
+      playerStatusPane.getChildren().add(playerBox);
     }
   }
 
   private void styleButton(Button btn) {
-    btn.setFont(Font.font("Serif", FontWeight.BOLD, 16));
-    btn.setStyle("-fx-background-color: #E5B85C; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand;");
-    btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #D4A74A; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand;"));
-    btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #E5B85C; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand;"));
+    styleButton(btn, Color.web("#E5B85C"), Color.web("#D4A74A")); // Default colors
   }
+  private void styleButton(Button btn, Color baseColor, Color hoverColor) {
+    String baseRgb = String.format("rgba(%d, %d, %d, 0.9)", (int)(baseColor.getRed()*255), (int)(baseColor.getGreen()*255), (int)(baseColor.getBlue()*255));
+    String hoverRgb = String.format("rgba(%d, %d, %d, 1.0)", (int)(hoverColor.getRed()*255), (int)(hoverColor.getGreen()*255), (int)(hoverColor.getBlue()*255));
+
+    btn.setFont(Font.font("Serif", FontWeight.BOLD, 15));
+    btn.setStyle("-fx-background-color: " + baseRgb + "; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand; -fx-padding: 6 12 6 12;");
+    btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: " + hoverRgb + "; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand; -fx-padding: 6 12 6 12;"));
+    btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: " + baseRgb + "; -fx-text-fill: #5A3A22; -fx-background-radius: 5px; -fx-cursor: hand; -fx-padding: 6 12 6 12;"));
+  }
+
 
   public void updatePlayerStatusDisplay() {
     if (gameModel == null || gameModel.getPlayers() == null) return;
-    // If the number of players displayed doesn't match the model, recreate the boxes
     if (playerStatusPane.getChildren().size() != gameModel.getPlayers().size()) {
-      createPlayerStatusBoxes(gameModel.getPlayers());
+      createPlayerStatusBoxes(gameModel.getPlayers()); // Recreate if player count changed
+    } else { // Just update existing labels
+      gameModel.getPlayers().forEach(p -> {
+        Label posLabel = playerPositionLabels.get(p);
+        if (posLabel != null && p.getCurrentTile() != null) {
+          posLabel.setText("Tile: " + (p.getCurrentTile().getId() + 1));
+        }
+      });
     }
-
-    gameModel.getPlayers().forEach(p -> {
-      Label posLabel = playerPositionLabels.get(p);
-      if (posLabel != null && p.getCurrentTile() != null) {
-        posLabel.setText("Tile: " + (p.getCurrentTile().getId() + 1)); // Update position (1-indexed)
-      }
-    });
   }
 
   public void updateDiceLabel(String text) { if (diceLabel != null) diceLabel.setText(text); }
 
   public void highlightCurrentPlayer(Player playerToHighlight) {
     if (playerToHighlight == null || gameModel.getPlayers() == null) return;
-    for (Node node : playerStatusPane.getChildren()) {
-      if (node instanceof HBox) { // Each player's status is an HBox
-        node.setStyle("-fx-background-color: #FFF9E0; -fx-background-radius: 8px; -fx-border-color: transparent;"); // Reset style
+    for (int i = 0; i < gameModel.getPlayers().size(); i++) {
+      Node node = playerStatusPane.getChildren().get(i); // Assumes order matches
+      if (gameModel.getPlayers().get(i).equals(playerToHighlight)) {
+        node.setStyle("-fx-background-color: #FFE7B3; -fx-background-radius: 6px; -fx-border-color: #E5B85C; -fx-border-width: 2px; -fx-border-radius: 6px; -fx-padding: 5px;"); // Adjusted padding
+      } else {
+        node.setStyle("-fx-background-color: rgba(255, 249, 224, 0.8); -fx-background-radius: 6px; -fx-padding: 6px;"); // Reset to default player box style
       }
-    }
-    int playerIndex = gameModel.getPlayers().indexOf(playerToHighlight);
-    if (playerIndex != -1 && playerIndex < playerStatusPane.getChildren().size()) {
-      Node currentPlayerNode = playerStatusPane.getChildren().get(playerIndex);
-      currentPlayerNode.setStyle("-fx-background-color: #FFE7B3; -fx-background-radius: 8px; -fx-border-color: #E5B85C; -fx-border-width: 2px; -fx-border-radius: 8px;");
     }
   }
 
-  public void setRollButtonEnabled(boolean enabled) { if (rollButton != null) rollButton.setDisable(!enabled); }
+  public void setRollButtonEnabled(boolean enabled) {
+    if (rollButton != null) rollButton.setDisable(!enabled);
+  }
 
   public void displayGameOver(Player winner) {
-    updateDiceLabel("🏆");
+    updateDiceLabel(winner != null ? "🏆" : "🏁");
     setRollButtonEnabled(false);
-    for (Node node : playerStatusPane.getChildren()) { // Reset all highlights
-      if (node instanceof HBox) {
-        node.setStyle("-fx-background-color: #FFF9E0; -fx-background-radius: 8px; -fx-border-color: transparent;");
+    hideSchrodingerChoice();
+    String M = winner != null ? winner.getName() + " wins the journey!" : "The game has ended!";
+    showGameMessage(M);
+    if (winner != null) highlightCurrentPlayer(winner); // Highlight the winner
+  }
+
+  // --- Schrödinger UI Methods ---
+  public void showSchrodingerChoice(Player player, SchrodingerBoxAction action) {
+    if (schrodingerChoiceBox != null) {
+      // Find the label within schrodingerChoiceBox to update text, or add one if needed
+      Node firstChild = schrodingerChoiceBox.getChildren().getFirst();
+      if (firstChild instanceof Label choiceLabel) {
+        choiceLabel.setText(player.getName() + ", " + action.getDescription());
+      } else { // Prepend a label if not there
+        Label tempLabel = new Label(player.getName() + ", " + action.getDescription());
+        tempLabel.setWrapText(true);
+        tempLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        schrodingerChoiceBox.getChildren().addFirst(tempLabel);
       }
+
+      schrodingerChoiceBox.setManaged(true);
+      schrodingerChoiceBox.setVisible(true);
+      rollButton.setDisable(true); // Make sure roll is disabled
+      showGameMessage(player.getName() + " faces a choice..."); // Update main message too
     }
-    if (winner != null) {
-      int winnerIndex = gameModel.getPlayers().indexOf(winner);
-      if (winnerIndex != -1 && winnerIndex < playerStatusPane.getChildren().size()) {
-        Node winnerNode = playerStatusPane.getChildren().get(winnerIndex);
-        winnerNode.setStyle("-fx-background-color: #FFD700; -fx-background-radius: 8px; -fx-padding: 8px; -fx-border-color: #DAA520; -fx-border-width: 2px;"); // Gold highlight
-      }
+  }
+
+  public void hideSchrodingerChoice() {
+    if (schrodingerChoiceBox != null) {
+      schrodingerChoiceBox.setManaged(false);
+      schrodingerChoiceBox.setVisible(false);
+      // Clear general game message or set to default game state message
+      // gameMessageLabel.setText("Roll the dice to proceed.");
     }
-    updatePlayerStatusDisplay();
+  }
+
+  public void showGameMessage(String message) {
+    if (gameMessageLabel != null) {
+      gameMessageLabel.setText(message);
+    }
   }
 }
