@@ -2,7 +2,6 @@ package edu.ntnu.idi.bidata.model;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.service.GameService;
-import edu.ntnu.idi.bidata.service.SnakesLaddersService;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,51 +24,40 @@ public class BoardGame {
     }
     observers.add(observer);
   }
+
   public void removeObserver(BoardGameObserver observer) {
     observers.remove(observer);
   }
 
+  // New method to notify UI of generic game events/messages (optional but useful)
+  // If you decide to use this, GameController would call it, and BoardGameObserver would need a new method.
+  // For now, GameController updates GameScene directly for messages.
+  public void notifyGameEvent(String eventMessage, Player involvedPlayer) {
+    for (BoardGameObserver obs : observers) {
+      // Example: if (obs instanceof ExtendedBoardGameObserver extObs) {
+      // extObs.onGameMessage(eventMessage, involvedPlayer);
+      // }
+    }
+  }
+
+
   // --- Initialization ---
-  /**
-   * Call *after* setting board, dice, and adding players,
-   * to wire in your GameService and fire the start‐game event.
-   */
   public void init() {
-    // 1) validate that everything’s been wired
-    if (board == null) {
-      throw new IllegalStateException("Board must be set before init()");
-    }
-    if (dice == null) {
-      throw new IllegalStateException("Dice must be set before init()");
-    }
-    if (players.isEmpty()) {
-      throw new IllegalStateException("At least one player must be added before init()");
-    }
+    if (board == null) throw new IllegalStateException("Board must be set before init()");
+    if (dice == null) throw new IllegalStateException("Dice must be set before init()");
+    if (players.isEmpty()) throw new IllegalStateException("At least one player must be added before init()");
+    if (service == null) throw new IllegalStateException("GameService must be set before init()");
 
-    // 2) let the service do its setup
-    service.setup(this);
-    this.gameInitialized = true; // Mark as initialized AFTER service.setup() completes
-    // 3) notify observers
-    notifyGameStart();
+    service.setup(this); // Let the service do its setup (e.g., set initial player positions, current player index)
+    this.gameInitialized = true;
+    notifyGameStart(); // Notify observers that the game is ready
   }
 
-  // --- Full‐round play ---
-  /**
-   * Each player takes exactly one turn this round.
-   * @return the raw dice‐rolls in player-order
-   */
-  public List<Integer> playOneRound() {
-    requireInitialized();
-    List<Integer> rolls = service.playOneRound(this);
-    notifyRoundPlayed(rolls);
-    if (isFinished()) {
-      notifyGameOver(getWinner());
-    }
-    return rolls;
-  }
-
+  // --- Gameplay ---
   /**
    * Plays exactly one roll/move for the given player.
+   * The service will handle moving the player and calling tile.land(player).
+   * After this, notifyRoundPlayed is called.
    */
   public void playTurn(Player player) {
     requireInitialized();
@@ -77,13 +65,19 @@ public class BoardGame {
       throw new IllegalArgumentException("Player is not part of this game");
     }
 
-    // let the service do the roll & move
-    int roll = service.playTurn(this, player);
+    int roll = service.playTurn(this, player); // Service handles dice, move, and tile.land()
 
+    // Notify that a dice roll part of the turn happened.
+    // The GameController's onRoundPlayed will handle complex UI updates,
+    // including checks for special actions like Schrödinger's Box.
     notifyRoundPlayed(List.of(roll));
-    if (isFinished()) {
-      notifyGameOver(getWinner());
-    }
+
+    // The GameController will now handle the game over check in its onRoundPlayed
+    // or after a choice is made (if a choice was pending).
+    // This avoids a premature game over notification if a choice could change the outcome.
+    // if (isFinished()) { // This check is now primarily driven by GameController after actions
+    //     notifyGameOver(getWinner());
+    // }
   }
 
   // --- Queries delegated to the service ---
@@ -92,10 +86,6 @@ public class BoardGame {
     return service.isFinished(this);
   }
 
-  /**
-   * Checks if the game has been initialized.
-   * @return true if init() has been successfully called and completed, false otherwise.
-   */
   public boolean isGameStarted() {
     return this.gameInitialized;
   }
@@ -105,32 +95,24 @@ public class BoardGame {
     return service.getWinner(this);
   }
 
-  // --- Wiring: board, dice, players, service injection ---
+  // --- Wiring ---
   public void setBoard(Board board) {
-    if (board == null) {
-      throw new InvalidParameterException("Board cannot be null");
-    }
+    if (board == null) throw new InvalidParameterException("Board cannot be null");
     this.board = board;
   }
 
   public void setDice(Dice dice) {
-    if (dice == null) {
-      throw new InvalidParameterException("Dice cannot be null");
-    }
+    if (dice == null) throw new InvalidParameterException("Dice cannot be null");
     this.dice = dice;
   }
 
   public void addPlayer(Player player) {
-    if (player == null) {
-      throw new InvalidParameterException("Player cannot be null");
-    }
+    if (player == null) throw new InvalidParameterException("Player cannot be null");
     players.add(player);
   }
 
   public void setGameService(GameService service) {
-    if (service == null) {
-      throw new InvalidParameterException("GameService cannot be null");
-    }
+    if (service == null) throw new InvalidParameterException("GameService cannot be null");
     this.service = service;
   }
 
@@ -138,8 +120,7 @@ public class BoardGame {
   public Board getBoard() { return board; }
   public Dice getDice()   { return dice; }
   public List<Player> getPlayers() {
-    // defensive copy
-    return new ArrayList<>(players);
+    return new ArrayList<>(players); // Defensive copy
   }
 
   /**
@@ -148,20 +129,18 @@ public class BoardGame {
    * @return The current Player, or null if not applicable or game not started.
    */
   public Player getCurrentPlayer() {
-    if (!isGameStarted()) {
+    if (!isGameStarted() || service == null) {
+      // If game not started or service not set, behavior might depend on your GameService.
+      // Returning null is a safe default.
       return null;
-    }
-    // requireInitialized(); // or this, if you prefer to throw an exception
-    if (service == null) { // Should be caught by requireInitialized or isGameStarted
-      throw new IllegalStateException("GameService not available, game might not be fully initialized.");
     }
     return service.getCurrentPlayer(this);
   }
 
   // --- Internals & notification helpers ---
   private void requireInitialized() {
-    if (service == null) {
-      throw new IllegalStateException("Game not initialized; call init() first");
+    if (!gameInitialized || service == null) {
+      throw new IllegalStateException("Game not fully initialized; call init() first and ensure service is set.");
     }
   }
 

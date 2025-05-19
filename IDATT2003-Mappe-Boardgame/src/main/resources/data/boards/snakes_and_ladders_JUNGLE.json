@@ -190,7 +190,11 @@
     },
     {
       "id": 42,
-      "nextId": 43
+      "nextId": 43,
+      "action": {
+        "type": "SchrodingerBoxAction",
+        "description": "A peculiar, pulsating box appears!"
+      }
     },
     {
       "id": 43,
