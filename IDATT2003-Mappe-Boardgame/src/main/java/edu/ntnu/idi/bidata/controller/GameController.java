@@ -5,282 +5,324 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.BoardGameObserver;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
-import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction; // Assuming this exists for Monopoly
-import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction; // Import new action
-import edu.ntnu.idi.bidata.service.MonopolyService; // Assuming this exists for Monopoly
-import edu.ntnu.idi.bidata.service.ServiceLocator;   // Assuming this exists for Monopoly
+import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
+import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
+import edu.ntnu.idi.bidata.service.MonopolyService;
+import edu.ntnu.idi.bidata.service.ServiceLocator;
 import edu.ntnu.idi.bidata.ui.GameScene;
-import edu.ntnu.idi.bidata.ui.MonopolyGameScene; // Assuming this exists for Monopoly
+import edu.ntnu.idi.bidata.ui.MonopolyGameScene;
 import edu.ntnu.idi.bidata.ui.SceneManager;
+import edu.ntnu.idi.bidata.util.Logger;
 
-import javafx.scene.control.Alert; // For Monopoly alerts, if used
+import javafx.scene.control.Alert;
 import java.util.List;
 import java.util.Random;
 
 public class GameController implements BoardGameObserver {
     private final BoardGame gameModel;
     private SceneManager.ControlledScene activeView;
-    private Player currentPlayer; // Player whose turn it is currently or about to be
-    private MonopolyService monopolyService; // Assuming this is for Monopoly
+    private Player currentPlayer;
+    private MonopolyService monopolyService;
 
-    // State for Schrödinger's Box
     private boolean awaitingSchrodingerChoice = false;
-    private Player playerMakingSchrodingerChoice = null; // The player who landed on the box
-    private final Random random = new Random(); // For Schrödinger's outcome
+    private Player playerMakingSchrodingerChoice = null;
+    private final Random random = new Random();
 
     public GameController(BoardGame game) {
         this.gameModel = game;
         this.gameModel.addObserver(this);
+        Logger.info("GameController initialized.");
 
-        // Assuming ServiceLocator and MonopolyService are part of your Monopoly implementation
-        // If not, you can remove these lines if they cause errors and are not needed for S&L
-        if (ServiceLocator.getMonopolyService() != null) { // Check if service is registered
+        if (ServiceLocator.getMonopolyService() != null) {
             this.monopolyService = ServiceLocator.getMonopolyService();
+            Logger.debug("MonopolyService located and assigned.");
+        } else {
+            Logger.warning("MonopolyService not found via ServiceLocator. Monopoly features might be unavailable.");
         }
     }
 
     public void setActiveView(SceneManager.ControlledScene view) {
         this.activeView = view;
+        Logger.info("Active view set to: " + (view != null ? view.getClass().getSimpleName() : "null"));
         if (this.activeView != null && this.gameModel.isGameStarted()) {
+            Logger.debug("Active view set and game started, initializing/refreshing view.");
             initializeOrRefreshViewForCurrentState();
+        } else {
+            Logger.debug("Skipping view initialization/refresh: Active view is null or game not started.");
         }
     }
 
     private void initializeOrRefreshViewForCurrentState() {
-        if (activeView == null || !gameModel.isGameStarted()) return;
+        if (activeView == null) {
+            Logger.warning("Attempted to initialize/refresh view, but activeView is null.");
+            return;
+        }
+        if (!gameModel.isGameStarted()){
+            Logger.debug("Attempted to initialize/refresh view, but gameModel is not started.");
+            return;
+        }
+        Logger.debug("Initializing/refreshing view for current game state. View type: " + activeView.getClass().getSimpleName());
 
         this.currentPlayer = gameModel.getCurrentPlayer();
-        awaitingSchrodingerChoice = false; // Reset on view refresh
+        awaitingSchrodingerChoice = false;
         playerMakingSchrodingerChoice = null;
+        Logger.debug("Schrödinger choice state reset. Current player for view: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
 
 
         if (activeView instanceof GameScene scene) {
-            scene.initializeView(); // This should internally call createPlayerStatusBoxes, updatePlayerStatusDisplay
-            scene.getBoardView().refresh(); // Refresh board visuals
+            scene.initializeView();
+            scene.getBoardView().refresh();
             if (this.currentPlayer != null) {
                 scene.highlightCurrentPlayer(this.currentPlayer);
             }
             scene.setRollButtonEnabled(!gameModel.isFinished() && this.currentPlayer != null && !awaitingSchrodingerChoice);
-            scene.hideSchrodingerChoice(); // Ensure hidden
-        } else if (activeView instanceof MonopolyGameScene scene) { // Adapt for Monopoly if it also needs this
+            scene.hideSchrodingerChoice();
+            Logger.debug("GameScene refreshed for current state.");
+        } else if (activeView instanceof MonopolyGameScene scene) {
             scene.initializeView();
             scene.updatePlayerStatusDisplay();
-            // scene.getBoardView().refresh(); // Assuming MonopolyGameScene has getBoardView()
             if (this.currentPlayer != null) {
                 scene.highlightCurrentPlayer(this.currentPlayer);
             }
             scene.setRollButtonEnabled(!gameModel.isFinished() && this.currentPlayer != null);
-            // scene.hideSchrodingerChoice(); // If Monopoly ever gets this
+            Logger.debug("MonopolyGameScene refreshed for current state.");
         }
     }
 
     public void startGame() {
+        Logger.info("startGame() called. Initializing game model.");
         gameModel.init(); // Model initializes and fires onGameStart
     }
 
     @Override
     public void onGameStart(List<Player> players) {
-        if (activeView == null) return;
+        Logger.info("Game Started. Number of players: " + players.size());
+        if (activeView == null) {
+            Logger.warning("onGameStart: activeView is null, UI updates will be skipped.");
+            return;
+        }
 
         this.currentPlayer = gameModel.getCurrentPlayer();
         awaitingSchrodingerChoice = false;
         playerMakingSchrodingerChoice = null;
+        Logger.info("First player's turn: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
+        Logger.debug("onGameStart: Schrödinger state reset.");
+
 
         if (activeView instanceof GameScene scene) {
-            scene.initializeView(); // This will set up dice, player statuses etc.
-            scene.hideSchrodingerChoice(); // Crucial to hide at game start
+            scene.initializeView();
+            scene.hideSchrodingerChoice();
             if (this.currentPlayer != null) {
                 scene.highlightCurrentPlayer(this.currentPlayer);
             }
-            scene.setRollButtonEnabled(true); // For the first player
-            if (scene.getBoardView() != null) scene.getBoardView().refresh(); // Initial board draw
+            scene.setRollButtonEnabled(true);
+            if (scene.getBoardView() != null) scene.getBoardView().refresh();
+            Logger.debug("GameScene initialized for game start.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             scene.initializeView();
             if (this.currentPlayer != null) {
                 scene.highlightCurrentPlayer(this.currentPlayer);
             }
             scene.setRollButtonEnabled(true);
-            // if (scene.getBoardView() != null) scene.getBoardView().refresh();
+            Logger.debug("MonopolyGameScene initialized for game start.");
         }
     }
 
     @Override
     public void onRoundPlayed(List<Integer> rolls, List<Player> players) {
-        if (activeView == null) return;
+        String rollsStr = rolls != null && !rolls.isEmpty() ? rolls.toString() : "N/A";
+        // This could be INFO if you want a log per turn, or DEBUG if that's too much.
+        // Let's keep it INFO for now as it's a significant game progression event.
+        Logger.info("Round played. Player who acted: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "Unknown") + ". Rolls: " + rollsStr);
 
-        // 'this.currentPlayer' at this point should be the player who JUST finished their dice roll and initial move.
-        // The GameService within gameModel.playTurn() is responsible for:
-        // 1. Rolling dice.
-        // 2. Calling player.move(diceResult).
-        // 3. Calling landedTile.land(playerWhoMoved).
-        // This onRoundPlayed is the *consequence* of that.
+        if (activeView == null) {
+            Logger.warning("onRoundPlayed: activeView is null, UI updates will be skipped.");
+            return;
+        }
 
-        Player playerWhoActed = this.currentPlayer; // The player whose turn activities we are processing
+        Player playerWhoActed = this.currentPlayer; // This is the player who just finished their dice roll & initial move
 
-        // Clear any previous choice state for safety, though it should be cleared by completeSchrodingerActionSequence
+        // Reset choice state before checking for new choices
         awaitingSchrodingerChoice = false;
         playerMakingSchrodingerChoice = null;
-        if(activeView instanceof GameScene scene) scene.hideSchrodingerChoice(); // Ensure UI is reset
+        if(activeView instanceof GameScene scene) scene.hideSchrodingerChoice();
+        Logger.debug("onRoundPlayed: Schrödinger choice state reset before tile action check.");
 
 
         if (playerWhoActed != null && playerWhoActed.getCurrentTile() != null) {
             Tile landedTile = playerWhoActed.getCurrentTile();
+            Logger.debug("Player " + playerWhoActed.getName() + " landed on tile " + landedTile.getId() +
+                ". Action: " +
+                (landedTile.getAction() != null ? landedTile.getAction().getClass().getSimpleName() : "None"));
 
-            // The tile.land(player) method was called by the service.
-            // Now, we check the *type* of action on that tile to see if it's a Schrödinger box.
             if (landedTile.getAction() instanceof SchrodingerBoxAction schrodingerAction) {
                 awaitingSchrodingerChoice = true;
-                playerMakingSchrodingerChoice = playerWhoActed; // Store who needs to make the choice
+                playerMakingSchrodingerChoice = playerWhoActed;
+                Logger.info("Player " + playerWhoActed.getName() + " landed on a Schrödinger Box. Awaiting choice.");
                 if (activeView instanceof GameScene scene) {
                     scene.showSchrodingerChoice(playerWhoActed, schrodingerAction);
-                    scene.setRollButtonEnabled(false); // Disable main roll button
-                    // Update UI to reflect current state before choice
+                    scene.setRollButtonEnabled(false);
+                    assert rolls != null;
                     scene.updateDiceLabel(rolls.isEmpty() ? "" : String.valueOf(rolls.getFirst()));
-                    scene.getBoardView().refresh(); // Show player on the Schrödinger tile
+                    scene.getBoardView().refresh();
                     scene.updatePlayerStatusDisplay();
+                    Logger.debug("Schrödinger choice UI shown for " + playerWhoActed.getName());
                 }
-                // IMPORTANT: Return here. Do not proceed to finalizeTurnAndSetupNext.
-                // The turn is now paused, waiting for player input via handleObserve/IgnoreSchrodingerBoxRequest.
-                return;
+                return; // Await player choice
             }
 
-            // Handle other game-specific actions if not a Schrödinger box (e.g., Monopoly)
             if (activeView instanceof MonopolyGameScene mScene) {
                 if (monopolyService != null && landedTile.getAction() instanceof PropertyAction pa) {
+                    Logger.debug("Player " + playerWhoActed.getName() + " landed on Monopoly property: " + pa.getName() + ". Handling property action.");
                     handleLandedOnProperty(playerWhoActed, pa, mScene);
                 }
-                // ... other Monopoly action checks ...
             }
+        } else {
+            Logger.warning("onRoundPlayed: playerWhoActed or their current tile is null. Player: " +
+                (playerWhoActed != null ? playerWhoActed.getName() : "null"));
         }
 
-        // If no choice is pending (i.e., not a Schrödinger box or other choice-based action),
-        // proceed to finalize the turn and set up for the next player.
+        Logger.debug("No special choice pending from landing. Finalizing turn and setting up for next player.");
         finalizeTurnAndSetupNext(rolls);
     }
 
-    /**
-     * Finalizes the current turn's UI updates and prepares for the next player.
-     * Called when no special player choice is pending.
-     */
-    private void finalizeTurnAndSetupNext(List<Integer> rollsIfApplicable) {
-        // At this point, any direct consequences of the dice roll and landing (like standard snakes/ladders)
-        // have already occurred in the model via tile.land().
 
-        // Check for game over first, as the last move might have ended the game.
+    private void finalizeTurnAndSetupNext(List<Integer> rollsIfApplicable) {
+        Logger.debug("Entering finalizeTurnAndSetupNext.");
+        String rollsStr = rollsIfApplicable != null && !rollsIfApplicable.isEmpty() ? rollsIfApplicable.toString() : "N/A";
+        Logger.debug("Rolls from this turn (if applicable): " + rollsStr);
+
         if (gameModel.isFinished()) {
-            onGameOver(gameModel.getWinner()); // This will disable roll button etc.
-            // Ensure dice and board reflect the final state.
+            Logger.info("Game is finished (detected in finalizeTurnAndSetupNext). Calling onGameOver.");
+            onGameOver(gameModel.getWinner()); // This will log its own message
             if (activeView instanceof GameScene scene) {
                 if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) scene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
                 scene.getBoardView().refresh();
                 scene.updatePlayerStatusDisplay();
+                Logger.debug("GameScene UI updated for final game state.");
             }
             return;
         }
 
-        // Get the *next* player whose turn it is from the game model.
-        // The GameService should have advanced its internal current player pointer.
-        this.currentPlayer = gameModel.getCurrentPlayer();
+        this.currentPlayer = gameModel.getCurrentPlayer(); // This is now the *next* player
+        Logger.info("Next player's turn: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
 
-        // Update UI for the new current player.
         if (activeView instanceof GameScene scene) {
             if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) scene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
-            scene.getBoardView().refresh(); // Show any position changes
-            scene.updatePlayerStatusDisplay(); // Update tile numbers in status
-            scene.hideSchrodingerChoice(); // Ensure choice UI is hidden
+            scene.getBoardView().refresh();
+            scene.updatePlayerStatusDisplay();
+            scene.hideSchrodingerChoice();
             if (this.currentPlayer != null) scene.highlightCurrentPlayer(this.currentPlayer);
-            scene.setRollButtonEnabled(!gameModel.isFinished()); // Enable if game not over
+            scene.setRollButtonEnabled(!gameModel.isFinished());
+            Logger.debug("GameScene UI updated for the next turn.");
         } else if (activeView instanceof MonopolyGameScene mScene) {
-            // ... similar updates for MonopolyGameScene ...
+            // Add similar DEBUG logging for Monopoly if UI updates are extensive
             // mScene.updateDiceLabel(...);
             // mScene.getBoardView().refresh();
             // mScene.updatePlayerStatusDisplay();
-            // mScene.hideSchrodingerChoice(); // If applicable
             // if (this.currentPlayer != null) mScene.highlightCurrentPlayer(this.currentPlayer);
             // mScene.setRollButtonEnabled(!gameModel.isFinished());
+            Logger.debug("MonopolyGameScene UI updated for the next turn (placeholder).");
         }
     }
 
     @Override
     public void onGameOver(Player winner) {
-        if (activeView == null) return;
-        awaitingSchrodingerChoice = false; // Reset state
+        String winnerName = winner != null ? winner.getName() : "No one (Draw or Error)";
+        Logger.info("Game Over. Winner: " + winnerName);
+        if (activeView == null) {
+            Logger.warning("onGameOver: activeView is null, UI updates will be skipped.");
+            return;
+        }
+        awaitingSchrodingerChoice = false;
         playerMakingSchrodingerChoice = null;
+        Logger.debug("Schrödinger choice state reset on game over.");
 
         if (activeView instanceof GameScene scene) {
-            scene.displayGameOver(winner); // This method should handle dice label, button state etc.
-            scene.hideSchrodingerChoice(); // Ensure hidden
+            scene.displayGameOver(winner);
+            scene.hideSchrodingerChoice();
             scene.setRollButtonEnabled(false);
+            Logger.debug("GameScene displayed game over message and disabled roll button.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             scene.displayGameOver(winner);
-            // scene.hideSchrodingerChoice(); // If applicable
             scene.setRollButtonEnabled(false);
+            Logger.debug("MonopolyGameScene displayed game over message and disabled roll button.");
         }
     }
 
     public void handleRollDiceRequest() {
-        if (gameModel.isFinished() || this.currentPlayer == null || awaitingSchrodingerChoice) {
-            // If awaiting choice, the main roll button should already be disabled by showSchrodingerChoice.
-            // This is an extra safeguard.
-            if (activeView instanceof GameScene scene) {
-                scene.setRollButtonEnabled(false);
-            } else if (activeView instanceof MonopolyGameScene scene) {
-                // scene.setRollButtonEnabled(false);
-            }
+        Logger.debug("Entering handleRollDiceRequest for player: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "Unknown/None"));
+        if (gameModel.isFinished()) {
+            Logger.warning("Roll dice request ignored: Game is finished.");
+            return;
+        }
+        if (this.currentPlayer == null) {
+            Logger.warning("Roll dice request ignored: Current player is null.");
+            return;
+        }
+        if (awaitingSchrodingerChoice) {
+            Logger.warning("Roll dice request ignored: Awaiting Schrödinger choice from " +
+                (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "Unknown"));
+            if (activeView instanceof GameScene scene) scene.setRollButtonEnabled(false);
             return;
         }
 
-        // Disable roll button immediately to prevent multiple clicks for the same turn
+        // This is a key user action, so INFO seems appropriate
+        Logger.info("Player " + this.currentPlayer.getName() + " initiated a dice roll.");
+
         if (activeView instanceof GameScene scene) {
             scene.setRollButtonEnabled(false);
-            scene.showGameMessage(this.currentPlayer.getName() + " is rolling..."); // Brief message
+            scene.showGameMessage(this.currentPlayer.getName() + " is rolling...");
+            Logger.debug("Roll button disabled for GameScene during roll.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             // scene.setRollButtonEnabled(false);
+            Logger.debug("Roll button (Monopoly) disabled during roll (placeholder).");
         }
 
+        Logger.debug("Executing gameModel.playTurn() for player: " + this.currentPlayer.getName());
         gameModel.playTurn(this.currentPlayer); // This call eventually triggers onRoundPlayed
     }
 
-    /**
-     * Called by the UI when the player chooses to "observe" the Schrödinger's Box.
-     */
     public void handleObserveSchrodingerBoxRequest() {
+        Logger.debug("Entering handleObserveSchrodingerBoxRequest.");
         if (!awaitingSchrodingerChoice || playerMakingSchrodingerChoice == null) {
-            System.err.println("Controller: ObserveSchrodingerBoxRequest called inappropriately.");
+            Logger.warning("ObserveSchrodingerBoxRequest called inappropriately. State: awaiting=" + awaitingSchrodingerChoice +
+                ", player=" + (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "null"));
             return;
         }
+        Logger.info("Player " + playerMakingSchrodingerChoice.getName() + " chose to OBSERVE the Schrödinger Box.");
 
-        boolean goToStart = random.nextBoolean(); // 50/50 chance
+        boolean goToStart = random.nextBoolean();
         Tile targetTile;
         String outcomeMessage;
         Board board = gameModel.getBoard();
 
         if (board == null || board.getTile(0) == null || board.getTiles().isEmpty()) {
-            System.err.println("Controller: Board or critical tiles not available for Schrödinger outcome.");
-            completeSchrodingerActionSequence(); // Attempt to gracefully exit the choice state
+            Logger.error("Schrödinger outcome error: Board or critical tiles (start/end) not available.");
+            if (activeView instanceof GameScene scene) {
+                scene.showGameMessage("Error: Game board is in an invalid state for Schrödinger's Box!");
+            }
+            completeSchrodingerActionSequence(); // Attempt to gracefully exit
             return;
         }
 
         if (goToStart) {
-            targetTile = board.getTile(0); // Tile 0 is the start
+            targetTile = board.getTile(0);
             outcomeMessage = playerMakingSchrodingerChoice.getName() + " opened the box... Oh no! Sent back to the start!";
+            Logger.info("Schrödinger outcome (Observe): " + playerMakingSchrodingerChoice.getName() + " sent to START.");
         } else {
-            int lastTileId = board.getTiles().size() - 1; // Assuming tile IDs are 0 to N-1
+            int lastTileId = board.getTiles().size() - 1;
             targetTile = board.getTile(lastTileId);
             outcomeMessage = playerMakingSchrodingerChoice.getName() + " opened the box... Unbelievable! Sent straight to the finish line!";
+            Logger.info("Schrödinger outcome (Observe): " + playerMakingSchrodingerChoice.getName() + " sent to FINISH.");
         }
 
         if (targetTile != null) {
             playerMakingSchrodingerChoice.setCurrentTile(targetTile);
-            // After moving the player, we could trigger the land() method of the new tile
-            // if we want actions on the destination tile (start/finish) to also execute.
-            // For S&L, start/finish usually don't have actions, but if they did:
-            // targetTile.land(playerMakingSchrodingerChoice); // This would call its action.perform()
-            // This might lead to nested actions, so handle with care or decide against it.
-            // For now, direct placement is simpler.
+            Logger.debug("Player " + playerMakingSchrodingerChoice.getName() + " moved to tile " + targetTile.getId() + " due to Schrödinger Box.");
         } else {
             outcomeMessage = playerMakingSchrodingerChoice.getName() + " opened the box... but the destination was unclear!";
-            System.err.println("Controller: Target tile for Schrödinger outcome was null.");
+            Logger.error("Schrödinger outcome error: Target tile for observe outcome was null. GoToStart: " + goToStart);
         }
 
         if (activeView instanceof GameScene scene) {
@@ -290,15 +332,16 @@ public class GameController implements BoardGameObserver {
         completeSchrodingerActionSequence();
     }
 
-    /**
-     * Called by the UI when the player chooses to "move on" (ignore) the Schrödinger's Box.
-     */
     public void handleIgnoreSchrodingerBoxRequest() {
+        Logger.debug("Entering handleIgnoreSchrodingerBoxRequest.");
         if (!awaitingSchrodingerChoice || playerMakingSchrodingerChoice == null) {
-            System.err.println("Controller: IgnoreSchrodingerBoxRequest called inappropriately.");
+            Logger.warning("IgnoreSchrodingerBoxRequest called inappropriately. State: awaiting=" + awaitingSchrodingerChoice +
+                ", player=" + (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "null"));
             return;
         }
         String message = playerMakingSchrodingerChoice.getName() + " cautiously decided to ignore the mysterious box.";
+        Logger.info("Player " + playerMakingSchrodingerChoice.getName() + " chose to IGNORE the Schrödinger Box.");
+
 
         if (activeView instanceof GameScene scene) {
             scene.showGameMessage(message);
@@ -306,91 +349,82 @@ public class GameController implements BoardGameObserver {
         completeSchrodingerActionSequence();
     }
 
-    /**
-     * Common logic after a Schrödinger choice is made (observe or ignore).
-     * This method resets the choice state and finalizes the turn by preparing for the next player.
-     */
     private void completeSchrodingerActionSequence() {
+        Logger.debug("Completing Schrödinger action sequence for player: " +
+            (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "Unknown"));
         awaitingSchrodingerChoice = false;
-        // The playerMakingSchrodingerChoice is the one whose turn effectively just had its action phase.
 
-        // The actual dice rolls (List<Integer> rolls) that led to the Schrödinger tile
-        // were processed in onRoundPlayed before it returned early.
-        // We don't have 'rolls' here directly, so pass null or an empty list.
-        // The dice label in UI should already be updated from the initial part of onRoundPlayed.
-        finalizeTurnAndSetupNext(null);
+        finalizeTurnAndSetupNext(null); // Rolls not directly relevant here for dice display
 
-        playerMakingSchrodingerChoice = null; // Clear the player who was making the choice
+        playerMakingSchrodingerChoice = null;
+        Logger.debug("Schrödinger choice state fully reset after action.");
     }
 
 
-    // ---------------------------------------------------
-    // Monopoly-Specific Helper Logic (could be in a dedicated MonopolyGameController)
-    // ---------------------------------------------------
     private void handleLandedOnProperty(Player player, PropertyAction propertyAction, MonopolyGameScene monopolyView) {
+        Logger.info("Player " + player.getName() + " landed on property: " + propertyAction.getName() + ". Handling action.");
         if (monopolyService == null) {
-            System.err.println("MonopolyService not available!"); // Or show an error in UI
+            Logger.error("MonopolyService not available! Cannot handle property action for " + propertyAction.getName());
             monopolyView.showAlert("Error", "Service Unavailable", "Monopoly features are currently unavailable.", Alert.AlertType.ERROR);
             return;
         }
 
-        if (propertyAction.getOwner() == null) { // Property is unowned
+        if (propertyAction.getOwner() == null) {
+            Logger.debug("Property " + propertyAction.getName() + " is unowned. Cost: " + propertyAction.getCost() + ". Player money: " + player.getMoney());
             if (player.getMoney() >= propertyAction.getCost()) {
-                // Ask player if they want to buy
+                Logger.debug("Player " + player.getName() + " can afford " + propertyAction.getName() + ". Showing purchase dialog.");
                 boolean wantsToBuy = monopolyView.showPropertyPurchaseDialog(player, propertyAction);
                 if (wantsToBuy) {
+                    Logger.info("Player " + player.getName() + " attempts to buy " + propertyAction.getName());
                     boolean purchased = monopolyService.purchaseProperty(player, propertyAction);
                     if (purchased) {
+                        Logger.info("Property " + propertyAction.getName() + " purchased by " + player.getName() + ". New balance: $" + player.getMoney());
                         monopolyView.showAlert("Property Purchased", "Congratulations!",
-                                "You now own " + propertyAction.getName() + ".\n" +
-                                        "Your remaining balance: $" + player.getMoney(), Alert.AlertType.INFORMATION);
+                            "You now own " + propertyAction.getName() + ".\n" +
+                                "Your remaining balance: $" + player.getMoney(), Alert.AlertType.INFORMATION);
                     } else {
-                        // This case (can afford but purchase fails) should ideally be rare if service logic is robust
+                        Logger.error("Purchase of " + propertyAction.getName() + " by " + player.getName() + " failed despite affording it (service layer issue?).");
                         monopolyView.showAlert("Purchase Failed", "Error",
-                                "Could not complete the purchase of " + propertyAction.getName() + ".", Alert.AlertType.ERROR);
+                            "Could not complete the purchase of " + propertyAction.getName() + ".", Alert.AlertType.ERROR);
                     }
+                } else {
+                    Logger.info("Player " + player.getName() + " chose not to buy unowned property " + propertyAction.getName());
                 }
             } else {
-                // Cannot afford to buy
+                Logger.info("Player " + player.getName() + " cannot afford unowned property " + propertyAction.getName());
                 monopolyView.showAlert("Property Available", propertyAction.getName(),
-                        "You landed on " + propertyAction.getName() + " (Cost: $" + propertyAction.getCost() +
-                                "), but you don't have enough money to buy it.", Alert.AlertType.INFORMATION);
+                    "You landed on " + propertyAction.getName() + " (Cost: $" + propertyAction.getCost() +
+                        "), but you don't have enough money to buy it.", Alert.AlertType.INFORMATION);
             }
-        } else if (!propertyAction.getOwner().equals(player)) { // Property owned by another player
-            int rentAmount = propertyAction.getRent(); // Or monopolyService.calculateRent(propertyAction) if complex
+        } else if (!propertyAction.getOwner().equals(player)) {
+            int rentAmount = propertyAction.getRent();
+            Logger.info("Player " + player.getName() + " landed on " + propertyAction.getName() + " owned by " +
+                propertyAction.getOwner().getName() + ". Rent due: $" + rentAmount);
 
             monopolyView.showAlert("Rent Due!",
-                    "Landed on " + propertyAction.getName(),
-                    player.getName() + ", you landed on " + propertyAction.getOwner().getName() +
-                            "'s property. You owe $" + rentAmount + " in rent.",
-                    Alert.AlertType.INFORMATION);
+                "Landed on " + propertyAction.getName(),
+                player.getName() + ", you landed on " + propertyAction.getOwner().getName() +
+                    "'s property. You owe $" + rentAmount + " in rent.",
+                Alert.AlertType.INFORMATION);
 
             boolean paid = monopolyService.payRent(player, propertyAction.getOwner(), rentAmount);
             if (paid) {
-                // Alert already shown, or add a small confirmation if needed
-                // monopolyView.showAlert("Rent Paid", "Transaction Complete",
-                //        "$" + rentAmount + " paid to " + propertyAction.getOwner().getName(), Alert.AlertType.INFORMATION);
+                Logger.info("Player " + player.getName() + " paid $" + rentAmount + " rent to " + propertyAction.getOwner().getName() + " for " + propertyAction.getName());
             } else {
-                // Player could not afford rent - handle bankruptcy or other consequences
-                // This is a more complex scenario that might involve mortgaging properties,
-                // or declaring bankruptcy and being removed from the game.
+                Logger.warning("Player " + player.getName() + " could not afford to pay $" + rentAmount + " rent for " + propertyAction.getName() + ". Potential bankruptcy.");
                 monopolyView.showAlert("Rent Payment Failed", "Insufficient Funds",
-                        player.getName() + " could not afford to pay $" + rentAmount + " rent.", Alert.AlertType.WARNING);
-                // TODO: Implement further bankruptcy logic via MonopolyService
-                // e.g., boolean isBankrupt = monopolyService.handleBankruptcy(player);
-                // if (isBankrupt) gameModel.removePlayer(player); -> triggers onGameOver if conditions met
+                    player.getName() + " could not afford to pay $" + rentAmount + " rent.", Alert.AlertType.WARNING);
+                // Logger.debug("Further bankruptcy logic for " + player.getName() + " might be triggered by MonopolyService.");
             }
+        } else {
+            Logger.debug("Player " + player.getName() + " landed on their own property: " + propertyAction.getName() + ". No rent/purchase action.");
         }
-        // No action if player lands on their own property (usually)
+        monopolyView.updatePlayerStatusDisplay();
+        Logger.debug("Monopoly player status display updated after property action handling.");
     }
 
-
-    /**
-     * Provides access to the game model, primarily for the views to read data for display.
-     * Views should not modify the model directly.
-     * @return The current BoardGame model.
-     */
     public BoardGame getGameModel() {
+        // No logging needed for a simple getter usually
         return gameModel;
     }
 }
