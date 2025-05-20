@@ -4,7 +4,8 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.file.PlayerCsvReaderWriter;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
-import edu.ntnu.idi.bidata.ui.PlayerSetupData; // Assuming this DTO exists
+import edu.ntnu.idi.bidata.ui.PlayerSetupData;
+import edu.ntnu.idi.bidata.util.Logger; // Import the Logger
 
 import java.io.File;
 import java.io.FileReader;
@@ -18,63 +19,73 @@ import java.util.stream.Collectors;
 
 public class PlayerSetupController {
 
-  /**
-   * Handles the request to save player setup data.
-   *
-   * @param playerInputs The list of player setup data collected from the UI.
-   * @param file The file to save the data to.
-   * @return True if saving was successful, false otherwise.
-   * @throws IOException If an I/O error occurs during writing.
-   * @throws InvalidParameterException If player data is invalid during Player object creation.
-   */
   public boolean savePlayerSetup(List<PlayerSetupData> playerInputs, File file) throws IOException, InvalidParameterException {
+    Logger.info("Attempting to save player setup.");
     if (playerInputs == null || playerInputs.isEmpty()) {
-      // This validation could also be in the UI before calling,
-      // but good to have defense here too.
-      return false; // Or throw an IllegalArgumentException
+      Logger.warning("Save player setup request with no player inputs. Aborting save.");
+      return false; // Or throw new IllegalArgumentException("Player inputs cannot be null or empty.");
     }
     if (file == null) {
+      Logger.error("File cannot be null for saving player setup.");
       throw new IllegalArgumentException("File cannot be null for saving.");
     }
+    Logger.debug("Saving " + playerInputs.size() + " player(s) to file: " + file.getAbsolutePath());
 
     List<Player> playerList = new ArrayList<>();
-    // Tile ID for saving from setup is typically a placeholder (e.g., 0)
-    // as actual tile assignment happens during game initialization.
-    Tile placeholderStartTile = new Tile(0); // Assuming Tile(0) is valid
+    Tile placeholderStartTile = new Tile(0); // Assuming Tile(0) is a valid placeholder
 
     for (PlayerSetupData input : playerInputs) {
-      // Player constructor might throw InvalidParameterException
-      playerList.add(new Player(input.name(), placeholderStartTile, input.pieceIdentifier()));
+      try {
+        Logger.debug("Creating Player object for: " + input.name() + " with piece: " + input.pieceIdentifier());
+        playerList.add(new Player(input.name(), placeholderStartTile, input.pieceIdentifier()));
+      } catch (InvalidParameterException e) {
+        Logger.error("Failed to create Player object for '" + input.name() + "' due to invalid parameters.", e);
+        throw e; // Re-throw to inform the caller
+      }
     }
 
     try (Writer writer = new FileWriter(file)) {
       PlayerCsvReaderWriter.writeAll(writer, playerList);
+      Logger.info("Player setup successfully saved to: " + file.getAbsolutePath());
       return true;
+    } catch (IOException e) {
+      Logger.error("IOException occurred while saving player setup to " + file.getAbsolutePath(), e);
+      throw e;
+    } catch (InvalidParameterException e) { // Should not happen if playerList is not null, but defensive
+      Logger.error("InvalidParameterException from PlayerCsvReaderWriter.writeAll (unexpected).", e);
+      throw e;
     }
-    // IOException is declared to be thrown
-    // InvalidParameterException from PlayerCsvReaderWriter.writeAll (if players list is null, which we check)
   }
 
-  /**
-   * Handles the request to load player setup data.
-   *
-   * @param file The file to load the data from.
-   * @return A list of PlayerSetupData to populate the UI, or an empty list if no valid data.
-   * @throws IOException If an I/O error occurs during reading.
-   * @throws InvalidParameterException If the CSV data is malformed as per PlayerCsvReaderWriter.
-   */
   public List<PlayerSetupData> loadPlayerSetup(File file) throws IOException, InvalidParameterException {
+    Logger.info("Attempting to load player setup from file.");
     if (file == null) {
+      Logger.error("File cannot be null for loading player setup.");
       throw new IllegalArgumentException("File cannot be null for loading.");
+    }
+    Logger.debug("Loading player setup from: " + file.getAbsolutePath());
+
+    if (!file.exists() || !file.canRead()) {
+      Logger.warning("Player setup file does not exist or cannot be read: " + file.getAbsolutePath());
+      return new ArrayList<>(); // Return empty list, as if no setup exists
     }
 
     try (Reader reader = new FileReader(file)) {
-      List<Player> loadedPlayers = PlayerCsvReaderWriter.readAll(reader); // Can throw IOException or InvalidParameterException
+      List<Player> loadedPlayers = PlayerCsvReaderWriter.readAll(reader);
+      Logger.info("Successfully loaded " + loadedPlayers.size() + " players from " + file.getAbsolutePath());
 
-      // Convert List<Player> to List<PlayerSetupData> for the UI
       return loadedPlayers.stream()
-          .map(player -> new PlayerSetupData(player.getName(), player.getPieceIdentifier()))
+          .map(player -> {
+            Logger.debug("Mapping loaded player '" + player.getName() + "' to PlayerSetupData.");
+            return new PlayerSetupData(player.getName(), player.getPieceIdentifier());
+          })
           .collect(Collectors.toList());
+    } catch (IOException e) {
+      Logger.error("IOException occurred while loading player setup from " + file.getAbsolutePath(), e);
+      throw e;
+    } catch (InvalidParameterException e) {
+      Logger.error("InvalidParameterException (malformed CSV) while loading player setup from " + file.getAbsolutePath(), e);
+      throw e;
     }
   }
 }
