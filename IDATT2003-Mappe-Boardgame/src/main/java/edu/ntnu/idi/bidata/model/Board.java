@@ -57,36 +57,4 @@ public class Board {
     int firstId = tiles.keySet().stream().min(Integer::compareTo).get();
     return tiles.get(firstId);
   }
-
-  /**
-   * Given a current tile and a dice‐roll, returns the next tile:
-   * - computes (current.id + roll)
-   * - if that id is past the end, stays on the same tile
-   * - otherwise looks up the tile, and then follows any snake/ladder
-   *   via tile.getNext() if present
-   *
-   * @throws IllegalArgumentException if the target tile id exists but isn't on the board
-   */
-  public Tile getDestination(Tile current, int roll) {
-    if (current == null) {
-      throw new InvalidParameterException("Current tile cannot be null");
-    }
-    int targetId = current.getId() + roll;
-
-    // If roll would take you past the final square, you stay put
-    if (targetId > maxId) {
-      return current;
-    }
-
-    Tile target = tiles.get(targetId);
-    if (target == null) {
-      throw new IllegalArgumentException(
-          "No tile with id=" + targetId + " on this board");
-    }
-
-    // If there's a snake or ladder (i.e. target.getNext() != null), follow it
-    return (target.getNext() != null)
-        ? target.getNext()
-        : target;
-  }
 }

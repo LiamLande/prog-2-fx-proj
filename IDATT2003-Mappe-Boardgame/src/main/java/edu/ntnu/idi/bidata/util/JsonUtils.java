@@ -48,27 +48,4 @@ public final class JsonUtils {
       throw new JsonParseException("Failed to parse JSON from reader", e);
     }
   }
-
-  /**
-   * Serializes the JsonObject to a JSON string.
-   * @param obj JsonObject to serialize
-   * @return JSON text
-   */
-  public static String toJson(JsonObject obj) {
-    return GSON.toJson(obj);
-  }
-
-  /**
-   * Writes the JsonObject as JSON to the given Writer.
-   * @param writer destination for JSON data
-   * @param obj JsonObject to serialize
-   */
-  public static void write(Writer writer, JsonObject obj) {
-    try {
-      writer.write(GSON.toJson(obj));
-      writer.flush();
-    } catch (IOException e) {
-      throw new JsonParseException("I/O error writing JSON data", e);
-    }
-  }
 }

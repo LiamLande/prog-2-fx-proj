@@ -1,8 +1,6 @@
 package edu.ntnu.idi.bidata.service;
 
 import edu.ntnu.idi.bidata.model.Card;
-import edu.ntnu.idi.bidata.model.Player;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +35,4 @@ public class CardService {
 
         return card;
     }
-
-    // Additional methods for card execution would go here
 }

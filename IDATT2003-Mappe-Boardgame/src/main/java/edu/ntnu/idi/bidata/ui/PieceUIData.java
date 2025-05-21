@@ -1,5 +1,6 @@
 package edu.ntnu.idi.bidata.ui;
 
+import edu.ntnu.idi.bidata.util.Logger;
 import javafx.scene.image.Image;
 import java.io.InputStream;
 import java.util.Objects;
@@ -10,7 +11,7 @@ import java.util.Objects;
 public class PieceUIData {
   private final String identifier;
   private final String imagePath;
-  private Image image; // Lazily loaded image
+  private Image image;
 
   // Standard size for piece images on the board/UI
   private static final double DEFAULT_IMAGE_SIZE = 30; // For SnakeLadderBoardView
@@ -25,18 +26,6 @@ public class PieceUIData {
     return identifier;
   }
 
-  public String getImagePath() {
-    return imagePath;
-  }
-
-  /**
-   * Gets the image for the piece, loading it if necessary.
-   * This version is for general use, e.g., on the game board.
-   * @return The Image object.
-   */
-  public Image getImage() {
-    return getImage(DEFAULT_IMAGE_SIZE);
-  }
 
   /**
    * Gets the image for the piece, loading it if necessary, scaled to a specific size.
@@ -44,25 +33,18 @@ public class PieceUIData {
    * @return The Image object.
    */
   public Image getImage(double requestedSize) {
-    // Simple caching: if image is loaded and size matches, return it.
-    // For more sophisticated caching with multiple sizes, a Map<Double, Image> could be used.
-    // For now, let's assume the first loaded size is predominantly used or re-load for different specific sizes.
     if (this.image != null && this.image.getWidth() == requestedSize && this.image.getHeight() == requestedSize) {
       return this.image;
     }
     try {
       InputStream is = PieceUIData.class.getResourceAsStream(this.imagePath);
-      if (is == null && !this.imagePath.startsWith("/")) { // Try adding leading slash if not present
+      if (is == null && !this.imagePath.startsWith("/")) {
         is = PieceUIData.class.getResourceAsStream("/" + this.imagePath);
       }
       Objects.requireNonNull(is, "Cannot load image resource: " + this.imagePath);
       this.image = new Image(is, requestedSize, requestedSize, true, true); // Preserve ratio, smooth scaling
     } catch (Exception e) {
-      System.err.println("Error loading piece image: " + this.imagePath + " for size " + requestedSize);
-      e.printStackTrace();
-      // Fallback: return a null or a default placeholder image if you have one
-      // To avoid NPEs, ensure callers handle null or have a default.
-      // For now, returning null if load fails.
+      Logger.error("Error loading piece image: " + this.imagePath + " for size " + requestedSize, e);
       return null;
     }
     return this.image;

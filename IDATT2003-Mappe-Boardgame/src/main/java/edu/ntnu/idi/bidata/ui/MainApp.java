@@ -21,13 +21,14 @@ import java.util.function.Consumer;
  * Handles scene transitions and game flow via SceneManager.
  */
 public class MainApp extends Application {
-    private Stage primaryStage;
-    private GameVariant selectedVariant;
+
+  private GameVariant selectedVariant;
     // Store the selected theme for Snakes & Ladders
     private SnakeLadderPlayerSetupScene.Theme currentSnakesLaddersTheme = SnakeLadderPlayerSetupScene.Theme.EGYPT;
 
     // Store detailed setup for S&L players
     private List<PlayerSetupData> lastSlPlayerSetupDetails = new ArrayList<>();
+
     // Store names for Monopoly (as it doesn't have piece selection yet)
     private List<String> lastMonopolyPlayerNames = new ArrayList<>();
     private SceneManager sceneManager;
@@ -35,8 +36,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        this.sceneManager = SceneManager.getInstance();
+      this.sceneManager = SceneManager.getInstance();
         this.sceneManager.initialize(primaryStage);
 
         Runnable newGameAction = () -> {
@@ -45,11 +45,11 @@ public class MainApp extends Application {
                 sceneManager.show("selection");
                 return;
             }
+
             // Check if player data is available for the selected variant
             boolean canRestart = switch (selectedVariant) {
                 case SNAKES_LADDERS -> !lastSlPlayerSetupDetails.isEmpty();
                 case MINI_MONOPOLY -> !lastMonopolyPlayerNames.isEmpty();
-                // default -> false; // Or handle other variants
             };
 
             if (!canRestart) {
@@ -73,7 +73,7 @@ public class MainApp extends Application {
             sceneManager.show("selection");
         };
 
-        // 1) Selection scene registration (Assuming SelectionScene exists)
+        // 1) Selection scene registration
         sceneManager.register("selection", () ->
             new SelectionScene( // This scene is not provided, but its registration is kept
                 primaryStage,
@@ -103,15 +103,14 @@ public class MainApp extends Application {
         });
 
 
-        // 3) Monopoly setup scene registration (Assuming MonopolyPlayerSetupScene exists)
+        // 3) Monopoly setup scene registration
         sceneManager.register("monoSetup", () -> {
             Consumer<List<String>> onStartMono = names -> {
                 this.lastMonopolyPlayerNames = names;
                 this.selectedVariant = GameVariant.MINI_MONOPOLY; // Ensure variant is set
                 sceneManager.show("monoGame");
             };
-            // Assuming MonopolyPlayerSetupScene exists and takes these params
-            return new MonopolyPlayerSetupScene( // This scene is not provided
+            return new MonopolyPlayerSetupScene(
                 primaryStage,
                 onStartMono,
                 homeAction
@@ -123,10 +122,11 @@ public class MainApp extends Application {
         sceneManager.register("slGame", () -> {
             if (lastSlPlayerSetupDetails == null || lastSlPlayerSetupDetails.isEmpty()) {
                 System.err.println("Error: Attempting to start S&L game without player details.");
-                sceneManager.show("slSetup"); // Or "selection"
+                sceneManager.show("slSetup");
                 throw new IllegalStateException("Cannot create S&L game scene without player details. Redirecting.");
             }
-            // Call the renamed factory method for S&L
+
+            // Create the game model and controller
             BoardGame gameModel = GameFactory.createSnakesLaddersGameWithDetails(
                 lastSlPlayerSetupDetails,
                 this.currentSnakesLaddersTheme
@@ -147,7 +147,7 @@ public class MainApp extends Application {
             return snakeLadderGameScene;
         });
 
-        // 4b) Monopoly game scene registration (Assuming MonopolyGameScene exists)
+        // 4b) Monopoly game scene registration
         sceneManager.register("monoGame", () -> {
             if (lastMonopolyPlayerNames == null || lastMonopolyPlayerNames.isEmpty()) {
                 System.err.println("Error: Attempting to start Monopoly game without player names.");
@@ -157,7 +157,7 @@ public class MainApp extends Application {
             BoardGame gameModel = GameFactory.createGame(lastMonopolyPlayerNames, GameVariant.MINI_MONOPOLY);
             GameController controller = new GameController(gameModel);
 
-            MonopolyGameScene monopolyGameScene = new MonopolyGameScene( // This scene is not provided
+            MonopolyGameScene monopolyGameScene = new MonopolyGameScene(
                 primaryStage,
                 controller,
                 gameModel,
@@ -165,7 +165,7 @@ public class MainApp extends Application {
                 homeAction
             );
             controller.setActiveView(monopolyGameScene);
-            monopolyGameScene.initializeView(); // Should be called by controller or ensure it's safe here
+            monopolyGameScene.initializeView();
             controller.startGame();
             return monopolyGameScene;
         });
@@ -179,7 +179,6 @@ public class MainApp extends Application {
         return switch (variant) {
             case SNAKES_LADDERS -> "slSetup";
             case MINI_MONOPOLY -> "monoSetup";
-            // default -> throw new IllegalArgumentException("Unknown variant: " + variant); // Handle if more variants
         };
     }
 

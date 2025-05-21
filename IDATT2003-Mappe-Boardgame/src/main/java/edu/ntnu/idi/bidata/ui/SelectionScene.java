@@ -62,7 +62,6 @@ public class SelectionScene implements SceneManager.ControlledScene {
     });
   }
 
-  public Parent getRoot()  { return scene.getRoot(); }
   public Scene getScene()  { return scene;       }
 
   private void fadeOverlay(ImageView overlay, double target) {

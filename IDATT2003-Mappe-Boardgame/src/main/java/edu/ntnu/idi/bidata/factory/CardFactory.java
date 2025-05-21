@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class CardFactory {
     private CardFactory() { /* non-instantiable */ }
@@ -21,7 +22,7 @@ public final class CardFactory {
      */
     public static CardService createCardServiceFromJson(String resourcePath) {
         try (Reader reader = new InputStreamReader(
-                CardFactory.class.getResourceAsStream(resourcePath),
+            Objects.requireNonNull(CardFactory.class.getResourceAsStream(resourcePath)),
                 StandardCharsets.UTF_8)) {
             Map<String, List<Card>> decks = CardJsonReaderWriter.read(reader);
             return new CardService(decks);

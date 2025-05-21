@@ -17,16 +17,11 @@ public class BoardGame {
   private final List<BoardGameObserver> observers = new ArrayList<>();
   private boolean gameInitialized = false;
 
-  // --- Observer registration ---
   public void addObserver(BoardGameObserver observer) {
     if (observer == null) {
       throw new InvalidParameterException("Observer cannot be null");
     }
     observers.add(observer);
-  }
-
-  public void removeObserver(BoardGameObserver observer) {
-    observers.remove(observer);
   }
 
   // New method to notify UI of generic game events/messages (optional but useful)
@@ -40,20 +35,17 @@ public class BoardGame {
     }
   }
 
-
-  // --- Initialization ---
   public void init() {
     if (board == null) throw new IllegalStateException("Board must be set before init()");
     if (dice == null) throw new IllegalStateException("Dice must be set before init()");
     if (players.isEmpty()) throw new IllegalStateException("At least one player must be added before init()");
     if (service == null) throw new IllegalStateException("GameService must be set before init()");
 
-    service.setup(this); // Let the service do its setup (e.g., set initial player positions, current player index)
+    service.setup(this);
     this.gameInitialized = true;
     notifyGameStart(); // Notify observers that the game is ready
   }
 
-  // --- Gameplay ---
   /**
    * Plays exactly one roll/move for the given player.
    * The service will handle moving the player and calling tile.land(player).
@@ -67,20 +59,9 @@ public class BoardGame {
 
     int roll = service.playTurn(this, player); // Service handles dice, move, and tile.land()
 
-    // Notify that a dice roll part of the turn happened.
-    // The GameController's onRoundPlayed will handle complex UI updates,
-    // including checks for special actions like Schrödinger's Box.
     notifyRoundPlayed(List.of(roll));
-
-    // The GameController will now handle the game over check in its onRoundPlayed
-    // or after a choice is made (if a choice was pending).
-    // This avoids a premature game over notification if a choice could change the outcome.
-    // if (isFinished()) { // This check is now primarily driven by GameController after actions
-    //     notifyGameOver(getWinner());
-    // }
   }
 
-  // --- Queries delegated to the service ---
   public boolean isFinished() {
     requireInitialized();
     return service.isFinished(this);
@@ -95,7 +76,6 @@ public class BoardGame {
     return service.getWinner(this);
   }
 
-  // --- Wiring ---
   public void setBoard(Board board) {
     if (board == null) throw new InvalidParameterException("Board cannot be null");
     this.board = board;
@@ -116,7 +96,7 @@ public class BoardGame {
     this.service = service;
   }
 
-  // --- Simple getters ---
+
   public Board getBoard() { return board; }
   public Dice getDice()   { return dice; }
   public List<Player> getPlayers() {
@@ -130,14 +110,11 @@ public class BoardGame {
    */
   public Player getCurrentPlayer() {
     if (!isGameStarted() || service == null) {
-      // If game not started or service not set, behavior might depend on your GameService.
-      // Returning null is a safe default.
       return null;
     }
     return service.getCurrentPlayer(this);
   }
 
-  // --- Internals & notification helpers ---
   private void requireInitialized() {
     if (!gameInitialized || service == null) {
       throw new IllegalStateException("Game not fully initialized; call init() first and ensure service is set.");

@@ -58,17 +58,6 @@ public class MonopolyService implements GameService {
         return null;
     }
 
-    // playOneRound for Monopoly might be complex (doubles, multiple turns)
-    // For now, let's assume playTurn is the primary mode of advancement.
-    @Override
-    public List<Integer> playOneRound(BoardGame game) {
-        // This might need careful thought for Monopoly due to rules like rolling doubles.
-        // Often, Monopoly games proceed one 'playTurn' at a time.
-        // If you implement this, ensure currentPlayerIndex is managed correctly.
-        throw new UnsupportedOperationException("playOneRound for Monopoly needs specific rule implementation (e.g., doubles). Use playTurn.");
-    }
-
-
     @Override
     public int playTurn(BoardGame game, Player player) { // `game` param from interface
         // Ensure the 'player' passed is indeed the current one

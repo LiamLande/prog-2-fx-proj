@@ -23,7 +23,7 @@ public class PlayerSetupController {
     Logger.info("Attempting to save player setup.");
     if (playerInputs == null || playerInputs.isEmpty()) {
       Logger.warning("Save player setup request with no player inputs. Aborting save.");
-      return false; // Or throw new IllegalArgumentException("Player inputs cannot be null or empty.");
+      throw new IllegalArgumentException("Player inputs cannot be null or empty.");
     }
     if (file == null) {
       Logger.error("File cannot be null for saving player setup.");
@@ -32,7 +32,7 @@ public class PlayerSetupController {
     Logger.debug("Saving " + playerInputs.size() + " player(s) to file: " + file.getAbsolutePath());
 
     List<Player> playerList = new ArrayList<>();
-    Tile placeholderStartTile = new Tile(0); // Assuming Tile(0) is a valid placeholder
+    Tile placeholderStartTile = new Tile(0); // Placeholder for start tile
 
     for (PlayerSetupData input : playerInputs) {
       try {

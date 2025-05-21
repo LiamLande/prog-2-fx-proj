@@ -3,7 +3,7 @@ package edu.ntnu.idi.bidata.ui.sl;
 import edu.ntnu.idi.bidata.controller.GameController;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction; // Import
+import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.ui.PieceUIData;
 import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
@@ -14,7 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip; // Import
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -32,7 +32,7 @@ import javafx.stage.Stage;
 public class SnakeLadderGameScene implements ControlledScene {
   private final GameController controller;
   private final BoardGame gameModel;
-  private SnakeLadderBoardView snakeLadderBoardView;
+  private final SnakeLadderBoardView snakeLadderBoardView;
   private VBox playerStatusPane;
   private final Map<Player, Label> playerPositionLabels = new HashMap<>();
   private final Map<Player, ImageView> sidePanelPieceViews = new HashMap<>();
@@ -100,13 +100,12 @@ public class SnakeLadderGameScene implements ControlledScene {
   }
 
   public Scene getScene() { return scene; }
-  @Override public void onShow() {}
-  @Override public void onHide() {}
+
   public SnakeLadderBoardView getBoardView() { return snakeLadderBoardView; }
 
   private StackPane createBoardContainer(SnakeLadderBoardView board) {
     Group boardGroup = new Group(board);
-    StackPane container = new StackPane(boardGroup); // Simplified, add border/padding via CSS if needed
+    StackPane container = new StackPane(boardGroup);
     StackPane.setMargin(boardGroup, new Insets(10));
     container.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Let board dictate size initially
 
@@ -127,8 +126,8 @@ public class SnakeLadderGameScene implements ControlledScene {
     VBox sidePanel = new VBox(15); // Adjusted spacing
     sidePanel.setAlignment(Pos.TOP_CENTER);
     sidePanel.setPadding(new Insets(10, 10, 10, 20)); // Top, Right, Bottom, Left
-    sidePanel.setPrefWidth(320); // Slightly wider
-    sidePanel.setStyle("-fx-background-color: rgba(245, 235, 218, 0.85); -fx-background-radius: 10px;"); // Semi-transparent
+    sidePanel.setPrefWidth(320);
+    sidePanel.setStyle("-fx-background-color: rgba(245, 235, 218, 0.85); -fx-background-radius: 10px;");
 
     // Title
     Label titleLabel = new Label("Ancient Journey");
@@ -142,12 +141,6 @@ public class SnakeLadderGameScene implements ControlledScene {
     playerStatusPane = new VBox(8); // Spacing between player entries
     playerStatusPane.setAlignment(Pos.TOP_LEFT); // Align player entries to top-left
     playerStatusPane.setPadding(new Insets(5));
-
-    // ScrollPane for player status if many players
-    // ScrollPane playerScrollPane = new ScrollPane(playerStatusPane);
-    // playerScrollPane.setFitToWidth(true);
-    // playerScrollPane.setPrefHeight(200); // Example height
-    // playerScrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
 
     // Dice Display and Roll Button
     diceLabel = new Label("⚀");
@@ -198,7 +191,7 @@ public class SnakeLadderGameScene implements ControlledScene {
     gameControlsBox.setAlignment(Pos.CENTER);
     gameControlsBox.setPadding(new Insets(10,0,10,0));
 
-    sidePanel.getChildren().addAll(titleBox, playerStatusPane /*or playerScrollPane*/, diceBox, schrodingerChoiceBox, gameMessageLabel, gameControlsBox);
+    sidePanel.getChildren().addAll(titleBox, playerStatusPane, diceBox, schrodingerChoiceBox, gameMessageLabel, gameControlsBox);
     return sidePanel;
   }
 
@@ -223,7 +216,8 @@ public class SnakeLadderGameScene implements ControlledScene {
           .findFirst();
       if (pieceDataOpt.isPresent() && pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE) != null) {
         pieceView.setImage(pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE));
-      } else { /* Set a placeholder or leave empty */ }
+      }
+
       sidePanelPieceViews.put(p, pieceView);
 
       Label nameLbl = new Label(p.getName());
@@ -297,14 +291,14 @@ public class SnakeLadderGameScene implements ControlledScene {
     if (winner != null) highlightCurrentPlayer(winner); // Highlight the winner
   }
 
-  // --- Schrödinger UI Methods ---
+  //Schrödinger UI Methods
   public void showSchrodingerChoice(Player player, SchrodingerBoxAction action) {
     if (schrodingerChoiceBox != null) {
       // Find the label within schrodingerChoiceBox to update text, or add one if needed
       Node firstChild = schrodingerChoiceBox.getChildren().getFirst();
       if (firstChild instanceof Label choiceLabel) {
         choiceLabel.setText(player.getName() + ", " + action.getDescription());
-      } else { // Prepend a label if not there
+      } else {
         Label tempLabel = new Label(player.getName() + ", " + action.getDescription());
         tempLabel.setWrapText(true);
         tempLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
@@ -322,8 +316,6 @@ public class SnakeLadderGameScene implements ControlledScene {
     if (schrodingerChoiceBox != null) {
       schrodingerChoiceBox.setManaged(false);
       schrodingerChoiceBox.setVisible(false);
-      // Clear general game message or set to default game state message
-      // gameMessageLabel.setText("Roll the dice to proceed.");
     }
   }
 

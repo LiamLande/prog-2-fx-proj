@@ -31,40 +31,6 @@ public class SnakesLaddersService implements GameService {
   }
 
   @Override
-  public List<Integer> playOneRound(BoardGame game) {
-    List<Integer> rolls = new ArrayList<>();
-    // Note: playOneRound implies each player in the list gets one turn *in order*.
-    // The currentPlayerIndex might not be directly used here if the loop iterates all players.
-    // However, if playOneRound is a sequence of individual turns, currentPlayerIndex IS relevant.
-    // For simplicity, let's assume it's a sequence of individual turns for this example.
-
-    int initialPlayerIndexOfRound = this.currentPlayerIndex; // Store who started this round
-    if (initialPlayerIndexOfRound == -1 && !game.getPlayers().isEmpty()) initialPlayerIndexOfRound = 0;
-
-
-    for (int i = 0; i < game.getPlayers().size(); i++) {
-      Player currentPlayerForTurn = game.getPlayers().get(initialPlayerIndexOfRound);
-      this.currentPlayerIndex = initialPlayerIndexOfRound; // Set for this turn
-
-      int roll = game.getDice().rollDie();
-      currentPlayerForTurn.move(roll); // Assumes Player.move applies snakes/ladders
-      rolls.add(roll);
-
-      if (isFinished(game)) {
-        // Winner found, no need to advance player for next turn as game is over
-        break;
-      }
-      // Advance for the next iteration within this round
-      initialPlayerIndexOfRound = (initialPlayerIndexOfRound + 1) % game.getPlayers().size();
-    }
-    // After the round, set currentPlayerIndex for the *start* of the next round
-    if (!isFinished(game) && !game.getPlayers().isEmpty()) {
-      this.currentPlayerIndex = initialPlayerIndexOfRound; // Who is next after this round
-    }
-    return rolls;
-  }
-
-  @Override
   public int playTurn(BoardGame game, Player player) {
     // Ensure the player passed IS the current player according to our index
     if (game.getPlayers().isEmpty() || !player.equals(game.getPlayers().get(this.currentPlayerIndex))) {
