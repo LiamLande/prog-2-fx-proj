@@ -17,7 +17,6 @@ public class TaxAction implements TileAction {
         // Deduct the tax amount from the player's balance
         player.decreaseMoney(taxAmount);
         System.out.println(description + " You paid " + taxAmount + " in taxes.");
-        //TODO:IMPLEMENT ALERT
     }
 
     public String getDescription() {

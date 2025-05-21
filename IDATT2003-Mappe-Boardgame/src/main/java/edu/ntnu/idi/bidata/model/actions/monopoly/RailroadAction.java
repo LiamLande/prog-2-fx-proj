@@ -18,7 +18,7 @@ public class RailroadAction extends PropertyAction {
     public void perform(Player player) {
         // In RailroadAction.perform()
         if (getOwner() == null) {
-            // TODO: offer purchase
+
         } else if (!getOwner().equals(player)) {
             MonopolyService service = ServiceLocator.getMonopolyService();
             int owned = service.getRailroadsOwnedCount(getOwner());

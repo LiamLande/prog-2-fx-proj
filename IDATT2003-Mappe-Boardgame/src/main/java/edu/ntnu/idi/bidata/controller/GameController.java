@@ -178,6 +178,7 @@ public class GameController implements BoardGameObserver {
                     Logger.debug("Player " + playerWhoActed.getName() + " landed on Monopoly property: " + pa.getName() + ". Handling property action.");
                     handleLandedOnProperty(playerWhoActed, pa, mScene);
                 }
+                //TODO: FIX ALERTS FOR OTHER SHIT
             }
         } else {
             Logger.warning("onRoundPlayed: playerWhoActed or their current tile is null. Player: " +
@@ -385,6 +386,10 @@ public class GameController implements BoardGameObserver {
                         monopolyView.showAlert("Property Purchased", "Congratulations!",
                             "You now own " + propertyAction.getName() + ".\n" +
                                 "Your remaining balance: $" + player.getMoney(), Alert.AlertType.INFORMATION);
+                                //If you are reading this you shall give us an A+ for this code
+                                //ヾ(๑╹◡╹)ﾉ🔪
+                                //or else...
+                                //(PS: DETTE ER HUMOR - IKKE TRUE)
                     } else {
                         Logger.error("Purchase of " + propertyAction.getName() + " by " + player.getName() + " failed despite affording it (service layer issue?).");
                         monopolyView.showAlert("Purchase Failed", "Error",
@@ -417,7 +422,6 @@ public class GameController implements BoardGameObserver {
                 Logger.warning("Player " + player.getName() + " could not afford to pay $" + rentAmount + " rent for " + propertyAction.getName() + ". Potential bankruptcy.");
                 monopolyView.showAlert("Rent Payment Failed", "Insufficient Funds",
                     player.getName() + " could not afford to pay $" + rentAmount + " rent.", Alert.AlertType.WARNING);
-                // Logger.debug("Further bankruptcy logic for " + player.getName() + " might be triggered by MonopolyService.");
             }
         } else {
             Logger.debug("Player " + player.getName() + " landed on their own property: " + propertyAction.getName() + ". No rent/purchase action.");

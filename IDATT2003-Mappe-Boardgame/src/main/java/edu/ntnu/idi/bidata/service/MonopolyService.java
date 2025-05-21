@@ -125,47 +125,14 @@ public class MonopolyService implements GameService {
 
     @Override
     public Player getWinner(BoardGame game) {
-        // If game isn't finished yet
-        if (!isFinished(game)) {
-            return null;
-        }
-
         // Find the non-bankrupt player
         for (Player player : game.getPlayers()) {
             if (player.getMoney() > 0) {
                 return player;
             }
         }
-
-        // Fallback - if everyone is bankrupt, return player with most assets
-        // (shouldn't happen in normal gameplay)
-        Player wealthiest = null;
-        int maxWealth = Integer.MIN_VALUE;
-
-        for (Player player : game.getPlayers()) {
-            int totalAssets = calculateTotalAssets(player);
-            if (totalAssets > maxWealth) {
-                maxWealth = totalAssets;
-                wealthiest = player;
-            }
-        }
-
-        return wealthiest;
+        return null;
     }
-
-    // Helper method to calculate a player's total assets
-    private int calculateTotalAssets(Player player) {
-        int total = player.getMoney();
-
-        // Add property values
-        List<PropertyAction> properties = playerProperties.getOrDefault(player, List.of());
-        for (PropertyAction property : properties) {
-            total += property.getCost(); // Use purchase price as approximation
-        }
-
-        return total;
-    }
-
 
     public void sendToJail(Player player) {
         jailedPlayers.put(player, 3); // Standard is 3 turns in jail
@@ -215,14 +182,8 @@ public class MonopolyService implements GameService {
             }
         } else {
             System.out.println(payer.getName() + " cannot afford to pay $" + amount + " rent.");
-            // TODO: Implement bankruptcy logic / mortgaging options here
-            // For now, just return false. The controller will handle alerting the user.
-            // You might need to make the payer pay all they have and then handle bankruptcy.
-            // Example:
-            // int amountPaid = payer.getMoney();
-            // payer.decreaseMoney(amountPaid); // payer.setMoney(0);
-            // owner.increaseMoney(amountPaid);
-            // handleBankruptcy(payer); // A new method to check if player is out
+            //player is bankrupt game is over
+            payer.decreaseMoney(payer.getMoney());
             return false;
         }
     }

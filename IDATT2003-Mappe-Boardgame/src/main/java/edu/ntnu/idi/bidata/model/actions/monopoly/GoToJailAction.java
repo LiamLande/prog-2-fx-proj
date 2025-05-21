@@ -49,7 +49,7 @@ public class GoToJailAction implements TileAction {
             // We need to use the move method to handle any potential jail actions
             int stepsToJail = calculateSteps(player.getCurrentTile(), current);
             player.move(stepsToJail);
-            MonopolyService monopolyService = getMonopolyService(); // You'll need to implement this
+            MonopolyService monopolyService = getMonopolyService();
             if (monopolyService != null) {
                 monopolyService.sendToJail(player);
             }
