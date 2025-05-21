@@ -3,7 +3,10 @@ package edu.ntnu.idi.bidata.ui;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
+import edu.ntnu.idi.bidata.model.actions.monopoly.ChanceAction;
+import edu.ntnu.idi.bidata.model.actions.monopoly.CommunityChestAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
+import edu.ntnu.idi.bidata.model.actions.monopoly.TaxAction;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -24,7 +27,7 @@ import java.util.Map;
  * Inner class for rendering the Monopoly board.
  */
 public class MonopolyBoardView extends Pane {
-    public static final double SIZE = 700;
+    public static final double SIZE = 1000;
     private static final double TOKEN_RADIUS = 8;
 
     private final BoardGame game;
@@ -246,6 +249,13 @@ public class MonopolyBoardView extends Pane {
         } else if (tile.getAction() instanceof PropertyAction pa) {
             nameStr = pa.getName();
             priceStr = "$" + pa.getCost();
+        } else if (tile.getAction() instanceof ChanceAction ca) {
+            nameStr = "Chance";
+        } else if (tile.getAction() instanceof CommunityChestAction cca) {
+            nameStr = "Community Chest";
+        } else if (tile.getAction() instanceof TaxAction ta) {
+            nameStr = ta.getDescription();
+            priceStr = "$" + ta.getTaxAmount();
         }
 
         Text nameTextNode = new Text(nameStr);
@@ -314,12 +324,14 @@ public class MonopolyBoardView extends Pane {
         double rotationAngle = 0;
         int side = (tilesOnEdge > 0 && tileId < 4 * tilesOnEdge) ? tileId / tilesOnEdge : 0; // Determine side (0:bottom, 1:left, 2:top, 3:right)
 
-        switch (side) {
-            case 0: rotationAngle = 0; break;   // Bottom row
-            case 1: rotationAngle = -90; break; // Left row
-            case 2: rotationAngle = 0; break; // Top row
-            case 3: rotationAngle = 90; break;  // Right row
-        }
+        // Right row
+        rotationAngle = switch (side) {
+            case 0 -> 0;   // Bottom row
+            case 1 -> -90; // Left row
+            case 2 -> 0; // Top row
+            case 3 -> 90;
+            default -> rotationAngle;
+        };
 
         // Apply overrides for specific corners if their text orientation differs from the side's default.
         if (isCorner) {
