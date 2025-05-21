@@ -1,18 +1,17 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.monopoly;
 
 import edu.ntnu.idi.bidata.controller.GameController; // Assuming GameController
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.Tile;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 // import edu.ntnu.idi.bidata.model.actions.TileAction; // Not directly used in this class after review
 // MonopolyService and ServiceLocator are used by the Controller, not directly by the View here.
 // import edu.ntnu.idi.bidata.service.MonopolyService;
 // import edu.ntnu.idi.bidata.service.ServiceLocator;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -26,11 +25,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage; // Kept for SceneManager compatibility
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +38,7 @@ import java.util.Optional;
  * MonopolyGameScene displays a Monopoly board game interface.
  * Interacts with a GameController for game logic and updates.
  */
-public class MonopolyGameScene implements SceneManager.ControlledScene {
+public class MonopolyGameScene implements ControlledScene {
     private final GameController controller;
     private final BoardGame gameModel;
     private final MonopolyBoardView boardView;

@@ -1,4 +1,4 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
@@ -7,10 +7,10 @@ import edu.ntnu.idi.bidata.model.actions.TileAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SnakeAction;
+import edu.ntnu.idi.bidata.ui.PieceUIData;
 import java.io.InputStream;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView; // Added
@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class BoardView extends Pane {
+public class SnakeLadderBoardView extends Pane {
   private static final double SIZE = 600; // Board size
   private static final double TOKEN_SIZE = 30; // Desired player token image size on board
 
@@ -51,7 +51,7 @@ public class BoardView extends Pane {
   private Image lightTileImg, darkTileImg, schrodingerBoxImg;
   // private Image snakeHeadImg, ladderBaseImg; // Optional
 
-  public BoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
+  public SnakeLadderBoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
     this.game = game;
     this.theme = boardTheme;
     setPrefSize(SIZE, SIZE);
@@ -59,7 +59,7 @@ public class BoardView extends Pane {
     loadThemeAndSpecialTileImages(); // Modified to load all necessary tile images
     initializeBoardVisuals();
     drawSnakesAndLadders();
-    // Player tokens initialized by GameScene via initializePlayerTokenVisuals() or refresh()
+    // Player tokens initialized by SnakeLadderGameScene via initializePlayerTokenVisuals() or refresh()
   }
 
   private Image loadImageFromResources(String path) {
@@ -111,7 +111,7 @@ public class BoardView extends Pane {
     tilePositions.clear();
 
     if (game.getBoard() == null || game.getBoard().getTiles().isEmpty()) {
-      System.err.println("BoardView: Board model or tiles are not initialized.");
+      System.err.println("SnakeLadderBoardView: Board model or tiles are not initialized.");
       return;
     }
 
@@ -121,7 +121,7 @@ public class BoardView extends Pane {
       // Non-square board, sqrt logic for boardSize might be incorrect.
       // Need a more robust way to determine rows/cols for non-square or non-grid layouts.
       // For now, proceed assuming it's roughly square for serpentine layout.
-      System.err.println("BoardView: Tile count " + tileCount + " is not a perfect square. Board layout might be approximate.");
+      System.err.println("SnakeLadderBoardView: Tile count " + tileCount + " is not a perfect square. Board layout might be approximate.");
       if (tileCount > 0) boardSize = (int)Math.ceil(Math.sqrt(tileCount)); // Adjust for serpentine
     }
     if (boardSize == 0 && tileCount > 0) boardSize = 1; // Handle single tile case or very small boards
@@ -363,11 +363,11 @@ public class BoardView extends Pane {
         if (playerImage != null) {
           tokenView.setImage(playerImage);
         } else {
-          System.err.println("BoardView: Image for piece " + player.getPieceIdentifier() + " is null. Player: " + player.getName());
+          System.err.println("SnakeLadderBoardView: Image for piece " + player.getPieceIdentifier() + " is null. Player: " + player.getName());
           setFallbackTokenVisual(tokenView, player);
         }
       } else {
-        System.err.println("BoardView: PieceUIData not found for identifier: " + player.getPieceIdentifier() + ". Player: " + player.getName());
+        System.err.println("SnakeLadderBoardView: PieceUIData not found for identifier: " + player.getPieceIdentifier() + ". Player: " + player.getName());
         setFallbackTokenVisual(tokenView, player);
       }
 
@@ -402,7 +402,7 @@ public class BoardView extends Pane {
     }
     if (playerTokenViews.isEmpty() && game.getPlayers() != null && !game.getPlayers().isEmpty()) {
       // If still empty after trying to initialize, log it.
-      System.err.println("BoardView refresh: Player tokens are not initialized. Check player setup and piece identifiers.");
+      System.err.println("SnakeLadderBoardView refresh: Player tokens are not initialized. Check player setup and piece identifiers.");
     }
 
     for (Player player : game.getPlayers()) {

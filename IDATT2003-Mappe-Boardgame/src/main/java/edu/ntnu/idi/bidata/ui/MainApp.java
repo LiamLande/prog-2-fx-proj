@@ -1,6 +1,10 @@
 package edu.ntnu.idi.bidata.ui;
 
 import edu.ntnu.idi.bidata.controller.GameController;
+import edu.ntnu.idi.bidata.ui.monopoly.MonopolyGameScene;
+import edu.ntnu.idi.bidata.ui.monopoly.MonopolyPlayerSetupScene;
+import edu.ntnu.idi.bidata.ui.sl.SnakeLadderGameScene;
+import edu.ntnu.idi.bidata.ui.sl.SnakeLadderPlayerSetupScene;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import edu.ntnu.idi.bidata.app.GameVariant;
@@ -129,7 +133,7 @@ public class MainApp extends Application {
             );
             GameController controller = new GameController(gameModel);
 
-            GameScene gameScene = new GameScene(
+            SnakeLadderGameScene snakeLadderGameScene = new SnakeLadderGameScene(
                 primaryStage,
                 controller,
                 gameModel,
@@ -137,10 +141,10 @@ public class MainApp extends Application {
                 homeAction,
                 this.currentSnakesLaddersTheme
             );
-            controller.setActiveView(gameScene);
-            gameScene.initializeView();
+            controller.setActiveView(snakeLadderGameScene);
+            snakeLadderGameScene.initializeView();
             controller.startGame();
-            return gameScene;
+            return snakeLadderGameScene;
         });
 
         // 4b) Monopoly game scene registration (Assuming MonopolyGameScene exists)

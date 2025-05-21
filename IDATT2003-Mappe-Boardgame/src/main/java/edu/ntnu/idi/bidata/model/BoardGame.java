@@ -31,7 +31,7 @@ public class BoardGame {
 
   // New method to notify UI of generic game events/messages (optional but useful)
   // If you decide to use this, GameController would call it, and BoardGameObserver would need a new method.
-  // For now, GameController updates GameScene directly for messages.
+  // For now, GameController updates SnakeLadderGameScene directly for messages.
   public void notifyGameEvent(String eventMessage, Player involvedPlayer) {
     for (BoardGameObserver obs : observers) {
       // Example: if (obs instanceof ExtendedBoardGameObserver extObs) {

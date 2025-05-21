@@ -1,5 +1,7 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.monopoly;
 
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
+import edu.ntnu.idi.bidata.ui.UiStyles;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -22,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * Monopoly-themed setup; no longer sets Stage directly.
  */
-public class MonopolyPlayerSetupScene implements SceneManager.ControlledScene {
+public class MonopolyPlayerSetupScene implements ControlledScene {
   private final Scene scene;
 
   public MonopolyPlayerSetupScene(Stage stage,

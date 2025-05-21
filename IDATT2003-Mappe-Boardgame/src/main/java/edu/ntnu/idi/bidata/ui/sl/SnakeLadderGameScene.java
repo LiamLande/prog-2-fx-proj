@@ -1,9 +1,11 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
 import edu.ntnu.idi.bidata.controller.GameController;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction; // Import
+import edu.ntnu.idi.bidata.ui.PieceUIData;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,10 +29,10 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.stage.Stage;
 
-public class GameScene implements SceneManager.ControlledScene {
+public class SnakeLadderGameScene implements ControlledScene {
   private final GameController controller;
   private final BoardGame gameModel;
-  private BoardView boardView;
+  private SnakeLadderBoardView snakeLadderBoardView;
   private VBox playerStatusPane;
   private final Map<Player, Label> playerPositionLabels = new HashMap<>();
   private final Map<Player, ImageView> sidePanelPieceViews = new HashMap<>();
@@ -50,7 +52,7 @@ public class GameScene implements SceneManager.ControlledScene {
   private static final String JUNGLE_GAME_BG = "/images/jungle_game_background.png";
   private static final double SIDE_PANEL_PIECE_SIZE = 24;
 
-  public GameScene(Stage stage, GameController gameController, BoardGame gameModel,
+  public SnakeLadderGameScene(Stage stage, GameController gameController, BoardGame gameModel,
       Runnable onNewGame, Runnable onHome, SnakeLadderPlayerSetupScene.Theme gameTheme) {
     this.controller = gameController;
     this.gameModel = gameModel;
@@ -66,12 +68,12 @@ public class GameScene implements SceneManager.ControlledScene {
           BackgroundPosition.CENTER, new BackgroundSize(1.0,1.0,true,true,false,true));
       root.setBackground(new Background(bg));
     } catch (Exception e) {
-      System.err.println("Failed to load GameScene background: " + bgPath + ". " + e.getMessage());
+      System.err.println("Failed to load SnakeLadderGameScene background: " + bgPath + ". " + e.getMessage());
       root.setStyle("-fx-background-color: #D2B48C;"); // Tan fallback
     }
 
-    this.boardView = new BoardView(this.gameModel, this.theme);
-    StackPane boardContainer = createBoardContainer(this.boardView);
+    this.snakeLadderBoardView = new SnakeLadderBoardView(this.gameModel, this.theme);
+    StackPane boardContainer = createBoardContainer(this.snakeLadderBoardView);
     VBox sidePanel = createSidePanel();
 
     root.setCenter(boardContainer);
@@ -93,16 +95,16 @@ public class GameScene implements SceneManager.ControlledScene {
       highlightCurrentPlayer(gameModel.getPlayers().getFirst()); // Highlight first if no current (e.g. pre-game)
     }
     setRollButtonEnabled(!gameModel.isFinished()); // Enable roll if game not over
-    boardView.initializePlayerTokenVisuals();
-    boardView.refresh();
+    snakeLadderBoardView.initializePlayerTokenVisuals();
+    snakeLadderBoardView.refresh();
   }
 
   public Scene getScene() { return scene; }
   @Override public void onShow() {}
   @Override public void onHide() {}
-  public BoardView getBoardView() { return boardView; }
+  public SnakeLadderBoardView getBoardView() { return snakeLadderBoardView; }
 
-  private StackPane createBoardContainer(BoardView board) {
+  private StackPane createBoardContainer(SnakeLadderBoardView board) {
     Group boardGroup = new Group(board);
     StackPane container = new StackPane(boardGroup); // Simplified, add border/padding via CSS if needed
     StackPane.setMargin(boardGroup, new Insets(10));

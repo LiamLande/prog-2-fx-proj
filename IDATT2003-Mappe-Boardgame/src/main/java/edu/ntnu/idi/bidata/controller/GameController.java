@@ -9,8 +9,8 @@ import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
-import edu.ntnu.idi.bidata.ui.GameScene;
-import edu.ntnu.idi.bidata.ui.MonopolyGameScene;
+import edu.ntnu.idi.bidata.ui.sl.SnakeLadderGameScene;
+import edu.ntnu.idi.bidata.ui.monopoly.MonopolyGameScene;
 import edu.ntnu.idi.bidata.ui.SceneManager;
 import edu.ntnu.idi.bidata.util.Logger;
 
@@ -69,7 +69,7 @@ public class GameController implements BoardGameObserver {
         Logger.debug("Schrödinger choice state reset. Current player for view: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
 
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.initializeView();
             scene.getBoardView().refresh();
             if (this.currentPlayer != null) {
@@ -77,7 +77,7 @@ public class GameController implements BoardGameObserver {
             }
             scene.setRollButtonEnabled(!gameModel.isFinished() && this.currentPlayer != null && !awaitingSchrodingerChoice);
             scene.hideSchrodingerChoice();
-            Logger.debug("GameScene refreshed for current state.");
+            Logger.debug("SnakeLadderGameScene refreshed for current state.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             scene.initializeView();
             scene.updatePlayerStatusDisplay();
@@ -109,7 +109,7 @@ public class GameController implements BoardGameObserver {
         Logger.debug("onGameStart: Schrödinger state reset.");
 
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.initializeView();
             scene.hideSchrodingerChoice();
             if (this.currentPlayer != null) {
@@ -117,7 +117,7 @@ public class GameController implements BoardGameObserver {
             }
             scene.setRollButtonEnabled(true);
             if (scene.getBoardView() != null) scene.getBoardView().refresh();
-            Logger.debug("GameScene initialized for game start.");
+            Logger.debug("SnakeLadderGameScene initialized for game start.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             scene.initializeView();
             if (this.currentPlayer != null) {
@@ -145,7 +145,7 @@ public class GameController implements BoardGameObserver {
         // Reset choice state before checking for new choices
         awaitingSchrodingerChoice = false;
         playerMakingSchrodingerChoice = null;
-        if(activeView instanceof GameScene scene) scene.hideSchrodingerChoice();
+        if(activeView instanceof SnakeLadderGameScene scene) scene.hideSchrodingerChoice();
         Logger.debug("onRoundPlayed: Schrödinger choice state reset before tile action check.");
 
 
@@ -159,7 +159,7 @@ public class GameController implements BoardGameObserver {
                 awaitingSchrodingerChoice = true;
                 playerMakingSchrodingerChoice = playerWhoActed;
                 Logger.info("Player " + playerWhoActed.getName() + " landed on a Schrödinger Box. Awaiting choice.");
-                if (activeView instanceof GameScene scene) {
+                if (activeView instanceof SnakeLadderGameScene scene) {
                     scene.showSchrodingerChoice(playerWhoActed, schrodingerAction);
                     scene.setRollButtonEnabled(false);
                     assert rolls != null;
@@ -198,11 +198,11 @@ public class GameController implements BoardGameObserver {
         if (gameModel.isFinished()) {
             Logger.info("Game is finished (detected in finalizeTurnAndSetupNext). Calling onGameOver.");
             onGameOver(gameModel.getWinner()); // This will log its own message
-            if (activeView instanceof GameScene scene) {
+            if (activeView instanceof SnakeLadderGameScene scene) {
                 if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) scene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
                 scene.getBoardView().refresh();
                 scene.updatePlayerStatusDisplay();
-                Logger.debug("GameScene UI updated for final game state.");
+                Logger.debug("SnakeLadderGameScene UI updated for final game state.");
             }
             return;
         }
@@ -210,14 +210,14 @@ public class GameController implements BoardGameObserver {
         this.currentPlayer = gameModel.getCurrentPlayer(); // This is now the *next* player
         Logger.info("Next player's turn: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) scene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
             scene.getBoardView().refresh();
             scene.updatePlayerStatusDisplay();
             scene.hideSchrodingerChoice();
             if (this.currentPlayer != null) scene.highlightCurrentPlayer(this.currentPlayer);
             scene.setRollButtonEnabled(!gameModel.isFinished());
-            Logger.debug("GameScene UI updated for the next turn.");
+            Logger.debug("SnakeLadderGameScene UI updated for the next turn.");
         } else if (activeView instanceof MonopolyGameScene mScene) {
             // Add similar DEBUG logging for Monopoly if UI updates are extensive
             // mScene.updateDiceLabel(...);
@@ -241,11 +241,11 @@ public class GameController implements BoardGameObserver {
         playerMakingSchrodingerChoice = null;
         Logger.debug("Schrödinger choice state reset on game over.");
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.displayGameOver(winner);
             scene.hideSchrodingerChoice();
             scene.setRollButtonEnabled(false);
-            Logger.debug("GameScene displayed game over message and disabled roll button.");
+            Logger.debug("SnakeLadderGameScene displayed game over message and disabled roll button.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             scene.displayGameOver(winner);
             scene.setRollButtonEnabled(false);
@@ -266,17 +266,17 @@ public class GameController implements BoardGameObserver {
         if (awaitingSchrodingerChoice) {
             Logger.warning("Roll dice request ignored: Awaiting Schrödinger choice from " +
                 (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "Unknown"));
-            if (activeView instanceof GameScene scene) scene.setRollButtonEnabled(false);
+            if (activeView instanceof SnakeLadderGameScene scene) scene.setRollButtonEnabled(false);
             return;
         }
 
         // This is a key user action, so INFO seems appropriate
         Logger.info("Player " + this.currentPlayer.getName() + " initiated a dice roll.");
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.setRollButtonEnabled(false);
             scene.showGameMessage(this.currentPlayer.getName() + " is rolling...");
-            Logger.debug("Roll button disabled for GameScene during roll.");
+            Logger.debug("Roll button disabled for SnakeLadderGameScene during roll.");
         } else if (activeView instanceof MonopolyGameScene scene) {
             // scene.setRollButtonEnabled(false);
             Logger.debug("Roll button (Monopoly) disabled during roll (placeholder).");
@@ -302,7 +302,7 @@ public class GameController implements BoardGameObserver {
 
         if (board == null || board.getTile(0) == null || board.getTiles().isEmpty()) {
             Logger.error("Schrödinger outcome error: Board or critical tiles (start/end) not available.");
-            if (activeView instanceof GameScene scene) {
+            if (activeView instanceof SnakeLadderGameScene scene) {
                 scene.showGameMessage("Error: Game board is in an invalid state for Schrödinger's Box!");
             }
             completeSchrodingerActionSequence(); // Attempt to gracefully exit
@@ -328,7 +328,7 @@ public class GameController implements BoardGameObserver {
             Logger.error("Schrödinger outcome error: Target tile for observe outcome was null. GoToStart: " + goToStart);
         }
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.showGameMessage(outcomeMessage);
         }
 
@@ -346,7 +346,7 @@ public class GameController implements BoardGameObserver {
         Logger.info("Player " + playerMakingSchrodingerChoice.getName() + " chose to IGNORE the Schrödinger Box.");
 
 
-        if (activeView instanceof GameScene scene) {
+        if (activeView instanceof SnakeLadderGameScene scene) {
             scene.showGameMessage(message);
         }
         completeSchrodingerActionSequence();

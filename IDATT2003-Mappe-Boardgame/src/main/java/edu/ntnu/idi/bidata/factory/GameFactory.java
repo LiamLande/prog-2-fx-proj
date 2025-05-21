@@ -9,7 +9,7 @@ import edu.ntnu.idi.bidata.service.CardService;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
 import edu.ntnu.idi.bidata.service.SnakesLaddersService;
-import edu.ntnu.idi.bidata.ui.SnakeLadderPlayerSetupScene;
+import edu.ntnu.idi.bidata.ui.sl.SnakeLadderPlayerSetupScene;
 import edu.ntnu.idi.bidata.ui.PlayerSetupData;
 
 import java.util.List;

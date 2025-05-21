@@ -13,8 +13,8 @@ public class PieceUIData {
   private Image image; // Lazily loaded image
 
   // Standard size for piece images on the board/UI
-  private static final double DEFAULT_IMAGE_SIZE = 30; // For BoardView
-  static final double COMBOBOX_IMAGE_SIZE = 24; // For ComboBox display
+  private static final double DEFAULT_IMAGE_SIZE = 30; // For SnakeLadderBoardView
+  public static final double COMBOBOX_IMAGE_SIZE = 24; // For ComboBox display
 
   public PieceUIData(String identifier, String imagePath) {
     this.identifier = identifier;

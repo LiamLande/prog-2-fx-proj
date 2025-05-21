@@ -1,9 +1,12 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
 import edu.ntnu.idi.bidata.controller.PlayerSetupController; // Import the new controller
 import edu.ntnu.idi.bidata.exception.InvalidParameterException; // For catching
 import edu.ntnu.idi.bidata.model.Player; // Still needed for DEFAULT_PIECE_IDENTIFIER
 
+import edu.ntnu.idi.bidata.ui.PieceUIData;
+import edu.ntnu.idi.bidata.ui.PlayerSetupData;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +41,7 @@ import java.util.function.BiConsumer;
  * Passes selected theme and player setup data to the onStart callback.
  * Uses PlayerSetupController for save/load logic.
  */
-public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene {
+public class SnakeLadderPlayerSetupScene implements ControlledScene {
 
   public enum Theme { EGYPT, JUNGLE }
 
@@ -56,7 +59,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
   private static final String HOME_ICON_PATH = "/images/home_icon.png";
 
 
-  // Made public static final so other UI classes can access the defined pieces if needed (e.g. GameScene, BoardView)
+  // Made public static final so other UI classes can access the defined pieces if needed (e.g. SnakeLadderGameScene, SnakeLadderBoardView)
   public static final List<PieceUIData> AVAILABLE_PIECES = List.of(
       new PieceUIData("king", "/images/piece_king.png"),
       new PieceUIData("queen", "/images/piece_queen.png"),

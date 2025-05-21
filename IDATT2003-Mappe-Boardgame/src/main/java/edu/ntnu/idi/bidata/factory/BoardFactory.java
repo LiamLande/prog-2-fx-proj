@@ -4,7 +4,7 @@ import edu.ntnu.idi.bidata.app.GameVariant;
 import edu.ntnu.idi.bidata.file.BoardJsonReaderWriter;
 import edu.ntnu.idi.bidata.model.Board;
 import edu.ntnu.idi.bidata.exception.JsonParseException;
-import edu.ntnu.idi.bidata.ui.SnakeLadderPlayerSetupScene; // Import Theme enum
+import edu.ntnu.idi.bidata.ui.sl.SnakeLadderPlayerSetupScene; // Import Theme enum
 
 import java.io.InputStreamReader;
 import java.io.Reader;
