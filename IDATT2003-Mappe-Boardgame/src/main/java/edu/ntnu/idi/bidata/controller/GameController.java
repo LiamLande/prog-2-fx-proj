@@ -172,6 +172,8 @@ public class GameController implements BoardGameObserver {
             }
 
             if (activeView instanceof MonopolyGameScene mScene) {
+                mScene.updatePlayerStatusDisplay();
+                mScene.getBoardView().refresh();
                 if (monopolyService != null && landedTile.getAction() instanceof PropertyAction pa) {
                     Logger.debug("Player " + playerWhoActed.getName() + " landed on Monopoly property: " + pa.getName() + ". Handling property action.");
                     handleLandedOnProperty(playerWhoActed, pa, mScene);
@@ -363,6 +365,7 @@ public class GameController implements BoardGameObserver {
 
     private void handleLandedOnProperty(Player player, PropertyAction propertyAction, MonopolyGameScene monopolyView) {
         Logger.info("Player " + player.getName() + " landed on property: " + propertyAction.getName() + ". Handling action.");
+
         if (monopolyService == null) {
             Logger.error("MonopolyService not available! Cannot handle property action for " + propertyAction.getName());
             monopolyView.showAlert("Error", "Service Unavailable", "Monopoly features are currently unavailable.", Alert.AlertType.ERROR);
