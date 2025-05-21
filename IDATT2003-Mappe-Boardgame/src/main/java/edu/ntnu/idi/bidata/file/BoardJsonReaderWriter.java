@@ -97,8 +97,8 @@ public class BoardJsonReaderWriter {
                 String propName = actionJson.get("name").getAsString();
                 int cost = actionJson.get("cost").getAsInt();
                 int rent = actionJson.get("rent").getAsInt();
-                // String colorGroup = actionJson.get("colorGroup").getAsString(); // If you use colorGroup
-                tile.setAction(new PropertyAction(propName, cost, rent)); // Simplified constructor for example
+                String colorGroup = actionJson.get("colorGroup").getAsString();
+                tile.setAction(new PropertyAction(propName, cost, rent, colorGroup)); // Simplified constructor for example
                 break;
               case "CommunityChestAction":
                 tile.setAction(new CommunityChestAction(description));

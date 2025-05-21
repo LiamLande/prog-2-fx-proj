@@ -21,7 +21,7 @@ public class PropertyAction implements TileAction {
         this.name = name;
         this.cost = cost;
         this.rent = rent;
-        this.colorGroup = null;
+        this.colorGroup = null; // Default to null if no color group is provided
     }
     
     public PropertyAction(String name, int cost, int rent, String colorGroup) {
