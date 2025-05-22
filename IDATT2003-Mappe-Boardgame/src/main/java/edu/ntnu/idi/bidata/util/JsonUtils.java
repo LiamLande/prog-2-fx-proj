@@ -3,6 +3,7 @@ package edu.ntnu.idi.bidata.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -39,13 +40,15 @@ public final class JsonUtils {
    * @param reader source of JSON data
    * @return parsed JsonObject
    */
-  public static JsonObject read(Reader reader) {
-    try (BufferedReader br = new BufferedReader(reader)) {
-      return JsonParser.parseReader(br).getAsJsonObject();
-    } catch (IOException e) {
-      throw new JsonParseException("I/O error reading JSON data", e);
-    } catch (JsonSyntaxException | IllegalStateException e) {
-      throw new JsonParseException("Failed to parse JSON from reader", e);
+  public static JsonObject read(Reader reader) throws JsonParseException {
+    if (reader == null) {
+      // This line ensures the correct exception is thrown
+      throw new JsonParseException("Reader cannot be null");
+    }
+    try {
+      return JsonParser.parseReader(reader).getAsJsonObject();
+    } catch (JsonIOException | JsonSyntaxException | IllegalStateException e) {
+      throw new JsonParseException("Failed to parse JSON: " + e.getMessage(), e);
     }
   }
 }
