@@ -7,21 +7,20 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.ntnu.idi.bidata</groupId>
   <artifactId>IDATT2003-Mappe-Boardgame</artifactId>
-  <version>1.0.0</version> <!-- Or 1.0-SNAPSHOT as per assignment's example pom -->
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <properties>
     <!-- Java 21 LTS -->
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- Good practice -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- JavaFX module version -->
     <javafx.version>23.0.1</javafx.version>
 
-    <!-- Test dependency versions (as per assignment) -->
     <junit.jupiter.version>5.11.4</junit.jupiter.version>
-    <mockito.version>5.11.0</mockito.version> <!-- Current latest stable Mockito, should work with Java 21 -->
+    <mockito.version>5.11.0</mockito.version>
   </properties>
 
   <dependencies>
@@ -38,7 +37,7 @@
       <version>2.11.0</version>
     </dependency>
 
-    <!-- JUnit 5 - Aggregator (as per assignment example pom) -->
+    <!-- JUnit 5 - Aggregator -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -53,13 +52,7 @@
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
-    <!-- Mockito JUnit 5 Integration -->
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <version>${mockito.version}</version>
-      <scope>test</scope>
-    </dependency>
+
     <!-- Mockito JUnit test -->
     <dependency>
       <groupId>org.mockito</groupId>
@@ -72,36 +65,35 @@
 
   <build>
     <plugins>
-      <!-- Compile plugin (as per assignment) -->
+      <!-- Compile plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
-          <release>21</release> <!-- Ensures correct JDK features for compilation -->
+          <release>21</release>
         </configuration>
       </plugin>
-      <!-- Surefire for unit tests (as per assignment example pom on page 9) -->
+      <!-- Surefire for unit tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
       </plugin>
-      <!-- JavaFX Maven plugin (as per assignment) -->
+      <!-- JavaFX Maven plugin -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <!-- TODO: Replace with your own main-class -->
           <mainClass>edu.ntnu.idi.bidata.ui.MainApp</mainClass>
         </configuration>
       </plugin>
-      <!-- (Optional) Javadoc generation -->
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.8.0</version> <!-- Or the version from your previous pom -->
+        <version>3.8.0</version>
       </plugin>
     </plugins>
   </build>
