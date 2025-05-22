@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/FreeParkingActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
@@ -22,7 +21,7 @@ class FreeParkingActionTest {
   @BeforeEach
   void setUp() {
     System.setOut(new PrintStream(outContent));
-    mockPlayer = Mockito.mock(Player.class); // Not used by SUT's perform but needed for signature
+    mockPlayer = Mockito.mock(Player.class);
   }
 
   @AfterEach
@@ -34,7 +33,7 @@ class FreeParkingActionTest {
   @DisplayName("Constructor should initialize description")
   void testConstructor() {
     FreeParkingAction action = new FreeParkingAction("Free Parking Zone");
-    // Description is private, verify via perform's output
+
     action.perform(mockPlayer);
     assertTrue(outContent.toString().contains("Free Parking Zone"));
   }

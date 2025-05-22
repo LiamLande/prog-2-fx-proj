@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/BoardGameTest.java
 package edu.ntnu.idi.bidata.model;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
@@ -49,9 +48,6 @@ class BoardGameTest {
   @DisplayName("addObserver should add an observer")
   void testAddObserver_Valid() {
     boardGame.addObserver(mockObserver1);
-    // To verify, we'd typically check if notify methods call it.
-    // For coverage, adding is enough.
-    // Let's test notification in init()
     boardGame.init();
     verify(mockObserver1).onGameStart(anyList());
   }
@@ -167,7 +163,7 @@ class BoardGameTest {
     inOrder.verify(mockObserver1).onRoundPlayed(rollsCaptor.capture(), playersCaptor.capture());
 
     assertEquals(1, rollsCaptor.getValue().size());
-    assertEquals(expectedRoll, rollsCaptor.getValue().get(0));
+    assertEquals(expectedRoll, rollsCaptor.getValue().getFirst());
     assertEquals(2, playersCaptor.getValue().size()); // mockPlayer1, mockPlayer2
     assertTrue(playersCaptor.getValue().contains(mockPlayer1));
     assertTrue(playersCaptor.getValue().contains(mockPlayer2));
@@ -271,9 +267,7 @@ class BoardGameTest {
   void testSetGameService_Valid() {
     GameService newService = Mockito.mock(GameService.class);
     boardGame.setGameService(newService);
-    // Verification through init() or playTurn() that would use the new service.
-    // For simple coverage, setting is enough.
-    // Example check:
+
     BoardGame bg = new BoardGame();
     bg.setBoard(mockBoard);
     bg.setDice(mockDice);
@@ -302,23 +296,19 @@ class BoardGameTest {
     assertEquals(1, playersList1.size(), "Initial size of retrieved list should be 1.");
     assertTrue(playersList1.contains(p1_mock_internal), "Retrieved list should contain the internally added player.");
 
-    // Modify the retrieved list (playersList1).
-    // This should be allowed because getPlayers() returns a new ArrayList.
+
     Player p2_mock_external = Mockito.mock(Player.class); // Player added only to the copy
     assertDoesNotThrow(() -> playersList1.add(p2_mock_external), "Adding to the retrieved ArrayList copy should not throw.");
     assertEquals(2, playersList1.size(), "Size of the modified copy (playersList1) should now be 2.");
     assertTrue(playersList1.contains(p1_mock_internal), "Modified copy should still contain the original player.");
     assertTrue(playersList1.contains(p2_mock_external), "Modified copy should contain the newly added external player.");
 
-    // Get the list of players again from the BoardGame.
-    // This should be a new copy of the BoardGame's internal list,
-    // which should not have been affected by modifications to playersList1.
+
     List<Player> playersList2 = bg.getPlayers();
     assertEquals(1, playersList2.size(), "BoardGame's internal list size should remain 1 after modifying a retrieved copy.");
     assertTrue(playersList2.contains(p1_mock_internal), "BoardGame's internal list should still contain the original player.");
     assertFalse(playersList2.contains(p2_mock_external), "BoardGame's internal list should NOT contain the player added only to the copy.");
 
-    // Further check: ensure playersList1 and playersList2 are different instances
     assertNotSame(playersList1, playersList2, "Consecutive calls to getPlayers() should return different list instances.");
   }
 
@@ -342,33 +332,4 @@ class BoardGameTest {
     assertEquals(mockPlayer1, boardGame.getCurrentPlayer());
     verify(mockService).getCurrentPlayer(boardGame);
   }
-
-  @Test
-  @DisplayName("notifyGameOver should call onGameOver on observers")
-  void testNotifyGameOver() {
-    // This method is private, so we test its effects through a public method that might call it.
-    // Currently, no public method in BoardGame directly calls notifyGameOver.
-    // If, for example, playTurn could result in game over and call it:
-    //
-    // when(mockService.playTurn(any(), any())).thenReturn(1);
-    // when(mockService.isFinished(any())).thenReturn(true); // Game is now finished
-    // when(mockService.getWinner(any())).thenReturn(mockPlayer1); // mockPlayer1 wins
-    //
-    // // Hypothetical method that checks for game over and notifies
-    // // boardGame.checkAndNotifyGameOver();
-    //
-    // verify(mockObserver1).onGameOver(mockPlayer1);
-
-    // For now, since it's private and not called by public methods, we can't directly test it
-    // without refactoring or making it package-private for testing.
-    // To get line coverage, we assume it would be called internally if the game logic for game over was
-    // within BoardGame itself.
-    // The current structure delegates game over logic to GameService.
-    // If `service.isFinished()` becomes true and `service.getWinner()` returns a winner,
-    // the controller or a higher-level game loop would likely call `notifyGameOver`.
-    // For pure line coverage of the private method, you'd need to call it via reflection
-    // or have a public path. Given the focus, this is likely not required.
-    assertTrue(true, "notifyGameOver is private; tested indirectly or requires refactor for direct test.");
-  }
-
 }

@@ -49,8 +49,6 @@ class CardServiceTest {
         try (MockedStatic<MonopolyGameScene> mockedStatic = Mockito.mockStatic(MonopolyGameScene.class)) {
             mockedStatic.when(MonopolyGameScene::getInstance).thenReturn(mockGameScene);
 
-            // Since shuffling is random, we can't verify the exact order,
-            // but we can verify the decks are initialized and have the right cards
             cardService = new CardService(decks);
 
             // Verify by drawing all cards from each deck

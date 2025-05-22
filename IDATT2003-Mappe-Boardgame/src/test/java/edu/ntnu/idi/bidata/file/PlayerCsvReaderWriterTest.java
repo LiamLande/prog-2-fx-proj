@@ -30,9 +30,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PlayerCsvReaderWriterTest {
 
-    // No @InjectMocks because all methods are static
-    // We will use MockedStatic for CsvUtils and Logger
-
     @Mock
     Player mockPlayer1;
 
@@ -102,7 +99,7 @@ class PlayerCsvReaderWriterTest {
             List<Player> players = PlayerCsvReaderWriter.readAll(reader);
 
             assertEquals(2, players.size());
-            assertEquals("PlayerOne", players.get(0).getName());
+            assertEquals("PlayerOne", players.getFirst().getName());
             assertEquals(1, players.get(0).getCurrentTile().getId());
             assertEquals(Player.DEFAULT_PIECE_IDENTIFIER, players.get(0).getPieceIdentifier());
 
@@ -132,7 +129,7 @@ class PlayerCsvReaderWriterTest {
             List<Player> players = PlayerCsvReaderWriter.readAll(reader);
 
             assertEquals(2, players.size());
-            assertEquals("PlayerOne", players.get(0).getName());
+            assertEquals("PlayerOne", players.getFirst().getName());
             assertEquals(1, players.get(0).getCurrentTile().getId());
             assertEquals("Car", players.get(0).getPieceIdentifier());
 
@@ -183,7 +180,7 @@ class PlayerCsvReaderWriterTest {
             List<Player> players = PlayerCsvReaderWriter.readAll(reader);
 
             assertEquals(1, players.size()); // Only PlayerTwo should be loaded
-            assertEquals("PlayerTwo", players.get(0).getName());
+            assertEquals("PlayerTwo", players.getFirst().getName());
             mockedLogger.verify(() -> Logger.warning(contains("Skipping malformed CSV row 1")));
         }
     }
@@ -204,7 +201,7 @@ class PlayerCsvReaderWriterTest {
             List<Player> players = PlayerCsvReaderWriter.readAll(reader);
 
             assertEquals(1, players.size()); // Only PlayerTwo
-            assertEquals("PlayerTwo", players.get(0).getName());
+            assertEquals("PlayerTwo", players.getFirst().getName());
             mockedLogger.verify(() -> Logger.warning(contains("Skipping CSV row 1 with empty player name.")));
         }
     }
@@ -223,39 +220,16 @@ class PlayerCsvReaderWriterTest {
             List<Player> players = PlayerCsvReaderWriter.readAll(reader);
 
             assertEquals(1, players.size());
-            assertEquals("PlayerOne", players.get(0).getName());
-            assertEquals(0, players.get(0).getCurrentTile().getId()); // Default ID
+            assertEquals("PlayerOne", players.getFirst().getName());
+            assertEquals(0, players.getFirst().getCurrentTile().getId()); // Default ID
             mockedLogger.verify(() -> Logger.warning(contains("Invalid tileId format for player 'PlayerOne'")));
         }
     }
 
     @Test
     void readAll_tileCreationFails_skipsPlayer() throws IOException {
-        // This test requires Tile constructor to throw InvalidParameterException for a specific ID.
-        // We can't directly mock Tile constructor if it's "new Tile()".
-        // If Player constructor can fail for reasons other than tile, test that.
-        // For now, let's assume a specific tile ID is problematic for Tile construction for testing.
-        // This scenario is hard to test without deeper control or specific Tile behavior.
-        // Let's simulate Player constructor failing.
-
         String csvData = "ProblemPlayer,1,ProblemPiece";
         StringReader reader = new StringReader(csvData);
-
-        // To test the Player constructor catch block, we would need to make Player constructor throw an exception.
-        // This is tricky with "new Player(...)". A more robust way would be if Player creation was through a factory.
-        // For simplicity here, we'll assume the log happens and player is skipped.
-        // A true test of this path would involve a more complex setup or refactoring.
-
-        // We can test the Tile creation failure leading to player skip
-        // by making Tile constructor throw for a specific ID.
-        // However, we can't mock "new Tile()" easily.
-        // Let's focus on the log for now for the Tile creation failure.
-        // And then for Player creation failure (which is more feasible).
-
-        // To test the specific catch block for new Player(...) failure:
-        // We need to ensure the Player constructor *can* throw InvalidParameterException.
-        // Let's assume if name is "ExceptionalPlayer", it throws. (This would require modifying Player class for testability)
-        // Since we can't modify Player for this test, we'll rely on logs and the fact that list size doesn't increase.
 
         String csvDataForPlayerFail = "PlayerOne,1,Good\nBadPlayerName,2,Bad"; // Assume BadPlayerName makes Player constructor fail
         StringReader readerPlayerFail = new StringReader(csvDataForPlayerFail);
@@ -265,41 +239,17 @@ class PlayerCsvReaderWriterTest {
 
             List<String[]> csvRows = new ArrayList<>();
             csvRows.add(new String[]{"PlayerOne", "1", "Good"});
-            // Simulate "BadPlayerName" causing Player constructor to throw InvalidParameterException
-            // This requires that the Player constructor can actually throw based on its inputs.
-            // e.g. Player name too long, or specific name.
-            // For the sake of this example, we'll assume a Player constructor might fail.
-            // We are testing the CsvReaderWriter's handling of that failure.
-
-            // If "BadPlayerName" is not a trigger for Player constructor failure, this path won't be fully hit.
-            // Let's assume it is for this test:
             csvRows.add(new String[]{"BadPlayerName", "2", "Piece"});
             when(CsvUtils.readAll(readerPlayerFail)).thenReturn(csvRows);
 
-            // To actually trigger "Could not create player", we need Player(...) to throw.
-            // We cannot mock "new Player()" directly with Mockito in a simple way.
-            // A more involved approach would be PowerMockito or refactoring Player creation to a factory.
-
-            // For now, let's test the Tile creation failing part by anticipating the log
-            // This relies on Tile(id) potentially throwing.
-            // If Tile(-99) throws InvalidParameterException:
             String csvTileFail = "TileFailPlayer,-99,Piece";
             StringReader readerTileFail = new StringReader(csvTileFail);
             List<String[]> csvRowsTileFail = Collections.singletonList((new String[]{"TileFailPlayer", "-99", "Piece"}));
             when(CsvUtils.readAll(readerTileFail)).thenReturn(csvRowsTileFail);
 
-            // Triggering the Tile creation exception:
-            // This assumes new Tile(-99) would throw InvalidParameterException
-            // (which it does if ID < 0 based on typical Tile impl)
             List<Player> playersFromTileFail = PlayerCsvReaderWriter.readAll(readerTileFail);
             assertTrue(playersFromTileFail.isEmpty());
             mockedLogger.verify(() -> Logger.error(contains("Could not create placeholder tile for player 'TileFailPlayer' with ID -99."), any(InvalidParameterException.class)));
-
-
-            // Testing player creation failure is harder without ability to make `new Player` fail on demand.
-            // The existing structure means we assume if Tile is made, Player is made unless name/piece is bad.
-            // The Player constructor check for null name/tile is usually good.
-            // If name is null (already handled by empty check), or tile is null (handled if placeholder fails).
         }
     }
 
@@ -335,7 +285,6 @@ class PlayerCsvReaderWriterTest {
 
             PlayerCsvReaderWriter.writeAll(stringWriter, Collections.emptyList());
 
-            // CsvUtils.writeAll should be called with an empty list of rows
             mockedCsvUtils.verify(() -> CsvUtils.writeAll(eq(stringWriter), eq(Collections.emptyList())));
             assertEquals("", stringWriter.toString()); // Output should be empty
             mockedLogger.verify(() -> Logger.info(eq("Successfully wrote 0 player configurations to CSV.")));
@@ -359,7 +308,7 @@ class PlayerCsvReaderWriterTest {
             // Verify CsvUtils.writeAll was called with the correct writer and data
             mockedCsvUtils.verify(() -> CsvUtils.writeAll(eq(stringWriter), argThat(list ->
                     list.size() == 2 &&
-                            Arrays.equals(list.get(0), expectedRows.get(0)) &&
+                            Arrays.equals(list.getFirst(), expectedRows.getFirst()) &&
                             Arrays.equals(list.get(1), expectedRows.get(1))
             )));
             mockedLogger.verify(() -> Logger.debug(eq("Prepared CSV row for player 'Alice': Alice,10,Car")));
@@ -384,7 +333,7 @@ class PlayerCsvReaderWriterTest {
 
             mockedCsvUtils.verify(() -> CsvUtils.writeAll(eq(stringWriter), argThat(list ->
                     list.size() == 1 &&
-                            Arrays.equals(list.get(0), expectedRows.get(0))
+                            Arrays.equals(list.getFirst(), expectedRows.getFirst())
             )));
             mockedLogger.verify(() -> Logger.warning(eq("Player 'Alice' has a null currentTile. Writing with default tile ID 0 for CSV.")));
         }
@@ -410,7 +359,7 @@ class PlayerCsvReaderWriterTest {
             // CsvUtils.writeAll should be called with rows for non-null players only
             mockedCsvUtils.verify(() -> CsvUtils.writeAll(eq(stringWriter), argThat(list ->
                     list.size() == 2 && // Only 2 non-null players
-                            Arrays.equals(list.get(0), expectedRows.get(0)) &&
+                            Arrays.equals(list.getFirst(), expectedRows.getFirst()) &&
                             Arrays.equals(list.get(1), expectedRows.get(1))
             )));
             mockedLogger.verify(() -> Logger.warning(eq("Encountered a null player object in the list. Skipping this player for CSV writing.")));

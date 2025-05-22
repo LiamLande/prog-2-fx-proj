@@ -19,7 +19,6 @@ class CsvUtilsTest {
         Constructor<CsvUtils> constructor = CsvUtils.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
-        // Verify we can access it with reflection
         CsvUtils instance = constructor.newInstance();
         assertNotNull(instance);
     }

@@ -31,12 +31,10 @@ class BoardJsonReaderWriterTest {
   void setUp() {
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
-    // Logger.info("-------------------- Test BoardJsonReaderWriter Case Start --------------------");
   }
 
   @AfterEach
   void tearDown() {
-    // Logger.info("-------------------- Test BoardJsonReaderWriter Case End ----------------------");
     System.setOut(originalOut);
     System.setErr(originalErr);
   }
@@ -66,15 +64,8 @@ class BoardJsonReaderWriterTest {
   void read_MissingTilesArray_ThrowsJsonParseExceptionOrNPE() {
     String jsonWithoutTiles = "{\"description\": \"A board without tiles\"}";
     StringReader reader = new StringReader(jsonWithoutTiles);
-    // Depending on JsonUtils, this might be NPE if getAsJsonArray is called on null,
-    // or specific JsonParseException if JsonUtils handles it.
-    // Current JsonUtils would throw JsonParseException("Failed to parse JSON: Not a JSON Array.")
-    // if "tiles" was present but not an array, or NPE if "tiles" is missing and getAsJsonArray is called on null.
-    // The SUT does `root.getAsJsonArray("tiles");` which returns null if "tiles" is not found.
-    // Then `assert tilesJson != null;` would fail with AssertionError if assertions are enabled.
-    // If assertions are not enabled, `for (JsonElement elem : tilesJson)` would NPE.
-    // Let's assume assertions are enabled for test runs.
-    assertThrows(AssertionError.class, // Or NullPointerException if assertions disabled and tilesJson is used
+
+    assertThrows(AssertionError.class,
         () -> BoardJsonReaderWriter.read(reader, GameVariant.SNAKES_LADDERS));
   }
 

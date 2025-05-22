@@ -29,7 +29,6 @@ class GameControllerTest {
   private GameController gameController;
   private BoardGame mockGameModel;
 
-  // UI Mocks (using actual class names from your image)
   private SnakeLadderGameScene mockSlScene;
   private MonopolyGameScene mockMonopolyScene;
 
@@ -49,7 +48,6 @@ class GameControllerTest {
   void setUp() {
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
-    Logger.info("-------------------- Test Case Start --------------------");
 
     mockGameModel = mock(BoardGame.class);
 
@@ -91,7 +89,6 @@ class GameControllerTest {
 
     outContent.reset();
     errContent.reset();
-    Logger.info("-------------------- Test Case End ----------------------");
   }
 
   private String getOut() { return outContent.toString(); }
@@ -203,7 +200,6 @@ class GameControllerTest {
   }
 
   // --- Player Action Requests ---
-
 
   @Test
   @DisplayName("handleRollDiceRequest should do nothing if game is finished")

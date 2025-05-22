@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/GoActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;

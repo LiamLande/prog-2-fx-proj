@@ -1,7 +1,7 @@
 package edu.ntnu.idi.bidata.model;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser; // For creating complex JsonObject for testing
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,16 +50,12 @@ class CardTest {
   @Test
   @DisplayName("hasProperty covers all its branches")
   void testHasProperty_BranchCoverage() {
-    // Path 1: rawData is null
     assertFalse(cardWithNullData.hasProperty("anyKey"), "hasProperty should return false for null rawData");
 
-    // Path 2: propertyName is null (rawData is not null)
     assertFalse(cardWithFullData.hasProperty(null), "hasProperty should return false for null propertyName");
 
-    // Path 3: property exists
     assertTrue(cardWithFullData.hasProperty("intKey"), "hasProperty should find existing key");
 
-    // Path 4: property does not exist (rawData is not null, propertyName is not null)
     assertFalse(cardWithFullData.hasProperty("nonExistentKey"), "hasProperty should not find non-existent key");
     assertFalse(cardWithEmptyData.hasProperty("anyKey"), "hasProperty should return false for key in empty rawData");
   }
@@ -89,16 +85,6 @@ class CardTest {
 
     // Path 4b: Is a double/decimal, should return default
     assertEquals(INT_DEFAULT_VAL, cardWithFullData.getIntProperty("doubleKey", INT_DEFAULT_VAL), "getIntProperty for double type");
-
-    // Path 5 (NumberFormatException): This is harder to reliably trigger with JsonPrimitive's getAsInt
-    // unless the number is truly malformed in a way JsonPrimitive allows but getAsInt rejects (e.g. "123L" if it were parsed as number).
-    // For typical JSON, if it's a number, getAsInt usually works or it falls into the double case.
-    // If you had a specific JSON that could cause NFE after `isNumber()` is true, you'd add it.
-    // For now, the doubleKey test covers a non-integer number.
-    JsonObject trickyNumber = new JsonObject();
-    // Gson's JsonPrimitive.getAsInt() is quite robust. It can parse "123" as int.
-    // A direct NumberFormatException for a valid JsonPrimitive(Number) is rare.
-    // The "doubleKey" test implicitly tests the robustness of getAsInt for non-integer numbers.
   }
 
   @Test

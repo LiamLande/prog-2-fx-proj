@@ -26,9 +26,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CardJsonReaderWriterTest {
 
-    // No @InjectMocks because all methods are static.
-    // We will use MockedStatic for JsonUtils and Logger.
-
     @Test
     void read_nullRootJson_returnsEmptyMapAndLogsError() {
         try (MockedStatic<JsonUtils> mockedJsonUtils = Mockito.mockStatic(JsonUtils.class);
@@ -42,7 +39,6 @@ class CardJsonReaderWriterTest {
             assertTrue(decks.isEmpty());
             mockedLogger.verify(() -> Logger.info("Starting to read card configurations from JSON."));
             mockedLogger.verify(() -> Logger.error("Failed to parse root JSON for cards. Root object is null. Aborting card reading."));
-            // The "Finished reading..." log is NOT called in this path due to early return
             mockedLogger.verify(() -> Logger.info(contains("Finished reading card configurations.")), never());
         }
     }
@@ -361,7 +357,6 @@ class CardJsonReaderWriterTest {
             when(JsonUtils.read(any(Reader.class))).thenReturn(root);
             Map<String, List<Card>> decks = CardJsonReaderWriter.read(new StringReader("..."));
             assertTrue(decks.get("chance").isEmpty());
-            // Verify the call with specific string and any matching exception type for the second argument
             mockedLogger.verify(() -> Logger.error(
                     eq("Error parsing a Chance card. JSON content: {\"id\":1,\"type\":[],\"description\":\"DescA\"}. Skipping this card."),
                     isA(java.lang.IllegalStateException.class) // GSON throws this if getAsString is called on a non-primitive/non-string

@@ -19,8 +19,6 @@ class DieTest {
   @Test
   @DisplayName("getValue before first roll should return 0")
   void testGetValue_beforeFirstRoll_returnsZero() {
-    // lastRolledValue is an int, defaults to 0. Javadoc says "undefined".
-    // Testing for 0 matches current implementation.
     assertEquals(0, die.getValue(), "Value before first roll should be 0.");
   }
 
@@ -47,8 +45,6 @@ class DieTest {
   @Test
   @DisplayName("Multiple rolls should update lastRolledValue consistently")
   void testMultipleRolls_updatesValue() {
-    // This test primarily ensures getValue updates correctly after each roll.
-    // It doesn't assert randomness, just consistency.
     for (int i = 0; i < 10; i++) {
       int rolledValue = die.roll();
       assertEquals(rolledValue, die.getValue(),

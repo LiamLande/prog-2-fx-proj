@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/GoToJailActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -27,7 +25,6 @@ class GoToJailActionTest {
   private Tile mockCurrentTile;
   private Tile mockJailTile;
   private Tile mockIntermediateTile1;
-  private Tile mockIntermediateTile2;
   private MonopolyService mockMonopolyService;
 
   @BeforeEach
@@ -38,7 +35,6 @@ class GoToJailActionTest {
     mockCurrentTile = mock(Tile.class);
     mockJailTile = mock(Tile.class);
     mockIntermediateTile1 = mock(Tile.class);
-    mockIntermediateTile2 = mock(Tile.class);
     mockMonopolyService = mock(MonopolyService.class);
 
     when(mockPlayer.getCurrentTile()).thenReturn(mockCurrentTile);
@@ -106,7 +102,7 @@ class GoToJailActionTest {
     action.perform(mockPlayer);
 
     // Expected steps: from 5 to 2 via 4 => (4-5) + (2-4) -> simplified to -2 direct steps
-    verify(mockPlayer).move(-2); // Correctly calculate -2 for reverse
+    verify(mockPlayer).move(-2);
     verify(mockMonopolyService).sendToJail(mockPlayer);
     assertTrue(outContent.toString().contains("Oops, Jail Time!"));
   }
@@ -177,7 +173,7 @@ class GoToJailActionTest {
     // Should not throw NPE, but service call won't happen
     assertDoesNotThrow(() -> action.perform(mockPlayer));
 
-    verify(mockPlayer).move(1); // Simplified, assuming 1 step forward path from 5 to 10 via getNext()
+    verify(mockPlayer).move(1);
     // mockMonopolyService is null, so sendToJail on it won't be verified (it would NPE if called)
     assertTrue(outContent.toString().contains("Go to Jail, no service"));
   }

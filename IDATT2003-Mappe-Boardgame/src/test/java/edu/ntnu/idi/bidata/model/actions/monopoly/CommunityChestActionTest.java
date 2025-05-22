@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/CommunityChestActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
@@ -8,7 +7,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -62,14 +60,12 @@ class CommunityChestActionTest {
     ServiceLocator.setMonopolyService(null); // Simulate service not being set
     CommunityChestAction action = new CommunityChestAction("Community Chest - No Service");
 
-    // Should not throw NPE even if service is null, as it's checked in SUT
     assertDoesNotThrow(() -> action.perform(mockPlayer));
 
     String consoleOutput = outContent.toString();
     assertTrue(consoleOutput.contains("Community Chest - No Service"),
         "Console output mismatch. Actual: " + consoleOutput);
-    // mockMonopolyService was never set globally to null, so this verify would fail if it was called.
-    // Since the service IS null from the locator, drawCommunityChestCard should not be called on our mock instance.
+
     verify(mockMonopolyService, never()).drawCommunityChestCard(mockPlayer);
   }
 

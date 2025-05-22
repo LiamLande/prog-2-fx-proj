@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/BoardTest.java
 package edu.ntnu.idi.bidata.model;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
@@ -33,14 +32,9 @@ class BoardTest {
   @DisplayName("addTile should update maxId")
   void testAddTile_UpdatesMaxId() {
     board.addTile(new Tile(5));
-    // Accessing maxId directly isn't possible, but we can infer from getStart or other behaviors if needed.
-    // For line coverage, this is implicitly tested.
-    // To explicitly test, we'd need a getMaxId() or test behavior dependent on it.
-    // For now, assume coverage is achieved by adding tiles with increasing IDs.
     board.addTile(new Tile(2));
     board.addTile(new Tile(10));
-    // If there was a getFinish() that used maxId, we could test it.
-    // For now, the line `if (id > maxId) { maxId = id; }` is covered.
+
     assertEquals(3, board.getTiles().size()); // Just to ensure tiles are added.
   }
 

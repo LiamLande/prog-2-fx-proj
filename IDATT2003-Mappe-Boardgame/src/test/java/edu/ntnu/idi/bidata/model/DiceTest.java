@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/DiceTest.java
 package edu.ntnu.idi.bidata.model;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
@@ -54,7 +53,6 @@ class DiceTest {
     Dice dice = new Dice(3);
     dice.rollDie(); // Roll all dice to ensure they have values
 
-    // We can't predict the exact value, but it should be between 1 and 6
     int die0Value = dice.getDie(0);
     assertTrue(die0Value >= 1 && die0Value <= 6, "Die 0 value out of range.");
 

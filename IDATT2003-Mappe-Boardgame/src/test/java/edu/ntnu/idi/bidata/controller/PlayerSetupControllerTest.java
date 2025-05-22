@@ -25,7 +25,7 @@ class PlayerSetupControllerTest {
 
   private PlayerSetupController controller;
 
-  // For capturing Logger output (optional, based on assertion needs)
+  // For capturing Logger output
   private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalOut = System.out;
@@ -93,7 +93,6 @@ class PlayerSetupControllerTest {
     assertTrue(result);
     List<String> lines = Files.readAllLines(tempFile.toPath());
     assertEquals(2, lines.size());
-    // PlayerCsvReaderWriter writes: name,tileId (0 for placeholder),pieceIdentifier
     assertEquals("Alice,0,tokenA", lines.get(0));
     assertEquals("Bob,0,tokenB", lines.get(1));
     assertTrue(getOut().contains("Player setup successfully saved to: " + tempFile.getAbsolutePath()), "Actual out: " + getOut());
@@ -126,7 +125,6 @@ class PlayerSetupControllerTest {
 
     IOException ioException = assertThrows(IOException.class,
         () -> controller.savePlayerSetup(inputs, unwritableFile));
-    // Message might be OS-dependent ("Permission denied", "Access is denied", etc.)
     assertNotNull(ioException.getMessage());
     assertTrue(getErr().contains("IOException occurred while saving player setup"), "Actual err: " + getErr());
   }
@@ -173,8 +171,6 @@ class PlayerSetupControllerTest {
       System.err.println("Test execution note: File '" + unreadableFile.getAbsolutePath() + "' remained readable. SUT path for !canRead() was likely not taken.");
       assertFalse(result.isEmpty(), "If file was readable, list should not be empty.");
     }
-
-    unreadableFile.setReadable(true, false); // Cleanup
   }
 
 

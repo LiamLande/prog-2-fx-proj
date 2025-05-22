@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,7 +32,7 @@ class SnakesLaddersServiceTest {
     @Mock
     Tile intermediateTileMock;
     @Mock
-    Tile endTileMock; // A tile where getNext() is null
+    Tile endTileMock;
     @Mock
     Board boardMock;
     @Mock
@@ -187,8 +186,7 @@ class SnakesLaddersServiceTest {
         when(diceMock.rollDie()).thenReturn(6);
         // Simulate player1 landing on end tile.
         when(player1Mock.getCurrentTile()).thenReturn(endTileMock); // Player1 is on the end tile
-        // player2 is not on end tile for this scenario. This stubbing is only needed if player1 *wasn't* on endTile.
-        // Since player1 IS on endTile, anyMatch will short-circuit. So, make this lenient.
+
         lenient().when(player2Mock.getCurrentTile()).thenReturn(intermediateTileMock);
 
 

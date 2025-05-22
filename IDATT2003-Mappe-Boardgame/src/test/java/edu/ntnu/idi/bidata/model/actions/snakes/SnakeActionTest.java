@@ -1,4 +1,3 @@
-
 package edu.ntnu.idi.bidata.model.actions.snakes;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
@@ -17,7 +16,7 @@ class SnakeActionTest {
   void testConstructor_Valid() {
     SnakeAction action = new SnakeAction("Slide down!", 5);
     assertEquals(5, action.getSteps());
-    // Description is not directly gettable, but constructor doesn't throw
+
     assertDoesNotThrow(() -> new SnakeAction("Valid Snake", 1));
   }
 

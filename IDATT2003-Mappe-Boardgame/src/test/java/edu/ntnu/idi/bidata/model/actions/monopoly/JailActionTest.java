@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/JailActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
@@ -35,7 +34,7 @@ class JailActionTest {
   @DisplayName("Constructor should initialize description")
   void testConstructor() {
     JailAction action = new JailAction("Just Visiting Jail");
-    // Description is private without a getter, so we verify by perform's output
+
     action.perform(mockPlayer); // Player arg isn't used by SUT's perform
     assertTrue(outContent.toString().contains("Just Visiting Jail"), "Description mismatch in output.");
   }

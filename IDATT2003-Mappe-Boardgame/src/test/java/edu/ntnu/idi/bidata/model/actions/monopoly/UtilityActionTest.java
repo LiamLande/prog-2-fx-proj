@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/UtilityActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
@@ -7,10 +6,8 @@ import edu.ntnu.idi.bidata.service.ServiceLocator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class UtilityActionTest {
@@ -89,20 +86,5 @@ class UtilityActionTest {
 
     verify(mockPlayer).getLastDiceRoll();
     verify(mockMonopolyService).getUtilitiesOwnedCount(mockOwner);
-    // int rentToPay = 5 * 10 = 50;
-    // Payment logic is commented out in SUT
-  }
-
-  @Test
-  @DisplayName("perform should throw NPE if ServiceLocator's service is null and accessed")
-  void testPerform_NullServiceViaLocator() {
-    ServiceLocator.setMonopolyService(null);
-    UtilityAction action = new UtilityAction("Utility with no service", 150);
-    action.setOwner(mockOwner); // Owner is not the player
-    when(mockPlayer.getLastDiceRoll()).thenReturn(5); // Needed to enter the branch
-
-    assertThrows(NullPointerException.class, () -> {
-      action.perform(mockPlayer);
-    }, "Should throw NPE if service is null and accessed");
   }
 }

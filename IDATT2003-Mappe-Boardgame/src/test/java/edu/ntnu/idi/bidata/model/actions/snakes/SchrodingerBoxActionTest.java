@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/snakes/SchrodingerBoxActionTest.java
 package edu.ntnu.idi.bidata.model.actions.snakes;
 
 import edu.ntnu.idi.bidata.model.Board;
@@ -36,7 +35,6 @@ class SchrodingerBoxActionTest {
 
   @BeforeEach
   void setUp() {
-    // Redirect System.out and System.err to capture logger output
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
 
@@ -67,8 +65,7 @@ class SchrodingerBoxActionTest {
     // Restore original System.out and System.err
     System.setOut(originalOut);
     System.setErr(originalErr);
-    // It's good practice to clear the streams if they are reused,
-    // though new instances are created in @BeforeEach.
+
     outContent.reset();
     errContent.reset();
   }
@@ -178,8 +175,7 @@ class SchrodingerBoxActionTest {
 
 
     SchrodingerBoxAction action = new SchrodingerBoxAction();
-    // We need to run this multiple times or use a controlled Random to ensure the path
-    // needing the start tile is hit. Since Random is internal, we check for either outcome.
+
     String outcome = action.executeObserve(mockPlayer, mockBoard);
     String errorLogs = errContent.toString();
     String infoLogs = outContent.toString();
@@ -204,12 +200,9 @@ class SchrodingerBoxActionTest {
     // Start tile is present and fine
     when(mockBoard.getTile(0)).thenReturn(mockStartTile);
 
-    // Setup the board to have two conceptual tiles (IDs 0 and 1)
-    // but make the tile at ID 1 (the end tile) null when fetched.
     Map<Integer, Tile> tilesMap = new LinkedHashMap<>();
     tilesMap.put(0, mockStartTile); // Start tile at ID 0
     tilesMap.put(1, mockEndTile);   // Placeholder for end tile at ID 1, actual tile object doesn't matter here for size
-    // The key is that getTiles().size() is 2.
 
     when(mockBoard.getTiles()).thenReturn(tilesMap); // So, board.getTiles().size() will be 2.
     // board.getTiles().size() - 1 will be 1.
@@ -221,10 +214,6 @@ class SchrodingerBoxActionTest {
     String outcome = action.executeObserve(mockPlayer, mockBoard);
     String errorLogs = errContent.toString();
     String infoLogs = outContent.toString();
-
-    // The actual error message from SchrodingerBoxAction is:
-    // Logger.error("Schrödinger (Observe) error: End tile (tile " + (board.getTiles().size() - 1) +") is null.");
-    // which will be "End tile (tile 1) is null." with this setup.
 
     if (outcome.contains("end point is missing")) {
       // This path means random tried to go to end, but it was null

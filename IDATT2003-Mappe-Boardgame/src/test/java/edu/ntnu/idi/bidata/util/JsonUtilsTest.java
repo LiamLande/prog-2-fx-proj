@@ -1,17 +1,11 @@
 package edu.ntnu.idi.bidata.util;
 
-import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import edu.ntnu.idi.bidata.exception.JsonParseException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,8 +17,6 @@ class JsonUtilsTest {
         Constructor<JsonUtils> constructor = JsonUtils.class.getDeclaredConstructor();
         constructor.setAccessible(true);
 
-        // The constructor doesn't explicitly throw an exception but is private
-        // Just verify we can access it with reflection
         JsonUtils instance = constructor.newInstance();
         assertNotNull(instance);
     }
@@ -47,7 +39,7 @@ class JsonUtilsTest {
         JsonParseException exception = assertThrows(JsonParseException.class,
                 () -> JsonUtils.parse(nonObjectJson));
         assertTrue(exception.getMessage().contains("Failed to parse JSON string"));
-        assertTrue(exception.getCause() instanceof IllegalStateException);
+      assertInstanceOf(IllegalStateException.class, exception.getCause());
     }
 
     @Test

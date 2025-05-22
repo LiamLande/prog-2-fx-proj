@@ -30,12 +30,6 @@ class PlayerTest {
   private Tile mockNextTile1;
   @Mock
   private Tile mockNextTile2;
-  @Mock
-  private Tile mockPrevTile1; // Kept for potential use, but check if actually used now
-  @Mock
-  private Tile mockPrevTile2; // Kept for potential use, but check if actually used now
-  // @Mock // mockTileAction is not directly used in PlayerTest, but by Tile which is mocked.
-  // private TileAction mockTileAction; // So, this mock might be unnecessary here.
 
   private Player player;
 
@@ -47,7 +41,7 @@ class PlayerTest {
   @Nested
   @DisplayName("Constructor Tests")
   class ConstructorTests {
-    // No changes needed here from previous version
+
     @Test
     @DisplayName("Constructor (name, start) uses default piece and null money")
     void testConstructor_nameStart_usesDefaults() {
@@ -176,7 +170,6 @@ class PlayerTest {
 
     @BeforeEach
     void setupPlayer() {
-      // Only initialize the player. Tile linking will be done per-test.
       player = new Player(VALID_NAME, mockStartTile);
     }
 
@@ -266,17 +259,10 @@ class PlayerTest {
     @Test
     @DisplayName("move when currentTile.land() is called - verifies interaction")
     void testMove_landInteraction() {
-      // This test primarily ensures that if a player moves to a tile,
-      // the land() method of THAT tile is called.
-      // The internal behavior of land() is tested in TileTest.
 
       when(mockStartTile.getNext()).thenReturn(mockNextTile1);
-      // No need to stub mockNextTile1.getNext() unless the land() method on mockNextTile1
-      // somehow tries to access its own .getNext() AND that influences the player's
-      // currentTile directly within the move() method's scope, which is unlikely.
-      // The move() method sets currentTile, then calls land().
 
-      player.move(1); // Player moves to mockNextTile1
+      player.move(1);
 
       assertSame(mockNextTile1, player.getCurrentTile());
       verify(mockNextTile1).land(player); // Crucial verification: land was called on the destination.
@@ -287,7 +273,7 @@ class PlayerTest {
   @Nested
   @DisplayName("Money Management Tests")
   class MoneyManagementTests {
-    // No changes needed here from previous version
+
     @BeforeEach
     void setupPlayer() {
       player = new Player(VALID_NAME, mockStartTile); // Starts with money = null
@@ -415,7 +401,7 @@ class PlayerTest {
   @Nested
   @DisplayName("Stubbed Method Tests")
   class StubbedMethodTests {
-    // No changes needed here from previous version
+
     @BeforeEach
     void setupPlayer() {
       player = new Player(VALID_NAME, mockStartTile);
@@ -437,7 +423,7 @@ class PlayerTest {
   @Nested
   @DisplayName("Getter Tests for Final Fields")
   class FinalFieldGetterTests {
-    // No changes needed here from previous version
+
     @Test
     @DisplayName("getName returns the correct player name")
     void testGetName() {

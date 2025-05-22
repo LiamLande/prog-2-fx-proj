@@ -1,9 +1,6 @@
-// src/test/java/edu/ntnu/idi/bidata/model/actions/monopoly/PropertyActionTest.java
 package edu.ntnu.idi.bidata.model.actions.monopoly;
 
 import edu.ntnu.idi.bidata.model.Player;
-// MonopolyService and ServiceLocator are not directly used by the active code in PropertyAction
-// but would be if the commented-out section in perform() was active.
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +17,6 @@ class PropertyActionTest {
   void setUp() {
     mockPlayer = Mockito.mock(Player.class);
     mockOwner = Mockito.mock(Player.class);
-    // It can be helpful to give names to mocks for debugging, though not strictly necessary for these tests.
-    // Mockito.when(mockPlayer.getName()).thenReturn("CurrentPlayer");
-    // Mockito.when(mockOwner.getName()).thenReturn("OwnerPlayer");
   }
 
   @Test
@@ -73,10 +67,6 @@ class PropertyActionTest {
     action.setOwner(mockOwner);
     Player anotherPlayer = Mockito.mock(Player.class); // The player landing on the tile
     assertDoesNotThrow(() -> action.perform(anotherPlayer), "Perform with another player as owner should not throw.");
-
-    // Since the perform() method body is empty (or fully commented out),
-    // these calls are primarily for line coverage of the method signature itself.
-    // No further verifications on mocks are needed for the current SUT state.
   }
 
   @Test

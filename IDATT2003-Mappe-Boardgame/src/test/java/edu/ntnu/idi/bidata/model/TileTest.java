@@ -112,21 +112,8 @@ class TileTest {
     @DisplayName("land() should do nothing if action is null")
     void testLand_whenActionIsNull_doesNothing() {
       tile.setAction(null); // Ensure action is null
-      // We are just checking that no NullPointerException occurs and perform is not called
-      // If mockAction was set and then perform was called, it would be an error.
-      // Here, we can verify that if mockAction was (mistakenly) set and then perform was not called.
-      // A more direct way is just to ensure no exception.
+
       assertDoesNotThrow(() -> tile.land(mockPlayer), "Land method should not throw if action is null");
-
-      // If we had a non-null mockAction and wanted to verify it's NOT called:
-      // TileAction otherMockAction = mock(TileAction.class);
-      // tile.setAction(null); // Action is null
-      // tile.land(mockPlayer);
-      // verify(otherMockAction, never()).perform(any(Player.class)); // This test is a bit indirect
-
-      // The primary check is that no NullPointerException occurs.
-      // If an action *were* present (but it isn't), we'd verify its perform method.
-      // Since it's null, we verify no attempt is made to call perform on a null object.
     }
 
     @Test
@@ -155,8 +142,6 @@ class TileTest {
       tile.setAction(mockAction);
       tile.land(null); // Passing null as player
 
-      // Verify that mockAction.perform(null) was called exactly once
-      // The TileAction implementation would then be responsible for handling a null player if necessary.
       verify(mockAction, times(1)).perform(null);
     }
   }

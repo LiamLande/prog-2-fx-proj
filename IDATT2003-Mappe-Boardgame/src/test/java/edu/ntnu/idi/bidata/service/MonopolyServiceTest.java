@@ -54,7 +54,6 @@ class MonopolyServiceTest {
     CardService cardService;
     @Mock
     Card card;
-    // PropertyAction, RailroadAction, UtilityAction will be mocked when needed.
 
     @InjectMocks
     MonopolyService monopolyService;
@@ -83,13 +82,9 @@ class MonopolyServiceTest {
 
     @AfterEach
     void tearDown() {
-        // Restore System.out and System.err
         System.setOut(originalSystemOut);
         System.setErr(originalSystemErr);
-        // Clear internal state of the service that might persist between tests
-        // This is important if the same MonopolyService instance were reused,
-        // but @InjectMocks creates a new one each time.
-        // However, re-running setup is a good practice for robust state clearing.
+
         if (monopolyService != null && game != null) {
             // Ensure players list isn't null if game.getPlayers() is called in setup
             if (game.getPlayers() == null) {
@@ -110,7 +105,7 @@ class MonopolyServiceTest {
 
     @Test
     void setup_validGame_emptyPlayers() {
-        // 'players' is already empty from setUp, game.getPlayers() returns it.
+
         monopolyService.setup(game); // Pass the mocked game
         assertNull(monopolyService.getCurrentPlayer(this.game)); // Use the field 'game' which is the one setup uses
     }
@@ -971,8 +966,6 @@ class MonopolyServiceTest {
         verify(player1, never()).setCurrentTile(any(Tile.class)); // This should now pass
         verify(player1, never()).move(anyInt());
 
-        // After monopolyService.setup (called in setupForCardExecutionTest),
-        // jailedPlayers is cleared, so player1 is not in jail.
         // The default card action should not put player1 in jail.
         assertFalse(monopolyService.isInJail(player1));
 
