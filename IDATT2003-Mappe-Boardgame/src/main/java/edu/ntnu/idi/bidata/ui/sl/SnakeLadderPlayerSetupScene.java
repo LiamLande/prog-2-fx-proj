@@ -1,9 +1,13 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
-import edu.ntnu.idi.bidata.controller.PlayerSetupController; // Import the new controller
-import edu.ntnu.idi.bidata.exception.InvalidParameterException; // For catching
-import edu.ntnu.idi.bidata.model.Player; // Still needed for DEFAULT_PIECE_IDENTIFIER
+import edu.ntnu.idi.bidata.controller.PlayerSetupController;
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
+import edu.ntnu.idi.bidata.model.Player;
 
+import edu.ntnu.idi.bidata.ui.PieceUIData;
+import edu.ntnu.idi.bidata.ui.PlayerSetupData;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
+import edu.ntnu.idi.bidata.util.Logger;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +42,7 @@ import java.util.function.BiConsumer;
  * Passes selected theme and player setup data to the onStart callback.
  * Uses PlayerSetupController for save/load logic.
  */
-public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene {
+public class SnakeLadderPlayerSetupScene implements ControlledScene {
 
   public enum Theme { EGYPT, JUNGLE }
 
@@ -48,7 +52,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
   private final Button themeButton, saveButton, loadButton, startBtn, homeBtn;
   private final List<TextField> nameFields;
   private final List<ComboBox<PieceUIData>> pieceSelectors;
-  private final PlayerSetupController setupController; // Controller for setup logic
+  private final PlayerSetupController setupController;
 
   private Theme currentTheme = Theme.EGYPT;
   private static final String EGYPT_BG_PATH = "/images/player_setup_bg.png";
@@ -56,7 +60,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
   private static final String HOME_ICON_PATH = "/images/home_icon.png";
 
 
-  // Made public static final so other UI classes can access the defined pieces if needed (e.g. GameScene, BoardView)
+  // Made public static final so other UI classes can access the defined pieces if needed (e.g. SnakeLadderGameScene, SnakeLadderBoardView)
   public static final List<PieceUIData> AVAILABLE_PIECES = List.of(
       new PieceUIData("king", "/images/piece_king.png"),
       new PieceUIData("queen", "/images/piece_queen.png"),
@@ -66,7 +70,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
 
   public SnakeLadderPlayerSetupScene(Stage stage, BiConsumer<List<PlayerSetupData>, Theme> onStart, Runnable onHome) {
     this.stage = stage;
-    this.setupController = new PlayerSetupController(); // Instantiate the controller
+    this.setupController = new PlayerSetupController();
     this.nameFields = new ArrayList<>();
     this.pieceSelectors = new ArrayList<>();
 
@@ -170,7 +174,6 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
     root.getChildren().add(homeBtn);
 
     scene = new Scene(root, 1024, 768); // Example initial size
-    // UiStyles.apply(scene); // If you have a UiStyles class for global styling
   }
 
   @Override
@@ -178,29 +181,10 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
     return scene;
   }
 
-  @Override
-  public void onShow() {
-    // Reset fields when the scene is shown
-    nameFields.forEach(tf -> tf.setText(""));
-    pieceSelectors.forEach(cb -> {
-      if (!AVAILABLE_PIECES.isEmpty()) {
-        cb.setValue(AVAILABLE_PIECES.getFirst());
-      } else {
-        cb.setValue(null); // Handle case where no pieces are defined
-      }
-    });
-  }
-
-  @Override
-  public void onHide() {
-    // Optional: Any cleanup when the scene is hidden
-  }
-
   private Image loadImage(String path) {
     try {
       InputStream is = getClass().getResourceAsStream(path);
-      // A common issue: if path is "/images/file.png", getResourceAsStream sometimes prefers "images/file.png"
-      // or if path is "images/file.png", it might need "/images/file.png".
+
       // The following tries to be robust.
       if (is == null && path.startsWith("/")) {
         is = getClass().getResourceAsStream(path.substring(1));
@@ -210,11 +194,10 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
       Objects.requireNonNull(is, "Cannot load image resource from path: " + path);
       return new Image(is);
     } catch (NullPointerException e) {
-      System.err.println("Error: Image resource not found at path: " + path + ". Check if the path is correct and the resource exists.");
+      Logger.error("Image resource not found at path: " + path + ". Check if the path is correct and the resource exists.");
       throw new RuntimeException("Failed to load critical image: " + path, e);
     } catch (Exception e) {
-      System.err.println("An unexpected error occurred while loading image: " + path);
-      e.printStackTrace();
+      Logger.error("An unexpected error occurred while loading image: " + path, e);
       throw new RuntimeException("Failed to load critical image: " + path, e);
     }
   }
@@ -283,15 +266,13 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
         if (success) {
           showAlert(Alert.AlertType.INFORMATION, "Save Successful", "Player setup saved to:\n" + chosenFile.getAbsolutePath());
         }
-        // The controller now throws exceptions for explicit failure cases, so 'else' might not be needed
-        // if all failure paths in controller throw.
       } catch (IOException e) {
         showAlert(Alert.AlertType.ERROR, "Save Error", "Could not write to file: " + e.getMessage());
       } catch (InvalidParameterException e) { // From Player constructor within controller
         showAlert(Alert.AlertType.ERROR, "Data Error", "Invalid player data for saving: " + e.getMessage());
       } catch (Exception e) {
         showAlert(Alert.AlertType.ERROR, "Unexpected Save Error", "An unexpected error occurred: " + e.getMessage());
-        e.printStackTrace(); // For debugging
+        Logger.error("Unexpected error during player setup save", e);
       }
     }
   }
@@ -321,7 +302,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
             pieceSelectors.get(i).setValue(pieceOpt.get());
           } else if (!AVAILABLE_PIECES.isEmpty()) {
             pieceSelectors.get(i).setValue(AVAILABLE_PIECES.getFirst());
-            System.err.println("Loaded piece ID '" + data.pieceIdentifier() + "' for player '" + data.name() + "' not found in current piece list. Using default.");
+            Logger.error("Loaded piece ID '" + data.pieceIdentifier() + "' for player '" + data.name() + "' not found in current piece list. Using default.");
           }
         }
 
@@ -340,7 +321,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
         showAlert(Alert.AlertType.ERROR, "File Format Error", "Invalid data format in CSV file: " + e.getMessage());
       } catch (Exception e) {
         showAlert(Alert.AlertType.ERROR, "Unexpected Load Error", "An unexpected error occurred during loading: " + e.getMessage());
-        e.printStackTrace();
+        Logger.error("Unexpected error during load", e);
       }
     }
   }
@@ -348,7 +329,7 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
   private void showAlert(Alert.AlertType type, String title, String content) {
     Alert alert = new Alert(type);
     alert.setTitle(title);
-    alert.setHeaderText(null); // No header text
+    alert.setHeaderText(null);
     alert.setContentText(content);
     alert.initOwner(stage); // Ensures alert is modal to this stage
     alert.showAndWait();
@@ -379,8 +360,8 @@ public class SnakeLadderPlayerSetupScene implements SceneManager.ControlledScene
           setGraphic(imageView);
         } else {
           // Fallback if image is null (e.g., loading error)
-          setGraphic(null); // Or a placeholder graphic
-          System.err.println("ComboBox: Image for piece " + item.getIdentifier() + " is null.");
+          setGraphic(null);
+          Logger.error("ComboBox: Image for piece " + item.getIdentifier() + " is null.");
         }
         setContentDisplay(javafx.scene.control.ContentDisplay.LEFT); // Image to the left of text
         setMinWidth(Region.USE_PREF_SIZE); // Ensure cell takes up preferred size

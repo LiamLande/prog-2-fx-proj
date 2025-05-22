@@ -1,26 +1,25 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.monopoly;
 
 import edu.ntnu.idi.bidata.controller.GameController; // Assuming GameController
 import edu.ntnu.idi.bidata.model.BoardGame;
+import edu.ntnu.idi.bidata.model.Card;
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.Tile;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 // import edu.ntnu.idi.bidata.model.actions.TileAction; // Not directly used in this class after review
 // MonopolyService and ServiceLocator are used by the Controller, not directly by the View here.
 // import edu.ntnu.idi.bidata.service.MonopolyService;
 // import edu.ntnu.idi.bidata.service.ServiceLocator;
+import edu.ntnu.idi.bidata.ui.SceneManager;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -29,7 +28,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage; // Kept for SceneManager compatibility
 import java.util.HashMap;
@@ -42,7 +40,7 @@ import java.util.Optional;
  * MonopolyGameScene displays a Monopoly board game interface.
  * Interacts with a GameController for game logic and updates.
  */
-public class MonopolyGameScene implements SceneManager.ControlledScene {
+public class MonopolyGameScene implements ControlledScene {
     private final GameController controller;
     private final BoardGame gameModel;
     private final MonopolyBoardView boardView;
@@ -94,6 +92,10 @@ public class MonopolyGameScene implements SceneManager.ControlledScene {
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getClassLoader().getResource("css/monopoly.css")).toExternalForm()
         );
+    }
+
+    public static MonopolyGameScene getInstance() {
+        return (MonopolyGameScene) SceneManager.getInstance().getCurrentController();
     }
 
     /**
@@ -365,6 +367,98 @@ public class MonopolyGameScene implements SceneManager.ControlledScene {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    /**
+     * Displays a card image in a popup dialog, styled like a Monopoly card.
+     * @param card The card to display
+     */
+    public void displayCardImage(Card card) {
+        // Create a custom alert dialog
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        String cardTypeName = card.getType().contains("Chance") ? "Chance" : "Community Chest";
+        alert.setTitle(cardTypeName); // This sets the window title
+        alert.setHeaderText(null);    // Remove default header text area
+        alert.setGraphic(null);       // Remove the default "i" icon <--- KEY CHANGE HERE
+
+        // --- Create the card UI ---
+        VBox cardBox = new VBox(15); // Spacing between elements in the card
+        cardBox.setAlignment(Pos.CENTER);
+        cardBox.setPadding(new Insets(20));
+        cardBox.setMinWidth(320);
+        cardBox.setMinHeight(220);
+
+        // Card visual styling (ivory background, black border, shadow)
+        cardBox.setStyle(
+                "-fx-background-color: #FFFFF0; " + // Ivory color
+                        "-fx-background-radius: 10px; " +   // Rounded corners for the card
+                        "-fx-border-color: black; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 8px;"            // Rounded corners for the border
+        );
+        cardBox.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.3))); // Shadow for "floating" effect
+
+        // --- Card Title ---
+        Label titleLabel = new Label(cardTypeName.toUpperCase());
+        // Ensure "Kabel" font is available or use a common fallback like "Arial" or "System"
+        titleLabel.setFont(Font.font("Kabel", FontWeight.BOLD, 22));
+        titleLabel.setTextFill(Color.BLACK);
+
+        // --- Card Image ---
+        String imagePath = cardTypeName.equals("Chance") ?
+                "/images/chance_icon.png" : "/images/community_chest_icon.png";
+
+        Node imageDisplayNode;
+
+        try {
+            Image image = new Image(getClass().getResourceAsStream(imagePath));
+            if (image.isError()) {
+                throw new NullPointerException("Image loaded with error: " + imagePath + (image.getException() != null ? " - " + image.getException().getMessage() : ""));
+            }
+            ImageView cardImageView = new ImageView(image);
+            cardImageView.setFitHeight(80);
+            cardImageView.setFitWidth(80);
+            cardImageView.setPreserveRatio(true);
+            imageDisplayNode = cardImageView;
+        } catch (Exception e) {
+            System.err.println("Warning: Could not load card icon '" + imagePath + "'. Using placeholder. Error: " + e.getMessage());
+            Rectangle placeholderRect = new Rectangle(80, 80);
+            placeholderRect.setFill(Color.LIGHTGRAY);
+            placeholderRect.setStroke(Color.DARKGRAY);
+            Label placeholderText = new Label("No\nIcon");
+            placeholderText.setTextAlignment(TextAlignment.CENTER);
+            placeholderText.setFont(Font.font("System", FontWeight.NORMAL, 12));
+            imageDisplayNode = new StackPane(placeholderRect, placeholderText);
+        }
+
+        // --- Card Description Text ---
+        Label descLabel = new Label(card.getDescription());
+        descLabel.setFont(Font.font("Kabel", FontWeight.NORMAL, 16));
+        descLabel.setWrapText(true);
+        descLabel.setTextAlignment(TextAlignment.CENTER);
+        descLabel.setMaxWidth(280);
+        descLabel.setTextFill(Color.BLACK);
+
+        // Add all elements to the card box
+        cardBox.getChildren().addAll(titleLabel, imageDisplayNode, descLabel);
+
+        // Set the card as the content of the alert
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setContent(cardBox);
+
+        // Style the dialog pane itself (the area around your cardBox)
+        // This light gray makes the ivory cardBox "pop" more.
+        // Remove or change this if you prefer the default OS/theme dialog background.
+        dialogPane.setStyle("-fx-background-color: #F0F0F0;");
+
+        // Optional: If you want a completely transparent window with only the card floating
+        // (this will remove window decorations like title bar and close buttons):
+        // alert.initStyle(StageStyle.TRANSPARENT);
+        // dialogPane.getScene().setFill(Color.TRANSPARENT);
+        // dialogPane.setStyle("-fx-background-color: transparent;"); // Make dialog pane background transparent too
+
+        // Show the dialog and wait
         alert.showAndWait();
     }
 

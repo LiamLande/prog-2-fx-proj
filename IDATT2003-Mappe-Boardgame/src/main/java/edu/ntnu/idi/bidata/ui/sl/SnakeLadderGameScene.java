@@ -1,9 +1,11 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
 import edu.ntnu.idi.bidata.controller.GameController;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction; // Import
+import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
+import edu.ntnu.idi.bidata.ui.PieceUIData;
+import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,7 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip; // Import
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -27,10 +29,10 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.stage.Stage;
 
-public class GameScene implements SceneManager.ControlledScene {
+public class SnakeLadderGameScene implements ControlledScene {
   private final GameController controller;
   private final BoardGame gameModel;
-  private BoardView boardView;
+  private final SnakeLadderBoardView snakeLadderBoardView;
   private VBox playerStatusPane;
   private final Map<Player, Label> playerPositionLabels = new HashMap<>();
   private final Map<Player, ImageView> sidePanelPieceViews = new HashMap<>();
@@ -50,7 +52,7 @@ public class GameScene implements SceneManager.ControlledScene {
   private static final String JUNGLE_GAME_BG = "/images/jungle_game_background.png";
   private static final double SIDE_PANEL_PIECE_SIZE = 24;
 
-  public GameScene(Stage stage, GameController gameController, BoardGame gameModel,
+  public SnakeLadderGameScene(Stage stage, GameController gameController, BoardGame gameModel,
       Runnable onNewGame, Runnable onHome, SnakeLadderPlayerSetupScene.Theme gameTheme) {
     this.controller = gameController;
     this.gameModel = gameModel;
@@ -66,12 +68,12 @@ public class GameScene implements SceneManager.ControlledScene {
           BackgroundPosition.CENTER, new BackgroundSize(1.0,1.0,true,true,false,true));
       root.setBackground(new Background(bg));
     } catch (Exception e) {
-      System.err.println("Failed to load GameScene background: " + bgPath + ". " + e.getMessage());
+      System.err.println("Failed to load SnakeLadderGameScene background: " + bgPath + ". " + e.getMessage());
       root.setStyle("-fx-background-color: #D2B48C;"); // Tan fallback
     }
 
-    this.boardView = new BoardView(this.gameModel, this.theme);
-    StackPane boardContainer = createBoardContainer(this.boardView);
+    this.snakeLadderBoardView = new SnakeLadderBoardView(this.gameModel, this.theme);
+    StackPane boardContainer = createBoardContainer(this.snakeLadderBoardView);
     VBox sidePanel = createSidePanel();
 
     root.setCenter(boardContainer);
@@ -93,18 +95,17 @@ public class GameScene implements SceneManager.ControlledScene {
       highlightCurrentPlayer(gameModel.getPlayers().getFirst()); // Highlight first if no current (e.g. pre-game)
     }
     setRollButtonEnabled(!gameModel.isFinished()); // Enable roll if game not over
-    boardView.initializePlayerTokenVisuals();
-    boardView.refresh();
+    snakeLadderBoardView.initializePlayerTokenVisuals();
+    snakeLadderBoardView.refresh();
   }
 
   public Scene getScene() { return scene; }
-  @Override public void onShow() {}
-  @Override public void onHide() {}
-  public BoardView getBoardView() { return boardView; }
 
-  private StackPane createBoardContainer(BoardView board) {
+  public SnakeLadderBoardView getBoardView() { return snakeLadderBoardView; }
+
+  private StackPane createBoardContainer(SnakeLadderBoardView board) {
     Group boardGroup = new Group(board);
-    StackPane container = new StackPane(boardGroup); // Simplified, add border/padding via CSS if needed
+    StackPane container = new StackPane(boardGroup);
     StackPane.setMargin(boardGroup, new Insets(10));
     container.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE); // Let board dictate size initially
 
@@ -125,8 +126,8 @@ public class GameScene implements SceneManager.ControlledScene {
     VBox sidePanel = new VBox(15); // Adjusted spacing
     sidePanel.setAlignment(Pos.TOP_CENTER);
     sidePanel.setPadding(new Insets(10, 10, 10, 20)); // Top, Right, Bottom, Left
-    sidePanel.setPrefWidth(320); // Slightly wider
-    sidePanel.setStyle("-fx-background-color: rgba(245, 235, 218, 0.85); -fx-background-radius: 10px;"); // Semi-transparent
+    sidePanel.setPrefWidth(320);
+    sidePanel.setStyle("-fx-background-color: rgba(245, 235, 218, 0.85); -fx-background-radius: 10px;");
 
     // Title
     Label titleLabel = new Label("Ancient Journey");
@@ -140,12 +141,6 @@ public class GameScene implements SceneManager.ControlledScene {
     playerStatusPane = new VBox(8); // Spacing between player entries
     playerStatusPane.setAlignment(Pos.TOP_LEFT); // Align player entries to top-left
     playerStatusPane.setPadding(new Insets(5));
-
-    // ScrollPane for player status if many players
-    // ScrollPane playerScrollPane = new ScrollPane(playerStatusPane);
-    // playerScrollPane.setFitToWidth(true);
-    // playerScrollPane.setPrefHeight(200); // Example height
-    // playerScrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
 
     // Dice Display and Roll Button
     diceLabel = new Label("⚀");
@@ -196,7 +191,7 @@ public class GameScene implements SceneManager.ControlledScene {
     gameControlsBox.setAlignment(Pos.CENTER);
     gameControlsBox.setPadding(new Insets(10,0,10,0));
 
-    sidePanel.getChildren().addAll(titleBox, playerStatusPane /*or playerScrollPane*/, diceBox, schrodingerChoiceBox, gameMessageLabel, gameControlsBox);
+    sidePanel.getChildren().addAll(titleBox, playerStatusPane, diceBox, schrodingerChoiceBox, gameMessageLabel, gameControlsBox);
     return sidePanel;
   }
 
@@ -221,7 +216,8 @@ public class GameScene implements SceneManager.ControlledScene {
           .findFirst();
       if (pieceDataOpt.isPresent() && pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE) != null) {
         pieceView.setImage(pieceDataOpt.get().getImage(SIDE_PANEL_PIECE_SIZE));
-      } else { /* Set a placeholder or leave empty */ }
+      }
+
       sidePanelPieceViews.put(p, pieceView);
 
       Label nameLbl = new Label(p.getName());
@@ -295,14 +291,14 @@ public class GameScene implements SceneManager.ControlledScene {
     if (winner != null) highlightCurrentPlayer(winner); // Highlight the winner
   }
 
-  // --- Schrödinger UI Methods ---
+  //Schrödinger UI Methods
   public void showSchrodingerChoice(Player player, SchrodingerBoxAction action) {
     if (schrodingerChoiceBox != null) {
       // Find the label within schrodingerChoiceBox to update text, or add one if needed
       Node firstChild = schrodingerChoiceBox.getChildren().getFirst();
       if (firstChild instanceof Label choiceLabel) {
         choiceLabel.setText(player.getName() + ", " + action.getDescription());
-      } else { // Prepend a label if not there
+      } else {
         Label tempLabel = new Label(player.getName() + ", " + action.getDescription());
         tempLabel.setWrapText(true);
         tempLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
@@ -320,8 +316,6 @@ public class GameScene implements SceneManager.ControlledScene {
     if (schrodingerChoiceBox != null) {
       schrodingerChoiceBox.setManaged(false);
       schrodingerChoiceBox.setVisible(false);
-      // Clear general game message or set to default game state message
-      // gameMessageLabel.setText("Roll the dice to proceed.");
     }
   }
 

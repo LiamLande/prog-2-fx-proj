@@ -11,7 +11,6 @@ public class Player {
   private Integer money;
   private String pieceIdentifier;
 
-  // Change from private to public static final
   public static final String DEFAULT_PIECE_IDENTIFIER = "default_token";
 
   /**
@@ -56,8 +55,6 @@ public class Player {
     this.money = money;
   }
 
-  // ... (rest of the Player class remains the same as the previous version)
-
   public void setTile(Tile tile) {
     if (tile == null) {
       throw new InvalidParameterException("Tile must not be null");
@@ -82,10 +79,6 @@ public class Player {
 
   public String getPieceIdentifier() {
     return pieceIdentifier;
-  }
-
-  public void setPieceIdentifier(String pieceIdentifier) {
-    this.pieceIdentifier = (pieceIdentifier == null || pieceIdentifier.isBlank()) ? DEFAULT_PIECE_IDENTIFIER : pieceIdentifier.trim();
   }
 
   public void move(int steps) {

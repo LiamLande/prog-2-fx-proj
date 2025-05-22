@@ -1,17 +1,12 @@
-// service/GameService.java
 package edu.ntnu.idi.bidata.service;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
-import java.util.List;
 
 public interface GameService {
 
   /** Called once before any moves; e.g. reset all players to the start tile. */
   void setup(BoardGame game);
-
-  /** Roll & move each player once, returning the list of dice‐rolls in order. */
-  List<Integer> playOneRound(BoardGame game);
 
   /** Roll & move exactly one player; returns that player’s roll. */
   int playTurn(BoardGame game, Player player);

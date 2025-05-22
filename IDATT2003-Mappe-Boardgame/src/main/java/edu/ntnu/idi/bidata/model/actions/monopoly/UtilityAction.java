@@ -15,7 +15,6 @@ public class UtilityAction extends PropertyAction {
     @Override
     public void perform(Player player) {
         if (getOwner() == null) {
-            // TODO: offer purchase
         } else if (!getOwner().equals(player)) {
             // Retrieve last roll from game context or Player
             int roll = player.getLastDiceRoll(); // implement in Player or via context

@@ -18,12 +18,10 @@ import java.util.function.Supplier;
 public class SceneManager {
   private static SceneManager instance;
   private Stage primaryStage;
-  // MODIFIED: Store suppliers that create ControlledScene instances
   private final Map<String, Supplier<ControlledScene>> loaders = new HashMap<>();
-  // MODIFIED: Cache the ControlledScene instances themselves
   private final Map<String, ControlledScene> cache = new HashMap<>();
   private String currentKey;
-  private ControlledScene currentController; // Keep track of the current controller instance
+  private ControlledScene currentController;
 
   private SceneManager() {}
 
@@ -77,7 +75,6 @@ public class SceneManager {
       throw new IllegalArgumentException("No scene controller registered with key: " + key);
     }
 
-    // MODIFIED: Retrieve or create the scene CONTROLLER instance
     ControlledScene nextController = cache.computeIfAbsent(key, k -> {
       ControlledScene newController = loader.get();
       if (newController == null || newController.getScene() == null) {
@@ -115,6 +112,10 @@ public class SceneManager {
     primaryStage.setScene(nextScene);
     currentKey = key;
     currentController = nextController;
+  }
+
+  public Object getCurrentController() {
+    return currentController;
   }
 
   /**

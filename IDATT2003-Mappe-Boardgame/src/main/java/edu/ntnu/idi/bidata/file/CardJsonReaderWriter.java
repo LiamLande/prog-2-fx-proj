@@ -5,8 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import edu.ntnu.idi.bidata.model.Card;
-import edu.ntnu.idi.bidata.exception.JsonParseException;
+// import edu.ntnu.idi.bidata.exception.JsonParseException; // Not explicitly thrown here, JsonUtils might handle
 import edu.ntnu.idi.bidata.util.JsonUtils;
+import edu.ntnu.idi.bidata.util.Logger; // Added Logger import
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -17,29 +18,81 @@ import java.util.Map;
 public class CardJsonReaderWriter {
 
     public static Map<String, List<Card>> read(Reader reader) {
+        Logger.info("Starting to read card configurations from JSON.");
         JsonObject root = JsonUtils.read(reader);
+
+        if (root == null) {
+            Logger.error("Failed to parse root JSON for cards. Root object is null. Aborting card reading.");
+            return new HashMap<>(); // Return empty map to prevent NullPointerExceptions further down
+        }
+        Logger.debug("Successfully parsed root JSON for cards.");
 
         Map<String, List<Card>> decks = new HashMap<>();
 
-        decks.put("chance", readCardArray(root.getAsJsonArray("chanceCards")));
-        decks.put("communityChest", readCardArray(root.getAsJsonArray("communityChestCards")));
+        if (root.has("chanceCards") && root.get("chanceCards").isJsonArray()) {
+            Logger.debug("Reading Chance cards...");
+            List<Card> chanceCards = readCardArray(root.getAsJsonArray("chanceCards"), "Chance");
+            decks.put("chance", chanceCards);
+            Logger.debug("Finished reading " + chanceCards.size() + " Chance cards.");
+        } else {
+            Logger.warning("JSON data does not contain a 'chanceCards' array or it's not a valid array. Chance deck will be empty.");
+            decks.put("chance", new ArrayList<>());
+        }
 
+        if (root.has("communityChestCards") && root.get("communityChestCards").isJsonArray()) {
+            Logger.debug("Reading Community Chest cards...");
+            List<Card> communityChestCards = readCardArray(root.getAsJsonArray("communityChestCards"), "Community Chest");
+            decks.put("communityChest", communityChestCards);
+            Logger.debug("Finished reading " + communityChestCards.size() + " Community Chest cards.");
+        } else {
+            Logger.warning("JSON data does not contain a 'communityChestCards' array or it's not a valid array. Community Chest deck will be empty.");
+            decks.put("communityChest", new ArrayList<>());
+        }
+
+        Logger.info("Finished reading card configurations. Loaded " + decks.size() + " deck types ('chance', 'communityChest').");
         return decks;
     }
 
-    private static List<Card> readCardArray(JsonArray cardsJson) {
+    // Added deckType parameter for more specific logging
+    private static List<Card> readCardArray(JsonArray cardsJson, String deckType) {
+        Logger.debug("Processing " + deckType + " card array. Expected number of entries: " + cardsJson.size());
         List<Card> cards = new ArrayList<>();
 
         for (JsonElement element : cardsJson) {
+            if (!element.isJsonObject()) {
+                Logger.warning("Skipping a non-JSON object element found in the " + deckType + " card array: " + element.toString());
+                continue;
+            }
             JsonObject cardJson = element.getAsJsonObject();
 
-            int id = cardJson.get("id").getAsInt();
-            String type = cardJson.get("type").getAsString();
-            String description = cardJson.get("description").getAsString();
+            try {
+                // Check for presence of essential fields before attempting to get them
+                if (!cardJson.has("id")) {
+                    Logger.warning("Skipping " + deckType + " card due to missing 'id' field: " + cardJson.toString());
+                    continue;
+                }
+                if (!cardJson.has("type")) {
+                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'type' field: " + cardJson.toString());
+                    continue;
+                }
+                if (!cardJson.has("description")) {
+                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'description' field: " + cardJson.toString());
+                    continue;
+                }
 
-            cards.add(new Card(id, type, description, cardJson));
+
+                int id = cardJson.get("id").getAsInt(); // Could also throw if not int, but GSON usually handles well or we catch below
+                String type = cardJson.get("type").getAsString();
+                String description = cardJson.get("description").getAsString();
+
+                cards.add(new Card(id, type, description, cardJson));
+                Logger.debug("Successfully created " + deckType + " card - ID: " + id + ", Type: '" + type + "'.");
+            } catch (Exception e) {
+                // Catching general exception for robustness during parsing individual cards (e.g., NumberFormatException if id is not int)
+                Logger.error("Error parsing a " + deckType + " card. JSON content: " + cardJson.toString() + ". Skipping this card.", e);
+            }
         }
-
+        Logger.debug("Successfully processed and loaded " + cards.size() + " cards for the " + deckType + " deck.");
         return cards;
     }
 }

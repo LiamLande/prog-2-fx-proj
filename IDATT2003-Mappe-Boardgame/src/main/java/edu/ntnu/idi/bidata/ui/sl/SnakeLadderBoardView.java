@@ -1,4 +1,4 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.sl;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
@@ -7,17 +7,18 @@ import edu.ntnu.idi.bidata.model.actions.TileAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SnakeAction;
+import edu.ntnu.idi.bidata.ui.PieceUIData;
+import edu.ntnu.idi.bidata.util.Logger;
 import java.io.InputStream;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView; // Added
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle; // Can be kept for fallback or removed
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.MoveTo;
@@ -33,8 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class BoardView extends Pane {
-  private static final double SIZE = 600; // Board size
+public class SnakeLadderBoardView extends Pane {
+  private static final double SIZE = 800; // Board size
   private static final double TOKEN_SIZE = 30; // Desired player token image size on board
 
   private final BoardGame game;
@@ -49,34 +50,29 @@ public class BoardView extends Pane {
   private static final String SCHRODINGER_BOX_TILE_IMG = "/images/schrodinger_box_tile.png"; // New Image Path
 
   private Image lightTileImg, darkTileImg, schrodingerBoxImg;
-  // private Image snakeHeadImg, ladderBaseImg; // Optional
 
-  public BoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
+  public SnakeLadderBoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
     this.game = game;
     this.theme = boardTheme;
     setPrefSize(SIZE, SIZE);
 
-    loadThemeAndSpecialTileImages(); // Modified to load all necessary tile images
+    loadThemeAndSpecialTileImages();
     initializeBoardVisuals();
     drawSnakesAndLadders();
-    // Player tokens initialized by GameScene via initializePlayerTokenVisuals() or refresh()
   }
 
   private Image loadImageFromResources(String path) {
     // Centralized image loading helper
     try {
       InputStream is = getClass().getResourceAsStream(path);
-      if (is == null && !path.startsWith("/")) { // Try alternative path if first fails
+      if (is == null && !path.startsWith("/")) {
         is = getClass().getResourceAsStream("/" + path);
       }
       Objects.requireNonNull(is, "Cannot load image resource from path: " + path);
       return new Image(is);
     } catch (Exception e) {
-      System.err.println("Failed to load image: " + path + ". Error: " + e.getMessage());
-      // Return a placeholder or null, or throw an error to make the issue visible
-      // For critical images, throwing an error might be better during development.
-      // throw new RuntimeException("Failed to load critical image: " + path, e);
-      return null; // Or a default placeholder image object
+      Logger.error("Failed to load image resource from path: " + path, e);
+      return null;
     }
   }
 
@@ -92,17 +88,13 @@ public class BoardView extends Pane {
     }
     lightTileImg = loadImageFromResources(lightPath);
     darkTileImg  = loadImageFromResources(darkPath);
-    schrodingerBoxImg = loadImageFromResources(SCHRODINGER_BOX_TILE_IMG); // Load Schrödinger image
-
-    // Optional: Load images for snake/ladder tiles
-    // snakeHeadImg = loadImageFromResources(SNAKE_HEAD_TILE_IMG);
-    // ladderBaseImg = loadImageFromResources(LADDER_BASE_TILE_IMG);
+    schrodingerBoxImg = loadImageFromResources(SCHRODINGER_BOX_TILE_IMG);
 
     if (lightTileImg == null || darkTileImg == null) {
-      System.err.println("Warning: Default theme tile images failed to load. Board may not render correctly.");
+      Logger.error("Warning: Default theme tile images failed to load. Board may not render correctly.");
     }
     if (schrodingerBoxImg == null) {
-      System.err.println("Warning: Schrodinger Box tile image failed to load.");
+      Logger.error("Warning: Schrodinger Box tile image failed to load.");
     }
   }
 
@@ -111,18 +103,15 @@ public class BoardView extends Pane {
     tilePositions.clear();
 
     if (game.getBoard() == null || game.getBoard().getTiles().isEmpty()) {
-      System.err.println("BoardView: Board model or tiles are not initialized.");
+      System.err.println("SnakeLadderBoardView: Board model or tiles are not initialized.");
       return;
     }
 
     int tileCount = game.getBoard().getTiles().size();
-    int boardSize = (int) Math.sqrt(tileCount); // Assuming a square board for sqrt logic
+    int boardSize = (int) Math.sqrt(tileCount);
     if (boardSize * boardSize != tileCount && tileCount > 0) {
-      // Non-square board, sqrt logic for boardSize might be incorrect.
-      // Need a more robust way to determine rows/cols for non-square or non-grid layouts.
-      // For now, proceed assuming it's roughly square for serpentine layout.
-      System.err.println("BoardView: Tile count " + tileCount + " is not a perfect square. Board layout might be approximate.");
-      if (tileCount > 0) boardSize = (int)Math.ceil(Math.sqrt(tileCount)); // Adjust for serpentine
+      Logger.error("SnakeLadderBoardView: Tile count " + tileCount + " is not a perfect square. Board layout might be approximate.");
+      if (tileCount > 0) boardSize = (int)Math.ceil(Math.sqrt(tileCount)); 
     }
     if (boardSize == 0 && tileCount > 0) boardSize = 1; // Handle single tile case or very small boards
     if (tileCount == 0) return; // No tiles to draw
@@ -131,7 +120,7 @@ public class BoardView extends Pane {
 
     // Draw tiles first
     for (Tile tile : game.getBoard().getTiles().values()) {
-      int id = tile.getId(); // Assuming 0-indexed IDs
+      int id = tile.getId();
       Point2D tileCenterPos = calculateTilePosition(id, boardSize, cellSize); // Gets center of tile
       tilePositions.put(id, tileCenterPos);
 
@@ -139,16 +128,11 @@ public class BoardView extends Pane {
       Text num = createTileNumber(id, tileCenterPos.getX(), tileCenterPos.getY());
       getChildren().addAll(bg, num);
     }
-
-    // Then draw snakes/ladders so they are on top of tiles
+    
     drawSnakesAndLadders();
-
-    // Player tokens are added/updated by initializePlayerTokenVisuals() or refresh()
-    // and should be added last to be on top of everything.
   }
 
   private Point2D calculateTilePosition(int id, int boardSize, double cellSize) {
-    // boardSize here is the dimension (e.g., 10 for a 10x10 board)
     int logicalRow = id / boardSize; // 0-indexed row from bottom for calculation
     int offsetInRow = id % boardSize; // 0-indexed position within that logical row
 
@@ -169,46 +153,11 @@ public class BoardView extends Pane {
     return new Point2D(centerX, centerY);
   }
 
-  private Rectangle createTileBackground(double x, double y, double size, boolean isLight) { /* ... Same ... */
-    Rectangle bg = new Rectangle(x, y, size, size); // x, y is top-left
-    Image imgToUse = isLight ? lightTileImg : darkTileImg;
-    if (imgToUse != null) {
-      ImagePattern pat = new ImagePattern(imgToUse, 0, 0, 1, 1, true); // Use relative coords for pattern
-      bg.setFill(pat);
-    } else {
-      bg.setFill(isLight ? Color.BEIGE : Color.BURLYWOOD); // Fallback colors
-    }
-    bg.setStroke(Color.DARKGRAY);
-    bg.setStrokeWidth(1);
-    return bg;
-  }
-
   private Rectangle createTileBackgroundRectangle(Tile tile, double x, double y, double size) {
     Rectangle bg = new Rectangle(x, y, size, size);
-    Image tileImageToUse = null;
-    TileAction action = tile.getAction();
-
-    // 1. Check for specific action tile images
-    if (action instanceof SchrodingerBoxAction) {
-      tileImageToUse = schrodingerBoxImg;
-    }
-    // else if (action instanceof SnakeAction) { // Or check if this tile IS a snake head
-    //     tileImageToUse = snakeHeadImg;
-    // } else if (action instanceof LadderAction) { // Or check if this tile IS a ladder base
-    //     tileImageToUse = ladderBaseImg;
-    // }
-
+    // 1. Check for specific action tile images &
     // 2. If no specific action image, use theme-based alternating pattern
-    if (tileImageToUse == null) {
-      int id = tile.getId();
-      int boardDimension = (int) Math.sqrt(game.getBoard().getTiles().size()); // Recalculate or pass
-      if (boardDimension == 0) boardDimension = 1;
-      int row = id / boardDimension;
-      int colInRow = id % boardDimension;
-      int actualCol = (row % 2 == 0) ? colInRow : (boardDimension - 1 - colInRow);
-      boolean isLight = (row + actualCol) % 2 == 0;
-      tileImageToUse = isLight ? lightTileImg : darkTileImg;
-    }
+    Image tileImageToUse = getImage(tile);
 
     // 3. Apply image or fallback color
     if (tileImageToUse != null) {
@@ -231,13 +180,35 @@ public class BoardView extends Pane {
     return bg;
   }
 
-  private Text createTileNumber(int id, double centerX, double centerY) { /* ... Same ... */
+  private Image getImage(Tile tile) {
+    Image tileImageToUse = null;
+    TileAction action = tile.getAction();
+
+    if (action instanceof SchrodingerBoxAction) {
+      tileImageToUse = schrodingerBoxImg;
+    }
+
+    if (tileImageToUse == null) {
+      int id = tile.getId();
+      int boardDimension = (int) Math.sqrt(game.getBoard().getTiles().size());
+      if (boardDimension == 0) boardDimension = 1;
+      int row = id / boardDimension;
+      int colInRow = id % boardDimension;
+      int actualCol = (row % 2 == 0) ? colInRow : (boardDimension - 1 - colInRow);
+      boolean isLight = (row + actualCol) % 2 == 0;
+      tileImageToUse = isLight ? lightTileImg : darkTileImg;
+    }
+    return tileImageToUse;
+  }
+
+  private Text createTileNumber(int id, double centerX, double centerY) {
     Text num = new Text(String.valueOf(id + 1)); // Display 1-indexed numbers
     num.setFont(Font.font(14));
     num.setFill(Color.DARKSLATEGRAY);
+
     // Adjust to center text within the tile based on its bounds
     num.setX(centerX - num.getLayoutBounds().getWidth() / 2);
-    num.setY(centerY + num.getLayoutBounds().getHeight() / 4); // Approximation for baseline
+    num.setY(centerY + num.getLayoutBounds().getHeight() / 4);
     return num;
   }
 
@@ -363,12 +334,10 @@ public class BoardView extends Pane {
         if (playerImage != null) {
           tokenView.setImage(playerImage);
         } else {
-          System.err.println("BoardView: Image for piece " + player.getPieceIdentifier() + " is null. Player: " + player.getName());
-          setFallbackTokenVisual(tokenView, player);
+          Logger.error("SnakeLadderBoardView: Image for piece " + player.getPieceIdentifier() + " is null. Player: " + player.getName());
         }
       } else {
-        System.err.println("BoardView: PieceUIData not found for identifier: " + player.getPieceIdentifier() + ". Player: " + player.getName());
-        setFallbackTokenVisual(tokenView, player);
+        Logger.error("SnakeLadderBoardView: PieceUIData not found for identifier: " + player.getPieceIdentifier() + ". Player: " + player.getName());
       }
 
       DropShadow shadow = new DropShadow(5, Color.color(0,0,0,0.5));
@@ -377,23 +346,12 @@ public class BoardView extends Pane {
       tokenView.setEffect(shadow);
 
       playerTokenViews.put(player, tokenView);
-      // Add to children, but refresh() will position it.
-      // Ensure it's added if not already:
       if (!getChildren().contains(tokenView)) {
         getChildren().add(tokenView);
       }
     }
-    refresh(); // Position them correctly
+    refresh();
   }
-
-  private void setFallbackTokenVisual(ImageView tokenView, Player player) {
-    // This method could create a colored circle/rectangle and convert it to an Image
-    // or use a pre-defined placeholder image. For simplicity, we'll not draw anything
-    // or you can load a 'unknown_piece.png'.
-    // For now, the ImageView will be empty if image is null.
-    System.err.println("Fallback for player " + player.getName() + " with piece " + player.getPieceIdentifier());
-  }
-
 
   public void refresh() {
     // Check if tokens need to be initialized (e.g., if view was created before players were fully set up)
@@ -401,8 +359,7 @@ public class BoardView extends Pane {
       initializePlayerTokenVisuals();
     }
     if (playerTokenViews.isEmpty() && game.getPlayers() != null && !game.getPlayers().isEmpty()) {
-      // If still empty after trying to initialize, log it.
-      System.err.println("BoardView refresh: Player tokens are not initialized. Check player setup and piece identifiers.");
+      Logger.error("SnakeLadderBoardView refresh: Player tokens are not initialized. Check player setup and piece identifiers.");
     }
 
     for (Player player : game.getPlayers()) {
@@ -413,6 +370,7 @@ public class BoardView extends Pane {
 
       if (tileCenterPosition != null && playerTokenViews.containsKey(player)) {
         ImageView tokenView = playerTokenViews.get(player);
+
         // Position ImageView so its center aligns with the tile's center
         tokenView.setX(tileCenterPosition.getX() - tokenView.getFitWidth() / 2);
         tokenView.setY(tileCenterPosition.getY() - tokenView.getFitHeight() / 2);

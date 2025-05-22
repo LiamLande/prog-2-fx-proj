@@ -1,4 +1,4 @@
-package edu.ntnu.idi.bidata.ui;
+package edu.ntnu.idi.bidata.ui.monopoly;
 
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
@@ -27,7 +27,7 @@ import java.util.Map;
  * Inner class for rendering the Monopoly board.
  */
 public class MonopolyBoardView extends Pane {
-    public static final double SIZE = 1000;
+    public static final double SIZE = 800;
     private static final double TOKEN_RADIUS = 8;
 
     private final BoardGame game;

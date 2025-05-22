@@ -1,7 +1,7 @@
 package edu.ntnu.idi.bidata.service;
 
 import edu.ntnu.idi.bidata.model.Card;
-import edu.ntnu.idi.bidata.model.Player;
+import edu.ntnu.idi.bidata.ui.monopoly.MonopolyGameScene;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,8 +35,10 @@ public class CardService {
         index = (index + 1) % deck.size();
         currentIndexes.put(deckName, index);
 
+        //Update the UI with the drawn card
+        MonopolyGameScene monopolyGameScene = MonopolyGameScene.getInstance();
+        monopolyGameScene.displayCardImage(card);
+
         return card;
     }
-
-    // Additional methods for card execution would go here
 }
