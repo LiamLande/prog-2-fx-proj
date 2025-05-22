@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class SnakeLadderBoardView extends Pane {
-  private static final double SIZE = 600; // Board size
+  private static final double SIZE = 800; // Board size
   private static final double TOKEN_SIZE = 30; // Desired player token image size on board
 
   private final BoardGame game;
