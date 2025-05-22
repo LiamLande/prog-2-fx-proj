@@ -190,7 +190,7 @@ Bob,0,tokenB
 *   Liam Schreiner Lande (liamsl@stud.ntnu.no
 
 ## License
-This project is licensed under the MIT License - see the `LICENSE.md` file for details (if you create one).
+This project is licensed under the MIT License - see the `LICENSE.md` file for details
 
 
 
