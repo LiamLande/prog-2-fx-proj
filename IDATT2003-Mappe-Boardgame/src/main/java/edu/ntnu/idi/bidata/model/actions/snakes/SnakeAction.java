@@ -26,6 +26,13 @@ public class SnakeAction implements TileAction {
     this.steps = steps;
   }
 
+  /**
+   * Performs the snake action for the given player.
+   * This involves printing the snake's description to the console and then moving the player
+   * backward by the number of steps defined for this snake.
+   *
+   * @param player The {@link Player} who landed on the snake tile.
+   */
   @Override
   public void perform(Player player) {
     // optionally log the description

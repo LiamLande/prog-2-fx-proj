@@ -21,10 +21,21 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-
+/**
+ * A scene for selecting a game variant (Snakes & Ladders or Mini Monopoly).
+ * It displays a background image that changes based on mouse hover, and allows
+ * the user to click on a side to select a game. Implements {@link SceneManager.ControlledScene}
+ * for integration with the {@link SceneManager}.
+ */
 public class SelectionScene implements SceneManager.ControlledScene {
   private final Scene scene;
 
+  /**
+   * Constructs the game selection scene.
+   *
+   * @param stage The primary stage of the application, used for binding image view sizes.
+   * @param onSelect A {@link Consumer} that accepts the selected {@link GameVariant} when the user makes a choice.
+   */
   public SelectionScene(Stage stage, Consumer<GameVariant> onSelect) {
     Image baseImg = loadImage("/images/selection_default.png");
     Image slHiImg = loadImage("/images/selection_highlight_sl.png");
@@ -116,6 +127,11 @@ public class SelectionScene implements SceneManager.ControlledScene {
     });
   }
 
+  /**
+   * Gets the JavaFX {@link Scene} for the game selection screen.
+   *
+   * @return The {@link Scene} object representing the selection interface.
+   */
   @Override
   public Scene getScene() {
     return this.scene;

@@ -20,16 +20,30 @@ public class SchrodingerBoxAction implements TileAction {
   private final String description;
   private final Random random = new Random(); // For determining observe outcome
 
+  /**
+   * Constructs a SchrodingerBoxAction with a default description.
+   */
   public SchrodingerBoxAction() {
     this.description = "A mysterious Schrödinger's Box! Observe its contents or move on?";
   }
 
+  /**
+   * Constructs a SchrodingerBoxAction with a custom description.
+   * If the provided description is null or empty, a default description is used.
+   *
+   * @param description The description of the Schrödinger's Box action.
+   */
   public SchrodingerBoxAction(String description) {
     this.description = (description != null && !description.trim().isEmpty()) ?
         description.trim() :
         "A mysterious Schrödinger's Box! Observe its contents or move on?";
   }
 
+  /**
+   * Gets the description of this Schrödinger's Box action.
+   *
+   * @return The description string.
+   */
   public String getDescription() {
     return description;
   }

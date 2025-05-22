@@ -17,6 +17,11 @@ import edu.ntnu.idi.bidata.util.Logger;
 import javafx.scene.control.Alert;
 import java.util.List;
 
+/**
+ * The GameController class is responsible for managing the game flow,
+ * coordinating between the game model (BoardGame) and the user interface (SceneManager.ControlledScene).
+ * It implements BoardGameObserver to react to changes in the game state.
+ */
 public class GameController implements BoardGameObserver {
     private final BoardGame gameModel;
     private SceneManager.ControlledScene activeView;
@@ -27,7 +32,12 @@ public class GameController implements BoardGameObserver {
     private Player playerMakingSchrodingerChoice = null;
     private SchrodingerBoxAction currentSchrodingerAction = null; // Store the action instance
 
-
+    /**
+     * Constructs a GameController with the specified game model.
+     * It initializes the game model, adds itself as an observer, and attempts to locate the MonopolyService.
+     *
+     * @param game The BoardGame model instance.
+     */
     public GameController(BoardGame game) {
         this.gameModel = game;
         this.gameModel.addObserver(this);
@@ -41,6 +51,12 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Sets the active view (scene) for the game.
+     * If the game has already started, it initializes or refreshes the view to reflect the current game state.
+     *
+     * @param view The SceneManager.ControlledScene to be set as active.
+     */
     public void setActiveView(SceneManager.ControlledScene view) {
         this.activeView = view;
         Logger.info("Active view set to: " + (view != null ? view.getClass().getSimpleName() : "null"));
@@ -52,6 +68,12 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Initializes or refreshes the active view based on the current game state.
+     * This method is called when the active view is set or when the game state changes significantly.
+     * It configures the view (e.g., SnakeLadderGameScene or MonopolyGameScene) with the current player,
+     * board state, and enables/disables UI elements as appropriate.
+     */
     private void initializeOrRefreshViewForCurrentState() {
         if (activeView == null) {
             Logger.warning("Attempted to initialize/refresh view, but activeView is null.");
@@ -92,11 +114,21 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Starts the game by initializing the game model.
+     * The model will then typically fire an onGameStart event.
+     */
     public void startGame() {
         Logger.info("startGame() called. Initializing game model.");
         gameModel.init(); // Model initializes and fires onGameStart
     }
 
+    /**
+     * Called when the game starts.
+     * It initializes the UI for the game start, sets the current player, and enables appropriate UI controls.
+     *
+     * @param players The list of players participating in the game.
+     */
     @Override
     public void onGameStart(List<Player> players) {
         Logger.info("Game Started. Number of players: " + players.size());
@@ -132,6 +164,14 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Called after a round is played (a player has taken their turn).
+     * It updates the UI based on the outcome of the turn, such as player movement,
+     * tile actions (e.g., landing on a property, Schrödinger box), and prepares for the next player's turn.
+     *
+     * @param rolls   The list of dice rolls made during the turn.
+     * @param players The list of all players in the game.
+     */
     @Override
     public void onRoundPlayed(List<Integer> rolls, List<Player> players) {
         String rollsStr = rolls != null && !rolls.isEmpty() ? rolls.toString() : "N/A";
@@ -223,6 +263,15 @@ public class GameController implements BoardGameObserver {
     }
 
 
+    /**
+     * Finalizes the current player's turn and sets up the UI for the next player.
+     * This includes updating dice labels, refreshing the board view, highlighting the next current player,
+     * and enabling/disabling the roll button. It also checks if the game is over.
+     *
+     * @param rollsIfApplicable A list of integers representing the dice rolls from the completed turn,
+     *                          or null/empty if not applicable (e.g., after a Schrödinger box choice).
+     *                          Used to update the dice display.
+     */
     private void finalizeTurnAndSetupNext(List<Integer> rollsIfApplicable) {
         Logger.debug("Entering finalizeTurnAndSetupNext.");
         String rollsStr = rollsIfApplicable != null && !rollsIfApplicable.isEmpty() ? rollsIfApplicable.toString() : "N/A";
@@ -265,6 +314,12 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Called when the game is over.
+     * It updates the UI to display the game over message, shows the winner, and disables game controls.
+     *
+     * @param winner The player who won the game, or null if it's a draw or error.
+     */
     @Override
     public void onGameOver(Player winner) {
         String winnerName = winner != null ? winner.getName() : "No one (Draw or Error)";
@@ -290,6 +345,12 @@ public class GameController implements BoardGameObserver {
         }
     }
 
+    /**
+     * Handles a request from the UI to roll the dice for the current player.
+     * It checks if the game is ongoing, if there's a current player, and if the game is not awaiting
+     * a special choice (like a Schrödinger box decision). If valid, it instructs the game model
+     * to play the turn for the current player.
+     */
     public void handleRollDiceRequest() {
         Logger.debug("Entering handleRollDiceRequest for player: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "Unknown/None"));
         if (gameModel.isFinished()) {
@@ -319,6 +380,11 @@ public class GameController implements BoardGameObserver {
         gameModel.playTurn(this.currentPlayer);
     }
 
+    /**
+     * Handles a request from the UI to "observe" the Schrödinger box.
+     * This is called when a player lands on a Schrödinger box tile and chooses the "observe" option.
+     * It executes the observation logic of the SchrödingerBoxAction and updates the game state.
+     */
     public void handleObserveSchrodingerBoxRequest() {
         Logger.debug("Entering handleObserveSchrodingerBoxRequest.");
         if (!awaitingSchrodingerChoice || playerMakingSchrodingerChoice == null || currentSchrodingerAction == null) {
@@ -346,6 +412,11 @@ public class GameController implements BoardGameObserver {
         completeSchrodingerActionSequence();
     }
 
+    /**
+     * Handles a request from the UI to "ignore" the Schrödinger box.
+     * This is called when a player lands on a Schrödinger box tile and chooses the "ignore" option.
+     * It executes the ignore logic of the SchrödingerBoxAction and updates the game state.
+     */
     public void handleIgnoreSchrodingerBoxRequest() {
         Logger.debug("Entering handleIgnoreSchrodingerBoxRequest.");
         if (!awaitingSchrodingerChoice || playerMakingSchrodingerChoice == null || currentSchrodingerAction == null) {
@@ -368,6 +439,11 @@ public class GameController implements BoardGameObserver {
         completeSchrodingerActionSequence();
     }
 
+    /**
+     * Completes the sequence of actions related to a Schrödinger box event.
+     * It resets the state flags for awaiting a choice and finalizes the turn,
+     * setting up for the next player.
+     */
     private void completeSchrodingerActionSequence() {
         Logger.debug("Completing Schrödinger action sequence for player: " +
             (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "Unknown"));
@@ -379,6 +455,16 @@ public class GameController implements BoardGameObserver {
     }
 
 
+    /**
+     * Handles the logic when a player lands on a property tile in a Monopoly game.
+     * It checks if the property is owned, unowned, or owned by another player,
+     * and interacts with the MonopolyService and the MonopolyGameScene to manage
+     * property purchase, rent payment, and display relevant dialogs to the user.
+     *
+     * @param player         The player who landed on the property.
+     * @param propertyAction The PropertyAction associated with the tile.
+     * @param monopolyView   The MonopolyGameScene instance for UI interactions.
+     */
     private void handleLandedOnProperty(Player player, PropertyAction propertyAction, MonopolyGameScene monopolyView) {
         Logger.info("Player " + player.getName() + " landed on property: " + propertyAction.getName() + ". Handling action.");
 
@@ -443,6 +529,11 @@ public class GameController implements BoardGameObserver {
         Logger.debug("Monopoly player status display updated after property action handling.");
     }
 
+    /**
+     * Gets the game model.
+     *
+     * @return The BoardGame instance.
+     */
     public BoardGame getGameModel() {
         return gameModel;
     }

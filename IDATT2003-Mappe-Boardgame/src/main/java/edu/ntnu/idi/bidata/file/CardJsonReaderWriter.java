@@ -14,8 +14,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A utility class for reading and writing card configurations from/to JSON files.
+ * This class provides methods to parse JSON data into a map of card decks, where each deck is a list of {@link Card} objects.
+ * It is not meant to be instantiated.
+ */
 public class CardJsonReaderWriter {
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private CardJsonReaderWriter() {
+        // Prevent instantiation
+    }
+
+    /**
+     * Reads card configurations from a JSON file and returns a map of decks.
+     * Each deck is represented as a list of {@link Card} objects.
+     *
+     * @param reader The {@link Reader} to read the JSON data from.
+     * @return A map where the keys are deck names (e.g., "chance", "communityChest") and the values are lists of {@link Card} objects.
+     */
     public static Map<String, List<Card>> read(Reader reader) {
         Logger.info("Starting to read card configurations from JSON.");
         JsonObject root = JsonUtils.read(reader);

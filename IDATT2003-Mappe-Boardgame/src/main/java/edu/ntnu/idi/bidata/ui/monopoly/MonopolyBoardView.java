@@ -25,6 +25,8 @@ import java.util.Map;
 
 /**
  * Inner class for rendering the Monopoly board.
+ * This class is responsible for the visual representation of the game board,
+ * including tiles, player tokens, and property ownership indicators.
  */
 public class MonopolyBoardView extends Pane {
     public static final double SIZE = 800;
@@ -51,6 +53,14 @@ public class MonopolyBoardView extends Pane {
     private int cellsPerSideGrid;
     private double cellSize;
 
+    /**
+     * Constructs a MonopolyBoardView.
+     * Initializes the board layout, visuals, and player tokens.
+     *
+     * @param game The {@link BoardGame} instance containing the game state.
+     * @param playerTokenUIsFromSidePanel A map linking players to their token UI elements from a side panel,
+     *                                    used to synchronize token colors.
+     */
     public MonopolyBoardView(BoardGame game, Map<Player, Circle> playerTokenUIsFromSidePanel) {
         this.game = game;
         this.playerTokenUIsFromSidePanel = playerTokenUIsFromSidePanel;
@@ -226,6 +236,17 @@ public class MonopolyBoardView extends Pane {
         return colorBarRect;
     }
 
+    /**
+     * Creates a {@link Group} containing the text elements (name and price) for a given tile.
+     * The text is styled and positioned based on the tile type and its location on the board.
+     * Corner tiles and special action tiles (Chance, Community Chest, Tax) have specific text.
+     * Property tiles display their name and cost.
+     *
+     * @param tile The {@link Tile} for which to create the text group.
+     * @param centerPos The center {@link Point2D} of the tile on the board.
+     * @param tileId The ID of the tile.
+     * @return A {@link Group} containing the formatted and positioned text for the tile.
+     */
     public Group createTileTextGroup(Tile tile, Point2D centerPos, int tileId) {
         String nameStr = "Tile " + tileId; // Default name if not a property or special corner
         String priceStr = "";
@@ -365,6 +386,14 @@ public class MonopolyBoardView extends Pane {
         };
     }
 
+    /**
+     * Retrieves the color for a player's token.
+     * This color is sourced from the player's token UI element in the side panel if available.
+     * If not found, a default color is assigned based on the player's index in the game.
+     *
+     * @param player The {@link Player} for whom to get the token color.
+     * @return The {@link Color} for the player's token.
+     */
     private Color getPlayerColorFromSidePanel(Player player) {
         Circle tokenUI = playerTokenUIsFromSidePanel.get(player);
         if (tokenUI != null && tokenUI.getFill() instanceof Color) {
@@ -375,6 +404,11 @@ public class MonopolyBoardView extends Pane {
         return playerIndex >=0 ? defaultColors[playerIndex % defaultColors.length] : Color.BLACK;
     }
 
+    /**
+     * Updates the colors of player tokens on the board to match their corresponding UI elements
+     * in the side panel. If a player token does not exist on the board (e.g., for a new player),
+     * it is created and added.
+     */
     public void updatePlayerTokenColors() {
         if (game == null || game.getPlayers() == null) return;
         for(Player player : game.getPlayers()){
@@ -413,6 +447,12 @@ public class MonopolyBoardView extends Pane {
         }
     }
 
+    /**
+     * Refreshes the entire board view.
+     * This method updates the visual state of tiles (e.g., ownership indicators)
+     * and repositions player tokens based on their current tile and the presence of other tokens
+     * on the same tile to avoid overlap.
+     */
     public void refresh() {
         // Update tile ownership visuals
         for (int tileId = 0; tileId < game.getBoard().getTiles().size(); tileId++) {

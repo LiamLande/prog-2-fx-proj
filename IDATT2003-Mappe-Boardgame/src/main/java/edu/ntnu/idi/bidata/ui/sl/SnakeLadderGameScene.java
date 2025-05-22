@@ -29,6 +29,12 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.stage.Stage;
 
+/**
+ * Represents the main game scene for the Snakes and Ladders game.
+ * This class is responsible for displaying the game board, player information,
+ * dice rolls, and handling user interactions related to game play.
+ * It implements {@link ControlledScene} for integration with the {@link SceneManager}.
+ */
 public class SnakeLadderGameScene implements ControlledScene {
   private final GameController controller;
   private final BoardGame gameModel;
@@ -52,6 +58,16 @@ public class SnakeLadderGameScene implements ControlledScene {
   private static final String JUNGLE_GAME_BG = "/images/jungle_game_background.png";
   private static final double SIDE_PANEL_PIECE_SIZE = 24;
 
+  /**
+   * Constructs a new SnakeLadderGameScene.
+   *
+   * @param stage The primary stage of the application (used by some UI elements if needed, though not directly by this constructor).
+   * @param gameController The {@link GameController} responsible for handling game logic.
+   * @param gameModel The {@link BoardGame} model containing the current state of the game.
+   * @param onNewGame A {@link Runnable} to be executed when the "New Game" button is pressed.
+   * @param onHome A {@link Runnable} to be executed when the "Return Home" button is pressed.
+   * @param gameTheme The {@link SnakeLadderPlayerSetupScene.Theme} selected for the game, determining visual styles.
+   */
   public SnakeLadderGameScene(Stage stage, GameController gameController, BoardGame gameModel,
       Runnable onNewGame, Runnable onHome, SnakeLadderPlayerSetupScene.Theme gameTheme) {
     this.controller = gameController;
@@ -82,6 +98,12 @@ public class SnakeLadderGameScene implements ControlledScene {
     scene = new Scene(root, 1100, 800);
   }
 
+  /**
+   * Initializes or re-initializes the view components of the game scene.
+   * This includes setting the initial dice label, creating player status displays,
+   * highlighting the current player, enabling the roll button, and refreshing the board view.
+   * This method should be called when the scene is first displayed or when a new game starts.
+   */
   public void initializeView() {
     updateDiceLabel("⚀"); // Initial dice face
     createPlayerStatusBoxes(gameModel.getPlayers()); // Create/recreate based on current model
@@ -99,8 +121,18 @@ public class SnakeLadderGameScene implements ControlledScene {
     snakeLadderBoardView.refresh();
   }
 
+  /**
+   * Gets the JavaFX {@link Scene} for the Snakes and Ladders game.
+   *
+   * @return The {@link Scene} object.
+   */
   public Scene getScene() { return scene; }
 
+  /**
+   * Gets the {@link SnakeLadderBoardView} associated with this game scene.
+   *
+   * @return The {@link SnakeLadderBoardView} instance.
+   */
   public SnakeLadderBoardView getBoardView() { return snakeLadderBoardView; }
 
   private StackPane createBoardContainer(SnakeLadderBoardView board) {
@@ -250,6 +282,11 @@ public class SnakeLadderGameScene implements ControlledScene {
   }
 
 
+  /**
+   * Updates the display of player statuses in the side panel.
+   * If the number of players has changed, it recreates the player status boxes.
+   * Otherwise, it updates the current tile information for each player.
+   */
   public void updatePlayerStatusDisplay() {
     if (gameModel == null || gameModel.getPlayers() == null) return;
     if (playerStatusPane.getChildren().size() != gameModel.getPlayers().size()) {
@@ -264,8 +301,19 @@ public class SnakeLadderGameScene implements ControlledScene {
     }
   }
 
+  /**
+   * Updates the text of the dice label in the side panel.
+   *
+   * @param text The new text to display on the dice label (e.g., dice face or status icon).
+   */
   public void updateDiceLabel(String text) { if (diceLabel != null) diceLabel.setText(text); }
 
+  /**
+   * Highlights the status box of the current player in the side panel.
+   * Other player status boxes are styled normally.
+   *
+   * @param playerToHighlight The {@link Player} whose status box should be highlighted.
+   */
   public void highlightCurrentPlayer(Player playerToHighlight) {
     if (playerToHighlight == null || gameModel.getPlayers() == null) return;
     for (int i = 0; i < gameModel.getPlayers().size(); i++) {
@@ -278,10 +326,22 @@ public class SnakeLadderGameScene implements ControlledScene {
     }
   }
 
+  /**
+   * Enables or disables the roll dice button.
+   *
+   * @param enabled True to enable the button, false to disable it.
+   */
   public void setRollButtonEnabled(boolean enabled) {
     if (rollButton != null) rollButton.setDisable(!enabled);
   }
 
+  /**
+   * Updates the UI to reflect that the game is over.
+   * Displays a winner icon or a game over icon on the dice label, disables the roll button,
+   * hides Schrödinger choice buttons, shows a game over message, and highlights the winner (if any).
+   *
+   * @param winner The {@link Player} who won the game, or null if it's a draw or no specific winner.
+   */
   public void displayGameOver(Player winner) {
     updateDiceLabel(winner != null ? "🏆" : "🏁");
     setRollButtonEnabled(false);
@@ -291,7 +351,14 @@ public class SnakeLadderGameScene implements ControlledScene {
     if (winner != null) highlightCurrentPlayer(winner); // Highlight the winner
   }
 
-  //Schrödinger UI Methods
+  /**
+   * Shows the Schrödinger choice UI elements (Observe/Ignore buttons) in the side panel.
+   * This is typically called when a player lands on a {@link SchrodingerBoxAction} tile.
+   * The roll dice button is disabled while these choices are visible.
+   *
+   * @param player The {@link Player} who landed on the Schrödinger Box tile.
+   * @param action The {@link SchrodingerBoxAction} instance, used to display its description.
+   */
   public void showSchrodingerChoice(Player player, SchrodingerBoxAction action) {
     if (schrodingerChoiceBox != null) {
       // Find the label within schrodingerChoiceBox to update text, or add one if needed
@@ -312,6 +379,10 @@ public class SnakeLadderGameScene implements ControlledScene {
     }
   }
 
+  /**
+   * Hides the Schrödinger choice UI elements from the side panel.
+   * This is called after a player makes a choice or if the choice is no longer relevant.
+   */
   public void hideSchrodingerChoice() {
     if (schrodingerChoiceBox != null) {
       schrodingerChoiceBox.setManaged(false);
@@ -319,6 +390,11 @@ public class SnakeLadderGameScene implements ControlledScene {
     }
   }
 
+  /**
+   * Displays a message in the game message label area in the side panel.
+   *
+   * @param message The string message to display.
+   */
   public void showGameMessage(String message) {
     if (gameMessageLabel != null) {
       gameMessageLabel.setText(message);

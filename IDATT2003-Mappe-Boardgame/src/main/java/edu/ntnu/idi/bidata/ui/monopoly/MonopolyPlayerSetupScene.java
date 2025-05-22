@@ -1,10 +1,9 @@
 package edu.ntnu.idi.bidata.ui.monopoly;
 
 import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
-import edu.ntnu.idi.bidata.ui.UiStyles; // Assuming this class applies CSS or common styles
+import edu.ntnu.idi.bidata.ui.UiStyles;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-// import javafx.scene.Parent; // Not strictly needed if getScene() is the primary way to access
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -13,21 +12,31 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font; // Still used for TextField font
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects; // For robust null checks in loadImage
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * Monopoly-themed player setup scene with a reactive background.
+ * Creates and manages the player setup scene for a Monopoly game.
+ * This scene allows users to enter names for 2 to 4 players and then
+ * initiates the game or returns to the home screen.
+ * It features a reactive background that adjusts to the window size.
  */
 public class MonopolyPlayerSetupScene implements ControlledScene {
   private final Scene scene;
 
+  /**
+   * Constructs the MonopolyPlayerSetupScene.
+   *
+   * @param stage The primary stage of the application, used for binding background size and owner for dialogs.
+   * @param onStart A {@link Consumer} that accepts a list of player names and is called when the game is started.
+   * @param onHome A {@link Runnable} that is executed when the user chooses to return to the home screen.
+   */
   public MonopolyPlayerSetupScene(Stage stage,
       Consumer<List<String>> onStart,
       Runnable onHome) {
@@ -115,6 +124,12 @@ public class MonopolyPlayerSetupScene implements ControlledScene {
     UiStyles.apply(scene);
   }
 
+  /**
+   * Gets the JavaFX {@link Scene} for the player setup.
+   * This scene contains all UI elements for player name input and game start/home navigation.
+   *
+   * @return The {@link Scene} object representing the player setup interface.
+   */
   @Override
   public Scene getScene() {
     return this.scene;

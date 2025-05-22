@@ -56,6 +56,16 @@ public final class GameFactory {
     }
   }
 
+  /**
+   * Creates a game with the specified variant, theme, and player setup details.
+   * This method is private and should not be called directly.
+   *
+   * @param variant             The game variant (e.g., SNAKES_LADDERS or MINI_MONOPOLY).
+   * @param theme               The theme for Snakes & Ladders (can be null for other games).
+   * @param slPlayerSetupDetails List of PlayerSetupData for Snakes & Ladders (can be null for Monopoly).
+   * @param monopolyPlayerNames  List of player names for Monopoly (can be null for S&L).
+   * @return An initialized BoardGame.
+   */
   private static BoardGame createThemedGameInternal(
       GameVariant variant,
       SnakeLadderPlayerSetupScene.Theme theme,       // Can be null if not S&L

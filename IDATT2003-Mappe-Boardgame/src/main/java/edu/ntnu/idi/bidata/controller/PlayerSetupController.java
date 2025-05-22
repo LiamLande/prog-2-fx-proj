@@ -1,11 +1,11 @@
-package edu.ntnu.idi.bidata.controller; // Or controller.setup
+package edu.ntnu.idi.bidata.controller;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.file.PlayerCsvReaderWriter;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
 import edu.ntnu.idi.bidata.ui.PlayerSetupData;
-import edu.ntnu.idi.bidata.util.Logger; // Import the Logger
+import edu.ntnu.idi.bidata.util.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -17,8 +17,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Manages the saving and loading of player setup configurations.
+ * This class interacts with the file system to persist and retrieve player data,
+ * converting between {@link PlayerSetupData} used by the UI and {@link Player} domain objects.
+ */
 public class PlayerSetupController {
 
+  /**
+   * Saves the player setup data to the specified file.
+   * The data is converted from a list of {@link PlayerSetupData} objects to {@link Player} objects
+   * before being written to the file using {@link PlayerCsvReaderWriter}.
+   *
+   * @param playerInputs A list of {@link PlayerSetupData} representing the player information to save.
+   *                     Cannot be null or empty.
+   * @param file The {@link File} to which the player setup will be saved. Cannot be null.
+   * @return {@code true} if the player setup was successfully saved.
+   * @throws IOException If an I/O error occurs during writing to the file.
+   * @throws InvalidParameterException If any of the player input data is invalid,
+   *                                   or if issues arise during CSV writing.
+   * @throws IllegalArgumentException If {@code playerInputs} is null/empty or {@code file} is null.
+   */
   public boolean savePlayerSetup(List<PlayerSetupData> playerInputs, File file) throws IOException, InvalidParameterException {
     Logger.info("Attempting to save player setup.");
     if (playerInputs == null || playerInputs.isEmpty()) {
@@ -57,6 +76,19 @@ public class PlayerSetupController {
     }
   }
 
+  /**
+   * Loads player setup data from the specified file.
+   * The data is read from the file using {@link PlayerCsvReaderWriter} and converted
+   * from a list of {@link Player} objects to {@link PlayerSetupData} objects.
+   * If the file does not exist or cannot be read, an empty list is returned.
+   *
+   * @param file The {@link File} from which to load the player setup. Cannot be null.
+   * @return A list of {@link PlayerSetupData} representing the loaded player information.
+   *         Returns an empty list if the file doesn't exist or is unreadable.
+   * @throws IOException If an I/O error occurs during reading from the file.
+   * @throws InvalidParameterException If the data in the file is malformed or invalid.
+   * @throws IllegalArgumentException If {@code file} is null.
+   */
   public List<PlayerSetupData> loadPlayerSetup(File file) throws IOException, InvalidParameterException {
     Logger.info("Attempting to load player setup from file.");
     if (file == null) {

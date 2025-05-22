@@ -19,9 +19,18 @@ import java.util.List;
 public class PlayerCsvReaderWriter {
 
   /**
-   * Reads players from the given CSV Reader.
-   * Expects each row to have up to three columns: name, tileId, pieceIdentifier.
-   * pieceIdentifier is optional for backward compatibility.
+   * Private constructor to prevent instantiation of this utility class.
+   */
+  private PlayerCsvReaderWriter() {
+    // Prevent instantiation
+  }
+  /**
+   * Reads players from CSV. Each line: name,startingTileId,pieceIdentifier
+   *
+   * @param reader The {@link Reader} to read the CSV data from.
+   * @return A list of {@link Player} objects created from the CSV data.
+   * @throws IOException If an I/O error occurs during reading.
+   * @throws InvalidParameterException If the reader is null or if any player data is invalid.
    */
   public static List<Player> readAll(Reader reader) throws IOException {
     Logger.info("Starting to read player configurations from CSV.");

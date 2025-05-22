@@ -6,22 +6,38 @@ import java.io.InputStream;
 import java.util.Objects;
 
 /**
- * Represents UI data for a player piece, including its identifier and image.
+ * Represents UI data for a player piece, including its identifier and image path.
+ * This class is responsible for loading and providing the piece's image at different sizes.
+ * It also provides methods for comparison and string representation.
  */
 public class PieceUIData {
   private final String identifier;
   private final String imagePath;
-  private Image image;
+  private Image image; // Cached image
 
   // Standard size for piece images on the board/UI
-  private static final double DEFAULT_IMAGE_SIZE = 30; // For SnakeLadderBoardView
+  private static final double DEFAULT_IMAGE_SIZE = 30; // Example: For SnakeLadderBoardView
+  /**
+   * Standard size for piece images when displayed in a ComboBox.
+   */
   public static final double COMBOBOX_IMAGE_SIZE = 24; // For ComboBox display
 
+  /**
+   * Constructs a new PieceUIData object.
+   *
+   * @param identifier A unique string identifier for the piece (e.g., "car", "hat").
+   * @param imagePath The path to the image resource for this piece.
+   */
   public PieceUIData(String identifier, String imagePath) {
     this.identifier = identifier;
     this.imagePath = imagePath;
   }
 
+  /**
+   * Gets the identifier string for this piece.
+   *
+   * @return The identifier of the piece.
+   */
   public String getIdentifier() {
     return identifier;
   }
@@ -30,7 +46,7 @@ public class PieceUIData {
   /**
    * Gets the image for the piece, loading it if necessary, scaled to a specific size.
    * @param requestedSize The desired size (width and height) for the image.
-   * @return The Image object.
+   * @return The Image object, or null if an error occurs during loading.
    */
   public Image getImage(double requestedSize) {
     if (this.image != null && this.image.getWidth() == requestedSize && this.image.getHeight() == requestedSize) {
@@ -50,11 +66,23 @@ public class PieceUIData {
     return this.image;
   }
 
+  /**
+   * Gets the image for the piece scaled specifically for display in a ComboBox.
+   * This is a convenience method that calls {@link #getImage(double)} with {@link #COMBOBOX_IMAGE_SIZE}.
+   *
+   * @return The Image object scaled for ComboBox display, or null if an error occurs.
+   */
   public Image getComboBoxImage() {
     return getImage(COMBOBOX_IMAGE_SIZE);
   }
 
 
+  /**
+   * Returns a string representation of the piece, typically its identifier capitalized.
+   * Used for display purposes, for example, in a ComboBox if images are not shown.
+   *
+   * @return The capitalized identifier, or an empty string if the identifier is null or empty.
+   */
   @Override
   public String toString() {
     // Capitalize for display in ComboBox if text is shown
@@ -62,6 +90,13 @@ public class PieceUIData {
     return identifier.substring(0, 1).toUpperCase() + identifier.substring(1);
   }
 
+  /**
+   * Compares this PieceUIData object with another object for equality.
+   * Two PieceUIData objects are considered equal if their identifiers are equal.
+   *
+   * @param o The object to compare with.
+   * @return True if the objects are equal, false otherwise.
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -70,6 +105,12 @@ public class PieceUIData {
     return Objects.equals(identifier, that.identifier);
   }
 
+  /**
+   * Computes the hash code for this PieceUIData object.
+   * The hash code is based on the piece's identifier.
+   *
+   * @return The hash code value for this object.
+   */
   @Override
   public int hashCode() {
     return Objects.hash(identifier);

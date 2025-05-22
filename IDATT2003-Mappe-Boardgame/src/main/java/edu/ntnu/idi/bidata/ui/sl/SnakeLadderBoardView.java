@@ -34,6 +34,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Represents the visual display of a Snakes and Ladders game board.
+ * This class is responsible for drawing the board tiles, snakes, ladders,
+ * and player tokens based on the current game state and selected theme.
+ * It extends {@link Pane} and manages all visual elements within it.
+ */
 public class SnakeLadderBoardView extends Pane {
   private static final double SIZE = 800; // Board size
   private static final double TOKEN_SIZE = 30; // Desired player token image size on board
@@ -51,6 +57,12 @@ public class SnakeLadderBoardView extends Pane {
 
   private Image lightTileImg, darkTileImg, schrodingerBoxImg;
 
+  /**
+   * Constructs a new SnakeLadderBoardView.
+   *
+   * @param game The {@link BoardGame} model containing the game state.
+   * @param boardTheme The {@link SnakeLadderPlayerSetupScene.Theme} to be applied to the board visuals.
+   */
   public SnakeLadderBoardView(BoardGame game, SnakeLadderPlayerSetupScene.Theme boardTheme) {
     this.game = game;
     this.theme = boardTheme;
@@ -311,7 +323,10 @@ public class SnakeLadderBoardView extends Pane {
 
   /**
    * Initializes or re-initializes player token visuals (ImageViews).
-   * Should be called after players are known and game starts.
+   * This method should be called after players are set up in the game model
+   * and their piece identifiers are known. It creates {@link ImageView} instances
+   * for each player, loads their corresponding piece image, and adds them to the board.
+   * If called again, it will first remove existing token views before recreating them.
    */
   public void initializePlayerTokenVisuals() {
     playerTokenViews.values().forEach(getChildren()::remove); // Remove old ImageViews if any
@@ -353,6 +368,13 @@ public class SnakeLadderBoardView extends Pane {
     refresh();
   }
 
+  /**
+   * Refreshes the positions of all player tokens on the board according to their
+   * current tile in the game model. If player tokens have not been initialized yet
+   * (e.g., if players were added to the game after the view was created),
+   * this method will first call {@link #initializePlayerTokenVisuals()}.
+   * It ensures that tokens are drawn on top of other board elements.
+   */
   public void refresh() {
     // Check if tokens need to be initialized (e.g., if view was created before players were fully set up)
     if (game.getPlayers() != null && playerTokenViews.size() != game.getPlayers().size()) {

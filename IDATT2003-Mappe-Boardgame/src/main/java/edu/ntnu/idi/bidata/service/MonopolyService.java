@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Monopoly-specific game logic.
+ * Monopoly-specific game logic implementing the {@link GameService} interface.
+ * Manages player turns, jail status, property ownership, card drawing, and game state for Monopoly.
  */
 public class MonopolyService implements GameService {
     private int currentPlayerIndex = -1;
@@ -26,6 +27,14 @@ public class MonopolyService implements GameService {
     private final Map<Player, Integer> getOutOfJailFreeCards = new HashMap<>();
     private BoardGame game; // Storing game reference from setup
 
+    /**
+     * Sets up the Monopoly game.
+     * Initializes player money, starting positions, and clears any existing game state data.
+     * Sets the current player to the first player in the list if players exist.
+     *
+     * @param game The {@link BoardGame} instance to set up.
+     * @throws InvalidParameterException if the game is null.
+     */
     @Override
     public void setup(BoardGame game) {
         this.game = game; // Store the game instance
@@ -47,6 +56,12 @@ public class MonopolyService implements GameService {
         }
     }
 
+    /**
+     * Gets the current player whose turn it is.
+     *
+     * @param game The {@link BoardGame} instance (parameter consistent with interface, though internal state is used).
+     * @return The current {@link Player}, or null if no current player is set or players list is out of bounds.
+     */
     @Override
     public Player getCurrentPlayer(BoardGame game) { // game param consistent with interface
         if (this.currentPlayerIndex >= 0 && this.currentPlayerIndex < this.game.getPlayers().size()) {
@@ -55,6 +70,16 @@ public class MonopolyService implements GameService {
         return null;
     }
 
+    /**
+     * Plays a turn for the given player.
+     * Handles dice rolling, player movement, jail logic (including using Get Out of Jail Free cards),
+     * and advancing to the next player.
+     *
+     * @param game The {@link BoardGame} instance (parameter consistent with interface, though internal state is used).
+     * @param player The {@link Player} whose turn it is.
+     * @return The total dice roll for the turn. Returns 0 if the player is in jail and cannot move.
+     * @throws IllegalArgumentException if the specified player is not in the game or it's not their turn according to this service.
+     */
     @Override
     public int playTurn(BoardGame game, Player player) { // `game` param from interface
         // Ensure the 'player' passed is indeed the current one
@@ -100,6 +125,13 @@ public class MonopolyService implements GameService {
         return totalRoll; // Or return individual rolls if controller needs them
     }
 
+    /**
+     * Checks if the Monopoly game has finished.
+     * The game is considered finished if there is one or zero active (non-bankrupt) players.
+     *
+     * @param game The {@link BoardGame} instance.
+     * @return true if the game has finished, false otherwise.
+     */
     @Override
     public boolean isFinished(BoardGame game) {
         // Count active (non-bankrupt) players
@@ -116,6 +148,13 @@ public class MonopolyService implements GameService {
         return activePlayers <= 1;
     }
 
+    /**
+     * Gets the winner of the Monopoly game.
+     * The winner is the last remaining player with money.
+     *
+     * @param game The {@link BoardGame} instance.
+     * @return The winning {@link Player}, or null if there is no winner yet (e.g., multiple players still active or game not finished).
+     */
     @Override
     public Player getWinner(BoardGame game) {
         // Find the non-bankrupt player
@@ -127,17 +166,35 @@ public class MonopolyService implements GameService {
         return null;
     }
 
+    /**
+     * Sends a player to jail.
+     * The player is typically jailed for 3 turns.
+     *
+     * @param player The {@link Player} to send to jail.
+     */
     public void sendToJail(Player player) {
         jailedPlayers.put(player, 3); // Standard is 3 turns in jail
     }
 
+    /**
+     * Checks if a player is currently in jail.
+     *
+     * @param player The {@link Player} to check.
+     * @return true if the player is in jail, false otherwise.
+     */
     public boolean isInJail(Player player) {
         return jailedPlayers.containsKey(player);
     }
 
+    /**
+     * Handles a turn for a player who is in jail.
+     * Decrements the remaining jail turns. If turns run out, the player is released.
+     * Note: This method currently only handles turn decrement; full jail logic (rolling doubles, paying fine) is a TODO.
+     *
+     * @param player The {@link Player} in jail.
+     */
     public void handleJailTurn(Player player) {
         if (isInJail(player)) {
-            // TODO: Handle jail turn logic (rolling doubles, paying fine, etc.)
             int remainingTurns = jailedPlayers.get(player);
             if (remainingTurns <= 1) {
                 jailedPlayers.remove(player);
@@ -152,7 +209,8 @@ public class MonopolyService implements GameService {
      * @param payer The player who needs to pay rent.
      * @param owner The owner of the property receiving rent.
      * @param amount The amount of rent to be paid.
-     * @return true if the rent was successfully paid, false if the payer could not afford it (and is potentially bankrupt or needs to mortgage).
+     * @return true if the rent was successfully paid, false if the payer could not afford it.
+     * @throws InvalidParameterException if payer, owner are null or amount is negative.
      */
     public boolean payRent(Player payer, Player owner, int amount) {
         if (payer == null || owner == null) {
@@ -185,7 +243,8 @@ public class MonopolyService implements GameService {
      * Handles the purchase of a property by a player.
      * @param player The player purchasing the property.
      * @param property The property being purchased.
-     * @return true if the purchase was successful, false otherwise (e.g., not enough money).
+     * @return true if the purchase was successful, false otherwise (e.g., not enough money or property already owned).
+     * @throws InvalidParameterException if player or property is null.
      */
     public boolean purchaseProperty(Player player, PropertyAction property) {
         if (player == null || property == null) {
@@ -213,10 +272,22 @@ public class MonopolyService implements GameService {
         }
     }
 
+    /**
+     * Adds a property to a player's list of owned properties.
+     *
+     * @param player The {@link Player} who now owns the property.
+     * @param property The {@link PropertyAction} representing the property.
+     */
     public void addProperty(Player player, PropertyAction property) {
         playerProperties.computeIfAbsent(player, p -> new ArrayList<>()).add(property);
     }
 
+    /**
+     * Gets the number of railroads owned by a specific player.
+     *
+     * @param player The {@link Player} to check.
+     * @return The count of railroads owned by the player.
+     */
     public int getRailroadsOwnedCount(Player player) {
         return (int) playerProperties.getOrDefault(player, List.of())
                 .stream()
@@ -224,6 +295,12 @@ public class MonopolyService implements GameService {
                 .count();
     }
 
+    /**
+     * Gets the number of utilities owned by a specific player.
+     *
+     * @param player The {@link Player} to check.
+     * @return The count of utilities owned by the player.
+     */
     public int getUtilitiesOwnedCount(Player player) {
         return (int) playerProperties.getOrDefault(player, List.of())
                 .stream()
@@ -232,30 +309,65 @@ public class MonopolyService implements GameService {
     }
 
 
+    /**
+     * Sets the {@link CardService} to be used for drawing Chance and Community Chest cards.
+     *
+     * @param cardService The {@link CardService} instance.
+     */
     public void setCardService(CardService cardService) {
         this.cardService = cardService;
     }
 
+    /**
+     * Draws a Chance card for the player and executes its action.
+     *
+     * @param player The {@link Player} drawing the card.
+     * @return The drawn {@link Card}.
+     */
     public Card drawChanceCard(Player player) {
         Card card = cardService.drawCard("chance");
         executeCardAction(card, player);
         return card;
     }
 
+    /**
+     * Draws a Community Chest card for the player and executes its action.
+     *
+     * @param player The {@link Player} drawing the card.
+     * @return The drawn {@link Card}.
+     */
     public Card drawCommunityChestCard(Player player) {
         Card card = cardService.drawCard("communityChest");
         executeCardAction(card, player);
         return card;
     }
 
+    /**
+     * Gives a "Get Out of Jail Free" card to the specified player.
+     *
+     * @param player The {@link Player} receiving the card.
+     */
     public void giveGetOutOfJailFreeCard(Player player) {
         getOutOfJailFreeCards.put(player, getOutOfJailFreeCards.getOrDefault(player, 0) + 1);
     }
 
+    /**
+     * Checks if a player has a "Get Out of Jail Free" card.
+     *
+     * @param player The {@link Player} to check.
+     * @return true if the player has one or more cards, false otherwise.
+     */
     public boolean hasGetOutOfJailFreeCard(Player player) {
         return getOutOfJailFreeCards.getOrDefault(player, 0) > 0;
     }
 
+    /**
+     * Executes the action associated with a drawn card.
+     * Handles various card types like movement, payments, receiving money, and jail-related actions.
+     *
+     * @param card The {@link Card} whose action is to be executed.
+     * @param player The {@link Player} affected by the card.
+     */
     private void executeCardAction(Card card, Player player) {
         Logger.info(player.getName() + " drew: " + card.getDescription());
 
@@ -349,19 +461,28 @@ public class MonopolyService implements GameService {
 
     }
 
-    private int handleCardRentActionSpecialCase(Player player, int payAmount, int totalPaid) {
+    /**
+     * Handles special card actions where a player pays or collects money from all other players.
+     * For example, "Chairman of the Board" or "Grand Opera Night".
+     *
+     * @param player The {@link Player} initiating the action (either paying to others or collecting from others).
+     * @param amountPerPlayer The amount each other player pays or receives.
+     * @param totalAccumulated The initial accumulated amount (usually 0, used for recursive or iterative summing).
+     * @return The total amount paid by or collected from other players.
+     */
+    private int handleCardRentActionSpecialCase(Player player, int amountPerPlayer, int totalAccumulated) {
         for (Player otherPlayer : game.getPlayers()) {
             if (!otherPlayer.equals(player)) {
-                if (otherPlayer.getMoney() >= payAmount) {
-                    otherPlayer.decreaseMoney(payAmount);
-                    totalPaid += payAmount;
+                if (otherPlayer.getMoney() >= amountPerPlayer) {
+                    otherPlayer.decreaseMoney(amountPerPlayer);
+                    totalAccumulated += amountPerPlayer;
                 } else {
-                    totalPaid += otherPlayer.getMoney();
+                    totalAccumulated += otherPlayer.getMoney();
                     otherPlayer.decreaseMoney(otherPlayer.getMoney());
                 }
             }
         }
-        return totalPaid;
+        return totalAccumulated;
     }
 
 }

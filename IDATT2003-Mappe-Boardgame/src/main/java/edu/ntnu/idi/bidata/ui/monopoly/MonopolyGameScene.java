@@ -35,6 +35,8 @@ import java.util.Optional;
 /**
  * MonopolyGameScene displays a Monopoly board game interface.
  * Interacts with a GameController for game logic and updates.
+ * This class is responsible for rendering the game state and handling user interactions
+ * specific to the Monopoly game, then delegating game logic to the {@link GameController}.
  */
 public class MonopolyGameScene implements ControlledScene {
     private final GameController controller;
@@ -51,6 +53,15 @@ public class MonopolyGameScene implements ControlledScene {
     private final Runnable onNewGameCallback;
     private final Runnable onHomeCallback;
 
+    /**
+     * Constructs a new MonopolyGameScene.
+     *
+     * @param primaryStage The primary stage of the application (kept for SceneManager compatibility).
+     * @param gameController The controller responsible for game logic.
+     * @param gameModel The model representing the current state of the board game.
+     * @param newGameAction A runnable action to be executed when the "New Game" button is pressed.
+     * @param homeAction A runnable action to be executed when the "Return Home" button is pressed.
+     */
     public MonopolyGameScene(Stage primaryStage, // Kept for SceneManager
                              GameController gameController,
                              BoardGame gameModel,
@@ -90,11 +101,19 @@ public class MonopolyGameScene implements ControlledScene {
         );
     }
 
+    /**
+     * Retrieves the currently active instance of MonopolyGameScene from the SceneManager.
+     *
+     * @return The current MonopolyGameScene instance, or null if not set.
+     */
     public static MonopolyGameScene getInstance() {
         return (MonopolyGameScene) SceneManager.getInstance().getCurrentController();
     }
 
     /**
+     * Initializes the view components of the game scene.
+     * This includes setting the initial dice label, updating player status displays,
+     * highlighting the current player, enabling the roll button, and refreshing the board view.
      * Called by the controller to initiate the game view setup.
      */
     public void initializeView() {
@@ -108,9 +127,26 @@ public class MonopolyGameScene implements ControlledScene {
     }
 
 
+    /**
+     * Gets the main scene for the Monopoly game.
+     *
+     * @return The JavaFX Scene object.
+     */
     public Scene getScene() { return scene; }
+
+    /**
+     * Gets the root node of the Monopoly game scene.
+     * Required for SceneManager compatibility.
+     *
+     * @return The parent root node of the scene.
+     */
     public Parent getRoot() { return scene.getRoot(); } // For SceneManager
 
+    /**
+     * Gets the MonopolyBoardView associated with this game scene.
+     *
+     * @return The MonopolyBoardView instance.
+     */
     public MonopolyBoardView getBoardView() {
         return boardView;
     }
@@ -266,6 +302,11 @@ public class MonopolyGameScene implements ControlledScene {
         btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: #FF7043; -fx-text-fill: white; -fx-background-radius: 5px; -fx-cursor: hand; -fx-padding: 8px 15px;"));
     }
 
+    /**
+     * Updates the display of player statuses, including their current tile and money.
+     * If the list of players has changed, it recreates the player status boxes.
+     * Also highlights the current player.
+     */
     public void updatePlayerStatusDisplay() {
         if (gameModel == null) return;
 
@@ -291,12 +332,22 @@ public class MonopolyGameScene implements ControlledScene {
         }
     }
 
+    /**
+     * Updates the text of the dice label.
+     *
+     * @param text The new text to display on the dice label (e.g., dice face or status).
+     */
     public void updateDiceLabel(String text) {
         if (diceLabel != null) {
             diceLabel.setText(text);
         }
     }
 
+    /**
+     * Highlights the status box of the current player in the side panel.
+     *
+     * @param playerToHighlight The player whose status box should be highlighted.
+     */
     public void highlightCurrentPlayer(Player playerToHighlight) {
         if (playerToHighlight == null) return;
 
@@ -314,12 +365,24 @@ public class MonopolyGameScene implements ControlledScene {
         }
     }
 
+    /**
+     * Enables or disables the roll dice button.
+     *
+     * @param enabled True to enable the button, false to disable it.
+     */
     public void setRollButtonEnabled(boolean enabled) {
         if (rollButton != null) {
             rollButton.setDisable(!enabled);
         }
     }
 
+    /**
+     * Updates the UI to reflect that the game is over.
+     * Displays a winner icon or a game over icon on the dice label, disables the roll button,
+     * and highlights the winner's status box.
+     *
+     * @param winner The player who won the game, or null if it's a draw or no specific winner.
+     */
     public void displayGameOver(Player winner) {
         updateDiceLabel(winner != null ? "👑" : "🏁");
         setRollButtonEnabled(false);
@@ -342,6 +405,13 @@ public class MonopolyGameScene implements ControlledScene {
         updatePlayerStatusDisplay();
     }
 
+    /**
+     * Shows a dialog asking the player if they want to purchase a property.
+     *
+     * @param player The player who landed on the property.
+     * @param propertyAction The action associated with the property, containing its details.
+     * @return True if the player chooses to buy the property, false otherwise.
+     */
     public boolean showPropertyPurchaseDialog(Player player, PropertyAction propertyAction) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Property Available");
@@ -359,6 +429,14 @@ public class MonopolyGameScene implements ControlledScene {
         return result.isPresent() && result.get() == buyButton;
     }
 
+    /**
+     * Displays a generic alert dialog.
+     *
+     * @param title The title of the alert window.
+     * @param header The header text of the alert.
+     * @param content The main content message of the alert.
+     * @param type The type of alert (e.g., INFORMATION, WARNING, ERROR).
+     */
     public void showAlert(String title, String header, String content, Alert.AlertType type) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -368,8 +446,10 @@ public class MonopolyGameScene implements ControlledScene {
     }
 
     /**
-     * Displays a card image in a popup dialog, styled like a Monopoly card.
-     * @param card The card to display
+     * Displays a card (Chance or Community Chest) in a styled popup dialog.
+     * The dialog shows the card type, an icon, and the card's description.
+     *
+     * @param card The {@link Card} object to display.
      */
     public void displayCardImage(Card card) {
         // Create a custom alert dialog

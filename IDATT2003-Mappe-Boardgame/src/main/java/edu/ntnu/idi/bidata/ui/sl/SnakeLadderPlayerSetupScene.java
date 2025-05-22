@@ -38,13 +38,27 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
- * Egypt/Jungle-themed player setup; allows theme switching, saving, and loading player names and pieces.
- * Passes selected theme and player setup data to the onStart callback.
- * Uses PlayerSetupController for save/load logic.
+ * Provides a themed user interface for setting up players for the Snakes and Ladders game.
+ * Allows users to enter player names, select game pieces, switch between EGYPT and JUNGLE themes,
+ * save the current player setup to a file, and load a setup from a file.
+ * Implements {@link ControlledScene} for integration with the {@link SceneManager}.
  */
 public class SnakeLadderPlayerSetupScene implements ControlledScene {
 
-  public enum Theme { EGYPT, JUNGLE }
+  /**
+   * Represents the available visual themes for the Snake and Ladder game.
+   * Themes affect the background image and potentially other visual elements.
+   */
+  public enum Theme {
+    /**
+     * Represents the Egyptian theme.
+     */
+    EGYPT,
+    /**
+     * Represents the Jungle theme.
+     */
+    JUNGLE
+  }
 
   private final Scene scene;
   private final Stage stage;
@@ -60,7 +74,11 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
   private static final String HOME_ICON_PATH = "/images/home_icon.png";
 
 
-  // Made public static final so other UI classes can access the defined pieces if needed (e.g. SnakeLadderGameScene, SnakeLadderBoardView)
+  /**
+   * A list of predefined piece UI data available for players to choose from.
+   * Made public static final so other UI classes can access the defined pieces if needed
+   * (e.g., {@code SnakeLadderGameScene}, {@code SnakeLadderBoardView}).
+   */
   public static final List<PieceUIData> AVAILABLE_PIECES = List.of(
       new PieceUIData("king", "/images/piece_king.png"),
       new PieceUIData("queen", "/images/piece_queen.png"),
@@ -68,6 +86,17 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
       new PieceUIData("knight", "/images/piece_knight.png")
   );
 
+  /**
+   * Constructs the player setup scene for the Snake and Ladder game.
+   * Initializes the UI components, including player name fields, piece selectors,
+   * theme switching, and options to save/load player configurations.
+   *
+   * @param stage The primary stage for this application.
+   * @param onStart A callback function to be executed when the game is started.
+   *                It receives a list of player setup data and the selected theme.
+   * @param onHome A callback function to be executed when the home button is pressed,
+   *               typically to return to a main menu or selection screen.
+   */
   public SnakeLadderPlayerSetupScene(Stage stage, BiConsumer<List<PlayerSetupData>, Theme> onStart, Runnable onHome) {
     this.stage = stage;
     this.setupController = new PlayerSetupController();
@@ -176,6 +205,12 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
     scene = new Scene(root, 1024, 768); // Example initial size
   }
 
+  /**
+   * Gets the JavaFX scene associated with this player setup screen.
+   * This scene contains all UI elements for player configuration.
+   *
+   * @return The {@link Scene} object for this setup screen.
+   */
   @Override
   public Scene getScene() {
     return scene;
