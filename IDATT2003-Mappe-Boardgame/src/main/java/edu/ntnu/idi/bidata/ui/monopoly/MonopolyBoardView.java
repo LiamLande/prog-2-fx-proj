@@ -34,7 +34,6 @@ public class MonopolyBoardView extends Pane {
     private final Map<Integer, Point2D> tileCenterPositions = new HashMap<>();
     private final Map<Player, Circle> playerTokensOnBoard = new HashMap<>();
     private final Map<Player, Circle> playerTokenUIsFromSidePanel;
-    private int tilesOnEdgeInDefinition; // This is the 'N' in "corners are 0, N, 2N, 3N"
 
     private final Map<Integer, Rectangle> tileRects = new HashMap<>();
     private final Map<Integer, Group> tileTextGroups = new HashMap<>(); // To manage text updates/removal
@@ -75,7 +74,7 @@ public class MonopolyBoardView extends Pane {
             return;
         }
 
-        if (tileCount > 0 && tileCount % 4 == 0) {
+        if (tileCount % 4 == 0) {
             this.cellsPerSideGrid = (tileCount / 4) + 1;
         } else {
             this.cellsPerSideGrid = (int) Math.ceil(Math.sqrt(tileCount));
@@ -104,6 +103,7 @@ public class MonopolyBoardView extends Pane {
 
         Label centerLabel = new Label("Mini Monopoly");
         centerLabel.setFont(Font.font("Kabel", FontWeight.BOLD, Math.max(10, innerAreaSize * 0.15)));
+        // We use Kabel after an AI suggestion on most of our logo designs, I believe
         centerLabel.setTextFill(Color.DARKRED);
         centerLabel.setPrefSize(innerAreaSize, innerAreaSize);
         centerLabel.setAlignment(Pos.CENTER);
@@ -231,9 +231,9 @@ public class MonopolyBoardView extends Pane {
         String priceStr = "";
 
 
-        this.tilesOnEdgeInDefinition = cellsPerSideGrid - 1;
+        // This is the 'N' in "corners are 0, N, 2N, 3N"
         // tilesOnEdgeInDefinition is N, where corners are 0, N, 2N, 3N. Total tiles = 4*N.
-        int tilesOnEdge = this.tilesOnEdgeInDefinition;
+        int tilesOnEdge = cellsPerSideGrid - 1;
 
         boolean isCorner = (tilesOnEdge > 0 && tileId % tilesOnEdge == 0);
 
@@ -249,9 +249,9 @@ public class MonopolyBoardView extends Pane {
         } else if (tile.getAction() instanceof PropertyAction pa) {
             nameStr = pa.getName();
             priceStr = "$" + pa.getCost();
-        } else if (tile.getAction() instanceof ChanceAction ca) {
+        } else if (tile.getAction() instanceof ChanceAction) {
             nameStr = "Chance";
-        } else if (tile.getAction() instanceof CommunityChestAction cca) {
+        } else if (tile.getAction() instanceof CommunityChestAction) {
             nameStr = "Community Chest";
         } else if (tile.getAction() instanceof TaxAction ta) {
             nameStr = ta.getDescription();
@@ -276,29 +276,19 @@ public class MonopolyBoardView extends Pane {
             textGroup.getChildren().add(priceTextNode);
         }
 
-        // It's good practice to ensure nodes are part of a scene graph for accurate bounds,
-        // but getLayoutBounds() is often sufficient if fonts are standard and set directly.
         double nameHeight = nameTextNode.getLayoutBounds().getHeight();
         double priceHeight = (priceTextNode != null) ? priceTextNode.getLayoutBounds().getHeight() : 0;
         double verticalSpacing = (priceTextNode != null && !nameStr.isEmpty()) ? cellSize * 0.03 : 0;
         double totalTextHeight = nameHeight + verticalSpacing + priceHeight;
 
-        // Determine vertical position for the text block.
-        // contentAreaVerticalOffsetFromCellCenter is the Y-coordinate of the center of the drawable text area,
-        // relative to the cell's center (which will be the group's origin).
+
         double contentAreaVerticalOffsetFromCellCenter = 0;
 
         if (!isCorner && tile.getAction() instanceof PropertyAction) {
             // For properties, a color bar takes up the top 22% of the cell.
             double colorBarHeightRatio = 0.22;
-            // The text should be centered in the area *below* the color bar.
-            // Cell top: -cellSize/2. Color bar ends at: -cellSize/2 + cellSize*colorBarHeightRatio.
-            // Text area is from (-cellSize/2 + cellSize*colorBarHeightRatio) to (+cellSize/2).
-            // Midpoint of this text area relative to cell center (Y=0):
+            // Fuck matte
             contentAreaVerticalOffsetFromCellCenter = (cellSize * colorBarHeightRatio) / 2.0;
-        } else {
-            // For corners or non-property tiles, text is centered in the whole cell.
-            // contentAreaVerticalOffsetFromCellCenter remains 0 (center of cell).
         }
 
         // Position text nodes relative to the group's (0,0) point.
@@ -321,6 +311,13 @@ public class MonopolyBoardView extends Pane {
         textGroup.setLayoutY(centerPos.getY());
 
         // Determine rotation angle for the textGroup.
+        double rotationAngle = getRotationAngle(tileId, tilesOnEdge, isCorner);
+        textGroup.setRotate(rotationAngle);
+
+        return textGroup;
+    }
+
+    private static double getRotationAngle(int tileId, int tilesOnEdge, boolean isCorner) {
         double rotationAngle = 0;
         int side = (tilesOnEdge > 0 && tileId < 4 * tilesOnEdge) ? tileId / tilesOnEdge : 0; // Determine side (0:bottom, 1:left, 2:top, 3:right)
 
@@ -338,8 +335,7 @@ public class MonopolyBoardView extends Pane {
             if (tileId == 0) { // GO (typically on Side 0)
                 rotationAngle = 0; // Standard GO text is horizontal.
             } else if (tileId == tilesOnEdge) { // JAIL (typically on Side 1)
-                // Side 1 default is -90. Image shows "JAIL" rotated -90, which is fine.
-                // No override needed if -90 is desired for this corner's name.
+                rotationAngle = 0; // Standard JAIL text is horizontal.
             } else if (tileId == 2 * tilesOnEdge) { // FREE PARKING (typically on Side 2)
                 // Side 2 default is 180. Image shows "FREE PARKING" text horizontal (0 degrees).
                 rotationAngle = 0;
@@ -348,9 +344,7 @@ public class MonopolyBoardView extends Pane {
                 rotationAngle = 0;
             }
         }
-        textGroup.setRotate(rotationAngle);
-
-        return textGroup;
+        return rotationAngle;
     }
 
     private int getColorGroupIndex(String colorGroup) {

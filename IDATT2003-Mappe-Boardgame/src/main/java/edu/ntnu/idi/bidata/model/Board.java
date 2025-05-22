@@ -15,7 +15,7 @@ public class Board {
   private int maxId = 0;
 
   /**
-   * Adds a tile to the board. Id must be unique.
+   * Adds a tile to the board. ID must be unique.
    */
   public void addTile(Tile tile) {
     if (tile == null) {

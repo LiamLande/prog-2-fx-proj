@@ -24,17 +24,6 @@ public class BoardGame {
     observers.add(observer);
   }
 
-  // New method to notify UI of generic game events/messages (optional but useful)
-  // If you decide to use this, GameController would call it, and BoardGameObserver would need a new method.
-  // For now, GameController updates SnakeLadderGameScene directly for messages.
-  public void notifyGameEvent(String eventMessage, Player involvedPlayer) {
-    for (BoardGameObserver obs : observers) {
-      // Example: if (obs instanceof ExtendedBoardGameObserver extObs) {
-      // extObs.onGameMessage(eventMessage, involvedPlayer);
-      // }
-    }
-  }
-
   public void init() {
     if (board == null) throw new IllegalStateException("Board must be set before init()");
     if (dice == null) throw new IllegalStateException("Dice must be set before init()");
@@ -133,9 +122,4 @@ public class BoardGame {
     }
   }
 
-  private void notifyGameOver(Player winner) {
-    for (var obs : observers) {
-      obs.onGameOver(winner);
-    }
-  }
 }

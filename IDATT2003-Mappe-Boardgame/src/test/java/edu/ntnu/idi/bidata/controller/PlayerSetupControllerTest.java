@@ -1,12 +1,8 @@
-// src/test/java/edu/ntnu/idi/bidata/controller/PlayerSetupControllerTest.java
 package edu.ntnu.idi.bidata.controller;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
-import edu.ntnu.idi.bidata.model.Player; // For Player.DEFAULT_PIECE_IDENTIFIER
+import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.ui.PlayerSetupData;
-import edu.ntnu.idi.bidata.util.Logger; // Assuming your Logger path
-
-import java.io.FileWriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -222,7 +218,6 @@ class PlayerSetupControllerTest {
   @DisplayName("loadPlayerSetup handles CSV with invalid tileId format (uses default 0)")
   void loadPlayerSetup_InvalidTileIdFormat_UsesDefaultZero(@TempDir Path tempDir) throws IOException {
     File tempFile = tempDir.resolve("players_invalidtile.csv").toFile();
-    String ls = System.lineSeparator();
     String csvContent = "Frank,badId,tokenF"; // tileId "badId" is not a number
     Files.writeString(tempFile.toPath(), csvContent);
 

@@ -49,8 +49,8 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
   private final Scene scene;
   private final Stage stage;
   private final ImageView bgView;
-  private final Button themeButton, saveButton, loadButton, startBtn, homeBtn;
-  private final List<TextField> nameFields;
+  private final Button themeButton;
+    private final List<TextField> nameFields;
   private final List<ComboBox<PieceUIData>> pieceSelectors;
   private final PlayerSetupController setupController;
 
@@ -125,15 +125,15 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
     styleSetupButton(themeButton);
     themeButton.setOnAction(e -> switchTheme());
 
-    saveButton = new Button("Save Player Setup");
+      Button saveButton = new Button("Save Player Setup");
     styleSetupButton(saveButton);
     saveButton.setOnAction(e -> handleSavePlayerSetup());
 
-    loadButton = new Button("Load Player Setup");
+      Button loadButton = new Button("Load Player Setup");
     styleSetupButton(loadButton);
     loadButton.setOnAction(e -> handleLoadPlayerSetup());
 
-    startBtn = new Button("START ADVENTURE");
+      Button startBtn = new Button("START ADVENTURE");
     startBtn.setFont(Font.font("Trajan Pro", FontWeight.BOLD, 24));
     startBtn.setTextFill(Color.WHITE);
     startBtn.setPadding(new Insets(10, 40, 10, 40));
@@ -154,8 +154,8 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
     ImageView homeView = new ImageView(homeImg);
     homeView.setFitWidth(40);
     homeView.setPreserveRatio(true);
-    homeBtn = new Button("", homeView); // Set graphic, no text
-    homeBtn.setBackground(Background.EMPTY);
+      Button homeBtn = new Button("", homeView); // Set graphic, no text
+      homeBtn.setBackground(Background.EMPTY);
     homeBtn.setOnAction(e -> onHome.run());
 
     // --- Layout Assembly ---

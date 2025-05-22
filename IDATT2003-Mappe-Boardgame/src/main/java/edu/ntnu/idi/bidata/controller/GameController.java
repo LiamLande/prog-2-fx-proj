@@ -5,7 +5,6 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.BoardGameObserver;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
-import edu.ntnu.idi.bidata.model.actions.TileAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.*;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.service.MonopolyService;
@@ -17,7 +16,6 @@ import edu.ntnu.idi.bidata.util.Logger;
 
 import javafx.scene.control.Alert;
 import java.util.List;
-// Removed 'java.util.Random' as it's no longer used here for Schrodinger
 
 public class GameController implements BoardGameObserver {
     private final BoardGame gameModel;
@@ -29,7 +27,6 @@ public class GameController implements BoardGameObserver {
     private Player playerMakingSchrodingerChoice = null;
     private SchrodingerBoxAction currentSchrodingerAction = null; // Store the action instance
 
-    // private final Random random = new Random(); // No longer needed for Schrodinger logic here
 
     public GameController(BoardGame game) {
         this.gameModel = game;
@@ -205,7 +202,7 @@ public class GameController implements BoardGameObserver {
                     mScene.showAlert("Taxes!", "Death, Taxes, and Taxes",
                         "You must pay " + ta.getTaxAmount() + "$ in taxes!",
                         Alert.AlertType.INFORMATION);
-                } else if (landedTile.getAction() instanceof GoToJailAction ga) {
+                } else if (landedTile.getAction() instanceof GoToJailAction) {
                     mScene.showAlert("Go to jail!", "Community Chest Tile",
                         "You must go to jail! For you are poor!",
                         Alert.AlertType.WARNING);
@@ -231,7 +228,7 @@ public class GameController implements BoardGameObserver {
         String rollsStr = rollsIfApplicable != null && !rollsIfApplicable.isEmpty() ? rollsIfApplicable.toString() : "N/A";
         Logger.debug("Rolls from this turn (if applicable): " + rollsStr);
 
-        // Check for game over after potential player position changes (e.g., from Schrodinger box)
+        // Check for game over after potential player position changes (e.g., from Schrödinger box)
         if (gameModel.isFinished()) {
             Logger.info("Game is finished (detected in finalizeTurnAndSetupNext). Calling onGameOver.");
             onGameOver(gameModel.getWinner());
@@ -316,9 +313,6 @@ public class GameController implements BoardGameObserver {
             scene.setRollButtonEnabled(false);
             scene.showGameMessage(this.currentPlayer.getName() + " is rolling...");
             Logger.debug("Roll button disabled for SnakeLadderGameScene during roll.");
-        } else if (activeView instanceof MonopolyGameScene scene) {
-            // scene.setRollButtonEnabled(false); // Consider if Monopoly needs this
-            Logger.debug("Roll button (Monopoly) potentially disabled during roll.");
         }
 
         Logger.debug("Executing gameModel.playTurn() for player: " + this.currentPlayer.getName());
@@ -377,29 +371,15 @@ public class GameController implements BoardGameObserver {
     private void completeSchrodingerActionSequence() {
         Logger.debug("Completing Schrödinger action sequence for player: " +
             (playerMakingSchrodingerChoice != null ? playerMakingSchrodingerChoice.getName() : "Unknown"));
-
-        // Player's position might have changed, so the game model needs to be aware before finalizing the turn.
-        // The player object playerMakingSchrodingerChoice was directly modified by currentSchrodingerAction.executeObserve().
-        // The gameModel should reflect this state when checking for win conditions or advancing turns.
-
         awaitingSchrodingerChoice = false;
-        // playerMakingSchrodingerChoice and currentSchrodingerAction will be reset at the start of the next onRoundPlayed,
-        // or when finalizeTurnAndSetupNext completes fully for the *next* player if it's not game over.
-        // For clarity and immediate effect, reset them here.
-
-        // finalizeTurnAndSetupNext will:
-        // 1. Check if game is over (e.g. player landed on finish tile via Schrodinger)
-        // 2. If not over, set up for the next player and update UI.
-        finalizeTurnAndSetupNext(null); // Rolls not directly relevant here for dice display after choice
-
-        playerMakingSchrodingerChoice = null; // Reset after finalizeTurnAndSetupNext has used it if needed.
+        finalizeTurnAndSetupNext(null);
+        playerMakingSchrodingerChoice = null;
         currentSchrodingerAction = null;
         Logger.debug("Schrödinger choice state fully reset after action completion and turn finalization.");
     }
 
 
     private void handleLandedOnProperty(Player player, PropertyAction propertyAction, MonopolyGameScene monopolyView) {
-        // ... (This method remains unchanged as it's for Monopoly)
         Logger.info("Player " + player.getName() + " landed on property: " + propertyAction.getName() + ". Handling action.");
 
         if (monopolyService == null) {
@@ -408,6 +388,7 @@ public class GameController implements BoardGameObserver {
             return;
         }
 
+        //This is the worst possible way to do this, but it works for now. -Liam
         if (propertyAction.getOwner() == null) {
             Logger.debug("Property " + propertyAction.getName() + " is unowned. Cost: " + propertyAction.getCost() + ". Player money: " + player.getMoney());
             if (player.getMoney() >= propertyAction.getCost()) {
@@ -453,6 +434,7 @@ public class GameController implements BoardGameObserver {
                 Logger.warning("Player " + player.getName() + " could not afford to pay $" + rentAmount + " rent for " + propertyAction.getName() + ". Potential bankruptcy.");
                 monopolyView.showAlert("Rent Payment Failed", "Insufficient Funds",
                     player.getName() + " could not afford to pay $" + rentAmount + " rent.", Alert.AlertType.WARNING);
+                player.decreaseMoney(player.getMoney()); //Lose condition
             }
         } else {
             Logger.debug("Player " + player.getName() + " landed on their own property: " + propertyAction.getName() + ". No rent/purchase action.");

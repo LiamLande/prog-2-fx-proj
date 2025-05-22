@@ -4,8 +4,6 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Card;
 import edu.ntnu.idi.bidata.model.Player;
-import edu.ntnu.idi.bidata.model.Tile;
-import edu.ntnu.idi.bidata.model.actions.TileAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.RailroadAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.UtilityAction;
@@ -19,17 +17,13 @@ import java.util.Map;
 
 /**
  * Monopoly-specific game logic.
- * <p>
- * Currently a stub: all methods throw UnsupportedOperationException
- * until you fill in actual Monopoly rules (rolling doubles, buying
- * houses, jail, auction, bankruptcies, etc.).
  */
 public class MonopolyService implements GameService {
     private int currentPlayerIndex = -1;
-    private Map<Player, Integer> jailedPlayers = new HashMap<>();
-    private Map<Player, List<PropertyAction>> playerProperties = new HashMap<>();
+    private final Map<Player, Integer> jailedPlayers = new HashMap<>();
+    private final Map<Player, List<PropertyAction>> playerProperties = new HashMap<>();
     private CardService cardService;
-    private Map<Player, Integer> getOutOfJailFreeCards = new HashMap<>();
+    private final Map<Player, Integer> getOutOfJailFreeCards = new HashMap<>();
     private BoardGame game; // Storing game reference from setup
 
     @Override
@@ -335,18 +329,7 @@ public class MonopolyService implements GameService {
             case "ChairmanOfBoard":
                 int payAmount = card.getIntProperty("amount", 50);
                 int totalPaid = 0;
-                for (Player otherPlayer : game.getPlayers()) {
-                    if (!otherPlayer.equals(player)) {
-                        if (otherPlayer.getMoney() >= payAmount) {
-                            otherPlayer.decreaseMoney(payAmount);
-                            totalPaid += payAmount;
-                        } else {
-                            // Handle player bankruptcy
-                            totalPaid += otherPlayer.getMoney();
-                            otherPlayer.decreaseMoney(otherPlayer.getMoney());
-                        }
-                    }
-                }
+                totalPaid = handleCardRentActionSpecialCase(player, payAmount, totalPaid);
                 player.increaseMoney(totalPaid);
                 Logger.info(player.getName() + " paid $" + payAmount + " to each player as Chairman of the Board");
                 break;
@@ -354,18 +337,7 @@ public class MonopolyService implements GameService {
             case "ItsYourBirthday":
                 int collectAmount = card.getIntProperty("amount", 10);
                 int totalCollected = 0;
-                for (Player otherPlayer : game.getPlayers()) {
-                    if (!otherPlayer.equals(player)) {
-                        if (otherPlayer.getMoney() >= collectAmount) {
-                            otherPlayer.decreaseMoney(collectAmount);
-                            totalCollected += collectAmount;
-                        } else {
-                            // Handle player bankruptcy
-                            totalCollected += otherPlayer.getMoney();
-                            otherPlayer.decreaseMoney(otherPlayer.getMoney());
-                        }
-                    }
-                }
+                totalCollected = handleCardRentActionSpecialCase(player, collectAmount, totalCollected);
                 player.increaseMoney(totalCollected);
                 Logger.info(player.getName() + " collected $" + collectAmount + " from each player");
                 break;
@@ -375,6 +347,21 @@ public class MonopolyService implements GameService {
 
         }
 
+    }
+
+    private int handleCardRentActionSpecialCase(Player player, int payAmount, int totalPaid) {
+        for (Player otherPlayer : game.getPlayers()) {
+            if (!otherPlayer.equals(player)) {
+                if (otherPlayer.getMoney() >= payAmount) {
+                    otherPlayer.decreaseMoney(payAmount);
+                    totalPaid += payAmount;
+                } else {
+                    totalPaid += otherPlayer.getMoney();
+                    otherPlayer.decreaseMoney(otherPlayer.getMoney());
+                }
+            }
+        }
+        return totalPaid;
     }
 
 }

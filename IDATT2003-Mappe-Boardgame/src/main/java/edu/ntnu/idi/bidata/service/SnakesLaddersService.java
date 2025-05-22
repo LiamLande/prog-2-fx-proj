@@ -3,8 +3,6 @@ package edu.ntnu.idi.bidata.service;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SnakesLaddersService implements GameService {
   private int currentPlayerIndex = -1; // Index in the game.getPlayers() list

@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/file/BoardJsonReaderWriterTest.java
 package edu.ntnu.idi.bidata.file;
 
 import edu.ntnu.idi.bidata.app.GameVariant;
@@ -9,8 +8,6 @@ import edu.ntnu.idi.bidata.model.actions.monopoly.*;
 import edu.ntnu.idi.bidata.model.actions.snakes.LadderAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.model.actions.snakes.SnakeAction;
-import edu.ntnu.idi.bidata.util.Logger; // Assuming Logger is available
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -144,27 +140,6 @@ class BoardJsonReaderWriterTest {
     assertTrue(getErr().contains("Next tile with id 99 not found for tile 0. Link not set."));
   }
 
-  @Test
-  @DisplayName("read skips processing tile in second pass if tile not found (e.g., due to error in first pass)")
-  void read_TileNotFoundInSecondPass_LogsErrorAndSkips() {
-    // This scenario is hard to create naturally if first pass always adds the tile.
-    // It implies board.getTile(id) returns null for an ID that was in tilesJson.
-    // This would only happen if addTile failed silently or tile was removed between passes (not possible here).
-    // The SUT has: if (tile == null) { Logger.error(...); continue; }
-    // For line coverage of this specific error log, we'd need to manipulate the board state
-    // between the two loops, or have a JSON where an ID is referenced but not defined.
-    // The "nextId not found" covers a similar logging path.
-    // Let's assume this path is less critical if addTile is robust.
-    // For now, we'll rely on the other logging tests to cover error reporting.
-    // To hit this: Board must be modified, or JSON must be inconsistent.
-    // E.g. tiles: [{"id":0}], and then later a tileObj refers to ID 0 but it's missing.
-    // The current loop processes elements from tilesJson. If an ID is in tilesJson, it's added in pass 1.
-    // So board.getTile(id) in pass 2 for an ID from tilesJson should not be null.
-    // This error log is more for unexpected internal state corruption.
-    assertTrue(true, "Error path for tile==null in second pass is for unexpected states, hard to deterministically create without direct board manipulation.");
-  }
-
-
   // --- SNAKES_LADDERS Action Tests ---
   @Test
   @DisplayName("read sets LadderAction correctly for SNAKES_LADDERS")
@@ -174,7 +149,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.SNAKES_LADDERS);
     Tile tile0 = board.getTile(0);
     assertNotNull(tile0.getAction());
-    assertTrue(tile0.getAction() instanceof LadderAction);
+    assertInstanceOf(LadderAction.class, tile0.getAction());
     assertEquals(5, ((LadderAction) tile0.getAction()).getSteps());
     assertTrue(getOut().contains("Set LadderAction for tile 0 with 5 steps."));
   }
@@ -187,7 +162,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.SNAKES_LADDERS);
     Tile tile1 = board.getTile(1);
     assertNotNull(tile1.getAction());
-    assertTrue(tile1.getAction() instanceof SnakeAction);
+    assertInstanceOf(SnakeAction.class, tile1.getAction());
     assertEquals(3, ((SnakeAction) tile1.getAction()).getSteps());
   }
 
@@ -199,7 +174,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.SNAKES_LADDERS);
     Tile tile2 = board.getTile(2);
     assertNotNull(tile2.getAction());
-    assertTrue(tile2.getAction() instanceof SchrodingerBoxAction);
+    assertInstanceOf(SchrodingerBoxAction.class, tile2.getAction());
     assertEquals("Mystery!", ((SchrodingerBoxAction) tile2.getAction()).getDescription());
   }
 
@@ -223,7 +198,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile0 = board.getTile(0);
     assertNotNull(tile0.getAction());
-    assertTrue(tile0.getAction() instanceof GoAction);
+    assertInstanceOf(GoAction.class, tile0.getAction());
     // GoAction doesn't have getters for reward/description, verify by log
     assertTrue(getOut().contains("Set GoAction for tile 0 with reward 200"));
   }
@@ -236,7 +211,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile1 = board.getTile(1);
     assertNotNull(tile1.getAction());
-    assertTrue(tile1.getAction() instanceof PropertyAction);
+      assertInstanceOf(PropertyAction.class, tile1.getAction());
     PropertyAction pa = (PropertyAction) tile1.getAction();
     assertEquals("Boardwalk", pa.getName());
     assertEquals(400, pa.getCost());
@@ -252,7 +227,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile2 = board.getTile(2);
     assertNotNull(tile2.getAction());
-    assertTrue(tile2.getAction() instanceof CommunityChestAction);
+      assertInstanceOf(CommunityChestAction.class, tile2.getAction());
     assertEquals("CC", ((CommunityChestAction) tile2.getAction()).getDescription());
   }
 
@@ -264,7 +239,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile3 = board.getTile(3);
     assertNotNull(tile3.getAction());
-    assertTrue(tile3.getAction() instanceof TaxAction);
+      assertInstanceOf(TaxAction.class, tile3.getAction());
     assertEquals(200, ((TaxAction) tile3.getAction()).getTaxAmount());
   }
 
@@ -276,7 +251,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile4 = board.getTile(4);
     assertNotNull(tile4.getAction());
-    assertTrue(tile4.getAction() instanceof RailroadAction);
+      assertInstanceOf(RailroadAction.class, tile4.getAction());
     assertEquals("Reading RR", ((RailroadAction)tile4.getAction()).getName());
   }
 
@@ -288,7 +263,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile5 = board.getTile(5);
     assertNotNull(tile5.getAction());
-    assertTrue(tile5.getAction() instanceof UtilityAction);
+      assertInstanceOf(UtilityAction.class, tile5.getAction());
     assertEquals("Water Works", ((UtilityAction)tile5.getAction()).getName());
   }
 
@@ -300,7 +275,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile6 = board.getTile(6);
     assertNotNull(tile6.getAction());
-    assertTrue(tile6.getAction() instanceof ChanceAction);
+      assertInstanceOf(ChanceAction.class, tile6.getAction());
     assertEquals("Chance", ((ChanceAction) tile6.getAction()).getDescription());
   }
 
@@ -312,7 +287,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile7 = board.getTile(7);
     assertNotNull(tile7.getAction());
-    assertTrue(tile7.getAction() instanceof JailAction);
+      assertInstanceOf(JailAction.class, tile7.getAction());
     // JailAction has no getters, check log
     assertTrue(getOut().contains("Set JailAction (Just Visiting) for tile " + 7));
   }
@@ -325,7 +300,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile8 = board.getTile(8);
     assertNotNull(tile8.getAction());
-    assertTrue(tile8.getAction() instanceof GoToJailAction);
+      assertInstanceOf(GoToJailAction.class, tile8.getAction());
     // GoToJailAction has no getters for targetId/description, check log
     assertTrue(getOut().contains("Set GoToJailAction for tile " + 8 + ", targeting jail tile 20"));
   }
@@ -338,7 +313,7 @@ class BoardJsonReaderWriterTest {
     Board board = BoardJsonReaderWriter.read(reader, GameVariant.MINI_MONOPOLY);
     Tile tile9 = board.getTile(9);
     assertNotNull(tile9.getAction());
-    assertTrue(tile9.getAction() instanceof FreeParkingAction);
+      assertInstanceOf(FreeParkingAction.class, tile9.getAction());
     // FreeParkingAction has no getters, check log
     assertTrue(getOut().contains("Set FreeParkingAction for tile " + 9));
   }

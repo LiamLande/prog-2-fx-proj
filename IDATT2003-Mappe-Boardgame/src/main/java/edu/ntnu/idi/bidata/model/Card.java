@@ -12,8 +12,8 @@ public class Card {
 
     public Card(int id, String type, String description, JsonObject rawData) {
         this.id = id;
-        this.type = type; // Consider null/blank checks
-        this.description = description; // Consider null check
+        this.type = type;
+        this.description = description;
         this.rawData = rawData; // Can be null
     }
 
@@ -30,7 +30,6 @@ public class Card {
 
     public int getIntProperty(String propertyName, int defaultValue) {
         // Check if the property exists and rawData is valid
-        // This relies on your existing hasProperty logic or direct checks.
         if (this.rawData == null || propertyName == null || !this.rawData.has(propertyName)) {
             return defaultValue;
         }
@@ -51,19 +50,13 @@ public class Card {
         double dValue = numberValue.doubleValue();
 
         // Check if the double value has a fractional part.
-        // Also handles NaN and Infinity, as (dValue % 1) would be NaN for them, and NaN != 0.
         if (dValue % 1 != 0) {
             return defaultValue; // It's a number with a fractional part (e.g., 45.67) or NaN/Infinity
         }
-
-        // At this point, dValue is a whole number (e.g., 45.0 or 123.0).
-        // Now, check if it fits within the Java int range.
-        // Casting dValue to long is safe here because it's confirmed to be a whole number.
         long lValue = (long) dValue;
         if (lValue >= Integer.MIN_VALUE && lValue <= Integer.MAX_VALUE) {
             return (int) lValue; // Safe to cast to int
         } else {
-            // It's a whole number, but it's outside the int range
             return defaultValue;
         }
     }

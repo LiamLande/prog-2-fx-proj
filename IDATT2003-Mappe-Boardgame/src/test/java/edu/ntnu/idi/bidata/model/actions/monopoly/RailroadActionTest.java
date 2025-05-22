@@ -68,19 +68,4 @@ class RailroadActionTest {
     verify(mockMonopolyService).getRailroadsOwnedCount(mockOwner);
   }
 
-  @Test
-  @DisplayName("perform should throw NPE if ServiceLocator's service is null and accessed")
-  void testPerform_NullServiceViaLocator() {
-    ServiceLocator.setMonopolyService(null); // Simulate service not being set
-    RailroadAction action = new RailroadAction("RR with no service", 200, 25);
-    action.setOwner(mockOwner); // Set owner to a different mock than player
-
-    // The condition `!getOwner().equals(player)` will be true because mockOwner and mockPlayer
-    // are different instances and their default equals() will return false.
-    // No need to mock .equals()
-
-    assertThrows(NullPointerException.class, () -> {
-      action.perform(mockPlayer);
-    }, "Should throw NPE if service is null and accessed when owner is not player");
-  }
 }

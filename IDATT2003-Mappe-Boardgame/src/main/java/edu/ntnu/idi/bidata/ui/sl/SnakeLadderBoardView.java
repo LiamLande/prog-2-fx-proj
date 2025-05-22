@@ -111,7 +111,7 @@ public class SnakeLadderBoardView extends Pane {
     int boardSize = (int) Math.sqrt(tileCount);
     if (boardSize * boardSize != tileCount && tileCount > 0) {
       Logger.error("SnakeLadderBoardView: Tile count " + tileCount + " is not a perfect square. Board layout might be approximate.");
-      if (tileCount > 0) boardSize = (int)Math.ceil(Math.sqrt(tileCount)); 
+      boardSize = (int)Math.ceil(Math.sqrt(tileCount));
     }
     if (boardSize == 0 && tileCount > 0) boardSize = 1; // Handle single tile case or very small boards
     if (tileCount == 0) return; // No tiles to draw

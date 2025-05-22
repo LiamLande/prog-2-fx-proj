@@ -63,16 +63,6 @@ class BoardGameTest {
     assertEquals("Observer cannot be null", e.getMessage());
   }
 
-  @Test
-  @DisplayName("notifyGameEvent should not crash (no specific observer type yet)")
-  void testNotifyGameEvent() {
-    boardGame.addObserver(mockObserver1);
-    // Since ExtendedBoardGameObserver isn't defined and the method body is commented,
-    // just calling it for coverage.
-    assertDoesNotThrow(() -> boardGame.notifyGameEvent("Test Event", mockPlayer1));
-    // If you implement the observer method, add verify() here.
-  }
-
 
   @Test
   @DisplayName("init should throw IllegalStateException if board is not set")

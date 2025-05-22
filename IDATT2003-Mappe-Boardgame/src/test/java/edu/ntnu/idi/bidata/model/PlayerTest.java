@@ -314,10 +314,10 @@ class PlayerTest {
     }
 
     @Test
-    @DisplayName("setMoney with null updates money to null (getMoney returns 0)")
+    @DisplayName("setMoney with zero updates money to zero (getMoney returns 0)")
     void testSetMoney_nullValue() {
-      player.setMoney(100); // Set to non-null first
-      player.setMoney(null);
+      player.setMoney(100); // Set to non-zero first
+      player.setMoney(0);
       assertEquals(0, player.getMoney()); // Observable behavior
     }
 

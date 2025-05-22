@@ -9,7 +9,7 @@ public class Player {
   private final String name;
   private Tile currentTile;
   private Integer money;
-  private String pieceIdentifier;
+  private final String pieceIdentifier;
 
   public static final String DEFAULT_PIECE_IDENTIFIER = "default_token";
 
@@ -98,11 +98,7 @@ public class Player {
     }
   }
 
-  public void setMoney(Integer money) {
-    if (money == null) {
-      this.money = money;
-      return;
-    }
+  public void setMoney(int money) {
     if (money < 0) {
       throw new InvalidParameterException("Money must not be negative");
     }

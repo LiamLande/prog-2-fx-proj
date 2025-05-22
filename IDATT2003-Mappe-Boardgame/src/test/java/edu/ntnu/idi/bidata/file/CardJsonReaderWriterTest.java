@@ -1,7 +1,6 @@
 package edu.ntnu.idi.bidata.file;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -22,7 +21,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -113,7 +111,7 @@ class CardJsonReaderWriterTest {
             Map<String, List<Card>> decks = CardJsonReaderWriter.read(dummyReader);
 
             assertEquals(1, decks.get("chance").size());
-            assertEquals("Advance", decks.get("chance").get(0).getType());
+            assertEquals("Advance", decks.get("chance").getFirst().getType());
             assertTrue(decks.get("communityChest").isEmpty());
 
             mockedLogger.verify(() -> Logger.debug("Finished reading 1 Chance cards."));
@@ -143,7 +141,7 @@ class CardJsonReaderWriterTest {
 
             assertTrue(decks.get("chance").isEmpty());
             assertEquals(1, decks.get("communityChest").size());
-            assertEquals("Pay", decks.get("communityChest").get(0).getType());
+            assertEquals("Pay", decks.get("communityChest").getFirst().getType());
 
             mockedLogger.verify(() -> Logger.debug("Finished reading 1 Community Chest cards."));
             mockedLogger.verify(() -> Logger.warning(contains("'chanceCards' array or it's not a valid array")));
@@ -221,7 +219,7 @@ class CardJsonReaderWriterTest {
 
             Map<String, List<Card>> decks = CardJsonReaderWriter.read(dummyReader);
             assertEquals(1, decks.get("chance").size());
-            assertEquals("Valid", decks.get("chance").get(0).getType());
+            assertEquals("Valid", decks.get("chance").getFirst().getType());
             mockedLogger.verify(() -> Logger.warning(eq("Skipping a non-JSON object element found in the Chance card array: \"not a card object\"")));
         }
     }

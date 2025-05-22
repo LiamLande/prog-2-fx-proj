@@ -3,6 +3,7 @@ package edu.ntnu.idi.bidata.model.actions.monopoly;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
+import edu.ntnu.idi.bidata.util.Logger;
 
 /**
  * Railroad action: rent depends on the number of railroads the owner holds.
@@ -23,7 +24,7 @@ public class RailroadAction extends PropertyAction {
             MonopolyService service = ServiceLocator.getMonopolyService();
             int owned = service.getRailroadsOwnedCount(getOwner());
             int rentToPay = BASE_RENT * owned;
-            // Payment logic
+            player.decreaseMoney(rentToPay-getRent());
         }
     }
 }

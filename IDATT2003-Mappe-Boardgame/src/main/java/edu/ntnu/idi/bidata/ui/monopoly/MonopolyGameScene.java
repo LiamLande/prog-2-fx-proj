@@ -1,14 +1,10 @@
 package edu.ntnu.idi.bidata.ui.monopoly;
 
-import edu.ntnu.idi.bidata.controller.GameController; // Assuming GameController
+import edu.ntnu.idi.bidata.controller.GameController;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Card;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
-// import edu.ntnu.idi.bidata.model.actions.TileAction; // Not directly used in this class after review
-// MonopolyService and ServiceLocator are used by the Controller, not directly by the View here.
-// import edu.ntnu.idi.bidata.service.MonopolyService;
-// import edu.ntnu.idi.bidata.service.ServiceLocator;
 import edu.ntnu.idi.bidata.ui.SceneManager;
 import edu.ntnu.idi.bidata.ui.SceneManager.ControlledScene;
 import javafx.beans.value.ChangeListener;
@@ -44,7 +40,7 @@ public class MonopolyGameScene implements ControlledScene {
     private final GameController controller;
     private final BoardGame gameModel;
     private final MonopolyBoardView boardView;
-    private VBox playerStatusPane;
+    private final VBox playerStatusPane;
     private final Map<Player, Label> playerPositionLabels = new HashMap<>();
     private final Map<Player, Label> playerMoneyLabels = new HashMap<>(); // Added for Monopoly
     private final Map<Player, Circle> playerTokenUIs = new HashMap<>(); // Tokens in the side panel
@@ -114,9 +110,6 @@ public class MonopolyGameScene implements ControlledScene {
 
     public Scene getScene() { return scene; }
     public Parent getRoot() { return scene.getRoot(); } // For SceneManager
-
-    @Override public void onShow() { }
-    @Override public void onHide() { }
 
     public MonopolyBoardView getBoardView() {
         return boardView;
@@ -258,6 +251,8 @@ public class MonopolyGameScene implements ControlledScene {
         playerTokenUIs.clear();
         playerTokenUIs.putAll(updatedPlayerTokenUIs);
 
+
+
         if (boardView != null) {
             boardView.updatePlayerTokenColors(); // Notify board view to update its token colors
             boardView.refresh(); // Full refresh to reposition tokens and update ownership
@@ -273,6 +268,8 @@ public class MonopolyGameScene implements ControlledScene {
 
     public void updatePlayerStatusDisplay() {
         if (gameModel == null) return;
+
+        this.highlightCurrentPlayer(gameModel.getCurrentPlayer());
 
         boolean playersChanged = playerTokenUIs.size() != gameModel.getPlayers().size() ||
                 !playerTokenUIs.keySet().containsAll(gameModel.getPlayers()) ||
@@ -383,21 +380,7 @@ public class MonopolyGameScene implements ControlledScene {
         alert.setGraphic(null);       // Remove the default "i" icon <--- KEY CHANGE HERE
 
         // --- Create the card UI ---
-        VBox cardBox = new VBox(15); // Spacing between elements in the card
-        cardBox.setAlignment(Pos.CENTER);
-        cardBox.setPadding(new Insets(20));
-        cardBox.setMinWidth(320);
-        cardBox.setMinHeight(220);
-
-        // Card visual styling (ivory background, black border, shadow)
-        cardBox.setStyle(
-                "-fx-background-color: #FFFFF0; " + // Ivory color
-                        "-fx-background-radius: 10px; " +   // Rounded corners for the card
-                        "-fx-border-color: black; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-border-radius: 8px;"            // Rounded corners for the border
-        );
-        cardBox.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.3))); // Shadow for "floating" effect
+        VBox cardBox = getCardBox();
 
         // --- Card Title ---
         Label titleLabel = new Label(cardTypeName.toUpperCase());
@@ -412,7 +395,7 @@ public class MonopolyGameScene implements ControlledScene {
         Node imageDisplayNode;
 
         try {
-            Image image = new Image(getClass().getResourceAsStream(imagePath));
+            Image image = new Image(getClass().getResourceAsStream(imagePath)); //this might be null, but it won't.
             if (image.isError()) {
                 throw new NullPointerException("Image loaded with error: " + imagePath + (image.getException() != null ? " - " + image.getException().getMessage() : ""));
             }
@@ -460,6 +443,25 @@ public class MonopolyGameScene implements ControlledScene {
 
         // Show the dialog and wait
         alert.showAndWait();
+    }
+
+    private static VBox getCardBox() {
+        VBox cardBox = new VBox(15); // Spacing between elements in the card
+        cardBox.setAlignment(Pos.CENTER);
+        cardBox.setPadding(new Insets(20));
+        cardBox.setMinWidth(320);
+        cardBox.setMinHeight(220);
+
+        // Card visual styling (ivory background, black border, shadow)
+        cardBox.setStyle(
+                "-fx-background-color: #FFFFF0; " + // Ivory color
+                        "-fx-background-radius: 10px; " +   // Rounded corners for the card
+                        "-fx-border-color: black; " +
+                        "-fx-border-width: 2px; " +
+                        "-fx-border-radius: 8px;"            // Rounded corners for the border
+        );
+        cardBox.setEffect(new DropShadow(10, Color.rgb(0, 0, 0, 0.3))); // Shadow for "floating" effect
+        return cardBox;
     }
 
 

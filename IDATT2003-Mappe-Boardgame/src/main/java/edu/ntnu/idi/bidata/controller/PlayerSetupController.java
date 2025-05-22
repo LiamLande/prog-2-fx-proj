@@ -51,7 +51,7 @@ public class PlayerSetupController {
     } catch (IOException e) {
       Logger.error("IOException occurred while saving player setup to " + file.getAbsolutePath(), e);
       throw e;
-    } catch (InvalidParameterException e) { // Should not happen if playerList is not null, but defensive
+    } catch (InvalidParameterException e) { // Should not happen if playerList is not null
       Logger.error("InvalidParameterException from PlayerCsvReaderWriter.writeAll (unexpected).", e);
       throw e;
     }

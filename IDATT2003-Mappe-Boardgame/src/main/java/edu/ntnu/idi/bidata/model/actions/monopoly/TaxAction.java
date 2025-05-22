@@ -4,8 +4,8 @@ import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.actions.TileAction;
 
 public class TaxAction implements TileAction {
-    private String description;
-    private int taxAmount;
+    private final String description;
+    private final int taxAmount;
 
     public TaxAction(String description, int taxAmount) {
         this.description = description;

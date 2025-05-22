@@ -5,9 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import edu.ntnu.idi.bidata.model.Card;
-// import edu.ntnu.idi.bidata.exception.JsonParseException; // Not explicitly thrown here, JsonUtils might handle
 import edu.ntnu.idi.bidata.util.JsonUtils;
-import edu.ntnu.idi.bidata.util.Logger; // Added Logger import
+import edu.ntnu.idi.bidata.util.Logger;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -60,7 +59,7 @@ public class CardJsonReaderWriter {
 
         for (JsonElement element : cardsJson) {
             if (!element.isJsonObject()) {
-                Logger.warning("Skipping a non-JSON object element found in the " + deckType + " card array: " + element.toString());
+                Logger.warning("Skipping a non-JSON object element found in the " + deckType + " card array: " + element);
                 continue;
             }
             JsonObject cardJson = element.getAsJsonObject();
@@ -68,20 +67,20 @@ public class CardJsonReaderWriter {
             try {
                 // Check for presence of essential fields before attempting to get them
                 if (!cardJson.has("id")) {
-                    Logger.warning("Skipping " + deckType + " card due to missing 'id' field: " + cardJson.toString());
+                    Logger.warning("Skipping " + deckType + " card due to missing 'id' field: " + cardJson);
                     continue;
                 }
                 if (!cardJson.has("type")) {
-                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'type' field: " + cardJson.toString());
+                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'type' field: " + cardJson);
                     continue;
                 }
                 if (!cardJson.has("description")) {
-                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'description' field: " + cardJson.toString());
+                    Logger.warning("Skipping " + deckType + " card with id " + (cardJson.has("id") ? cardJson.get("id").getAsString() : "UNKNOWN") + " due to missing 'description' field: " + cardJson);
                     continue;
                 }
 
 
-                int id = cardJson.get("id").getAsInt(); // Could also throw if not int, but GSON usually handles well or we catch below
+                int id = cardJson.get("id").getAsInt(); // Could also throw if not int, but GSON usually handles well, or we catch below
                 String type = cardJson.get("type").getAsString();
                 String description = cardJson.get("description").getAsString();
 

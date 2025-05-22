@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,8 +25,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,12 +32,6 @@ class PlayerCsvReaderWriterTest {
 
     // No @InjectMocks because all methods are static
     // We will use MockedStatic for CsvUtils and Logger
-
-    @Mock
-    Reader mockReader; // For testing null reader scenario
-
-    @Mock
-    Writer mockWriter; // For testing null writer scenario
 
     @Mock
     Player mockPlayer1;
@@ -72,9 +63,7 @@ class PlayerCsvReaderWriterTest {
     @Test
     void readAll_nullReader_throwsInvalidParameterException() {
         try (MockedStatic<Logger> mockedLogger = Mockito.mockStatic(Logger.class)) {
-            InvalidParameterException exception = assertThrows(InvalidParameterException.class, () -> {
-                PlayerCsvReaderWriter.readAll(null);
-            });
+            InvalidParameterException exception = assertThrows(InvalidParameterException.class, () -> PlayerCsvReaderWriter.readAll(null));
             assertEquals("Reader must not be null", exception.getMessage());
             mockedLogger.verify(() -> Logger.error(eq("Reader provided to readAll players is null.")));
         }

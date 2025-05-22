@@ -108,11 +108,11 @@ public final class GameFactory {
     if (startTile == null) {
       Logger.error("Error: Board or starting tile 0 not found for game variant: " + variant + ". Cannot add players.");
     } else {
-      if (variant == GameVariant.SNAKES_LADDERS && slPlayerSetupDetails != null) {
+      if (variant == GameVariant.SNAKES_LADDERS) {
         for (PlayerSetupData detail : slPlayerSetupDetails) {
           game.addPlayer(new Player(detail.name(), startTile, detail.pieceIdentifier()));
         }
-      } else if (variant == GameVariant.MINI_MONOPOLY && monopolyPlayerNames != null) {
+      } else {
         for (String name : monopolyPlayerNames) {
           game.addPlayer(new Player(name, startTile, Player.DEFAULT_PIECE_IDENTIFIER, 1500));
         }

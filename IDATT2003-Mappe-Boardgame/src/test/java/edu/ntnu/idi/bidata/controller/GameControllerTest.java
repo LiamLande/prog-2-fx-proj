@@ -1,4 +1,3 @@
-// src/test/java/edu/ntnu/idi/bidata/controller/GameControllerTest.java
 package edu.ntnu.idi.bidata.controller;
 
 import edu.ntnu.idi.bidata.model.*;
@@ -6,7 +5,6 @@ import edu.ntnu.idi.bidata.model.actions.monopoly.*;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
-import edu.ntnu.idi.bidata.ui.SceneManager;
 import edu.ntnu.idi.bidata.ui.monopoly.MonopolyBoardView;
 import edu.ntnu.idi.bidata.ui.monopoly.MonopolyGameScene;
 import edu.ntnu.idi.bidata.ui.sl.SnakeLadderBoardView;
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -35,18 +32,15 @@ class GameControllerTest {
   // UI Mocks (using actual class names from your image)
   private SnakeLadderGameScene mockSlScene;
   private MonopolyGameScene mockMonopolyScene;
-  private SnakeLadderBoardView mockSlBoardView;
-  private MonopolyBoardView mockMonopolyBoardView;
 
-  private Player mockPlayer1;
+    private Player mockPlayer1;
   private Player mockPlayer2;
   private MonopolyService mockMonopolyService;
   private Tile mockTile;
   private SchrodingerBoxAction mockSchrodingerActionInstance;
   private PropertyAction mockPropertyAction;
-  private Board mockBoard;
 
-  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
   private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
   private final PrintStream originalOut = System.out;
   private final PrintStream originalErr = System.err;
@@ -62,8 +56,8 @@ class GameControllerTest {
     // UI Mocks
     mockSlScene = mock(SnakeLadderGameScene.class);
     mockMonopolyScene = mock(MonopolyGameScene.class);
-    mockSlBoardView = mock(SnakeLadderBoardView.class);
-    mockMonopolyBoardView = mock(MonopolyBoardView.class);
+      SnakeLadderBoardView mockSlBoardView = mock(SnakeLadderBoardView.class);
+      MonopolyBoardView mockMonopolyBoardView = mock(MonopolyBoardView.class);
 
     when(mockSlScene.getBoardView()).thenReturn(mockSlBoardView);
     when(mockMonopolyScene.getBoardView()).thenReturn(mockMonopolyBoardView);
@@ -74,7 +68,7 @@ class GameControllerTest {
     mockTile = mock(Tile.class);
     mockSchrodingerActionInstance = mock(SchrodingerBoxAction.class);
     mockPropertyAction = mock(PropertyAction.class);
-    mockBoard = mock(Board.class);
+      Board mockBoard = mock(Board.class);
 
     when(mockPlayer1.getName()).thenReturn("PlayerOne");
     when(mockPlayer2.getName()).thenReturn("PlayerTwo");

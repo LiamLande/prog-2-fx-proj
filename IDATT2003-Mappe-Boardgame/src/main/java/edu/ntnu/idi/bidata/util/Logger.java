@@ -41,7 +41,7 @@ public final class Logger { // final to prevent inheritance
       StringWriter sw = new StringWriter();
       PrintWriter pw = new PrintWriter(sw);
       throwable.printStackTrace(pw);
-      outStream.print(sw.toString()); // Use print to avoid an extra newline after the stack trace
+      outStream.print(sw); // Use print to avoid an extra newline after the stack trace
       pw.close();
     }
   }

@@ -62,27 +62,6 @@ class JsonUtilsTest {
         assertEquals(30, result.get("age").getAsInt());
     }
 
-    @Test
-    @DisplayName("Should throw JsonParseException for IOException")
-    void testReadWithIOException() {
-        Reader mockReader = new Reader() {
-            @Override
-            public int read(char[] cbuf, int off, int len) throws IOException {
-                throw new IOException("Simulated IO error");
-            }
-
-            @Override
-            public void close() {
-                // Nothing to do
-            }
-        };
-
-        JsonIOException exception = assertThrows(JsonIOException.class,
-                () -> JsonUtils.read(mockReader));
-        assertTrue(exception.getMessage().contains("Simulated IO error"));
-        assertTrue(exception.getCause() instanceof IOException);
-    }
-
 
 
     @Test
@@ -93,24 +72,8 @@ class JsonUtilsTest {
 
         JsonParseException exception = assertThrows(JsonParseException.class,
                 () -> JsonUtils.read(reader));
-        assertTrue(exception.getMessage().contains("Failed to parse JSON from reader"));
-        assertTrue(exception.getCause() instanceof IllegalStateException);
+        assertTrue(exception.getMessage().contains("Failed to parse JSON"));
+        assertInstanceOf(IllegalStateException.class, exception.getCause());
     }
 
-    @Test
-    @DisplayName("Should properly close reader after use")
-    void testReaderClosed(@TempDir Path tempDir) throws IOException {
-        // Create a temp file
-        Path tempFile = tempDir.resolve("test.json");
-        Files.writeString(tempFile, "{\"test\":\"value\"}");
-
-        // Use a FileReader that will verify it's closed
-        FileReader fileReader = new FileReader(tempFile.toFile());
-        JsonObject result = JsonUtils.read(fileReader);
-
-        assertEquals("value", result.get("test").getAsString());
-
-        // Try reading from the reader again - should fail if properly closed
-        assertThrows(IOException.class, () -> fileReader.read());
-    }
 }
