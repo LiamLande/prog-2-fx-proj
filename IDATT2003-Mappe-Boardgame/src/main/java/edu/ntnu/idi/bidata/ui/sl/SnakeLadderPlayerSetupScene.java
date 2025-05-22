@@ -181,19 +181,6 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
     return scene;
   }
 
-  @Override
-  public void onShow() {
-    // Reset fields when the scene is shown
-    nameFields.forEach(tf -> tf.setText(""));
-    pieceSelectors.forEach(cb -> {
-      if (!AVAILABLE_PIECES.isEmpty()) {
-        cb.setValue(AVAILABLE_PIECES.getFirst());
-      } else {
-        cb.setValue(null); // Handle case where no pieces are defined
-      }
-    });
-  }
-
   private Image loadImage(String path) {
     try {
       InputStream is = getClass().getResourceAsStream(path);
@@ -315,7 +302,7 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
             pieceSelectors.get(i).setValue(pieceOpt.get());
           } else if (!AVAILABLE_PIECES.isEmpty()) {
             pieceSelectors.get(i).setValue(AVAILABLE_PIECES.getFirst());
-            System.err.println("Loaded piece ID '" + data.pieceIdentifier() + "' for player '" + data.name() + "' not found in current piece list. Using default.");
+            Logger.error("Loaded piece ID '" + data.pieceIdentifier() + "' for player '" + data.name() + "' not found in current piece list. Using default.");
           }
         }
 
@@ -374,7 +361,7 @@ public class SnakeLadderPlayerSetupScene implements ControlledScene {
         } else {
           // Fallback if image is null (e.g., loading error)
           setGraphic(null);
-          System.err.println("ComboBox: Image for piece " + item.getIdentifier() + " is null.");
+          Logger.error("ComboBox: Image for piece " + item.getIdentifier() + " is null.");
         }
         setContentDisplay(javafx.scene.control.ContentDisplay.LEFT); // Image to the left of text
         setMinWidth(Region.USE_PREF_SIZE); // Ensure cell takes up preferred size
