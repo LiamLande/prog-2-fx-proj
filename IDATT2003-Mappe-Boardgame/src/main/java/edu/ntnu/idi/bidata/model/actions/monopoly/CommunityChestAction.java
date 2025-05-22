@@ -12,6 +12,9 @@ public class CommunityChestAction implements TileAction {
         this.description = description;
     }
 
+    public String getDescription() {
+        return description;
+    }
     @Override
     public void perform(Player player) {
         System.out.println(description);

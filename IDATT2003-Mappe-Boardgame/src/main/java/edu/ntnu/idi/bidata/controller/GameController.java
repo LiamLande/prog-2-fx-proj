@@ -5,7 +5,8 @@ import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.BoardGameObserver;
 import edu.ntnu.idi.bidata.model.Player;
 import edu.ntnu.idi.bidata.model.Tile;
-import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
+import edu.ntnu.idi.bidata.model.actions.TileAction;
+import edu.ntnu.idi.bidata.model.actions.monopoly.*;
 import edu.ntnu.idi.bidata.model.actions.snakes.SchrodingerBoxAction;
 import edu.ntnu.idi.bidata.service.MonopolyService;
 import edu.ntnu.idi.bidata.service.ServiceLocator;
@@ -66,13 +67,15 @@ public class GameController implements BoardGameObserver {
         Logger.debug("Initializing/refreshing view for current game state. View type: " + activeView.getClass().getSimpleName());
 
         this.currentPlayer = gameModel.getCurrentPlayer();
-        awaitingSchrodingerChoice = false;
-        playerMakingSchrodingerChoice = null;
-        currentSchrodingerAction = null; // Reset current action
-        Logger.debug("Schrödinger choice state reset. Current player for view: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
 
 
         if (activeView instanceof SnakeLadderGameScene scene) {
+            awaitingSchrodingerChoice = false;
+            playerMakingSchrodingerChoice = null;
+            currentSchrodingerAction = null; // Reset current action
+            Logger.debug("Schrödinger choice state reset. Current player for view: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
+
+
             scene.initializeView();
             scene.getBoardView().refresh();
             if (this.currentPlayer != null) {
@@ -110,10 +113,10 @@ public class GameController implements BoardGameObserver {
         playerMakingSchrodingerChoice = null;
         currentSchrodingerAction = null; // Reset current action
         Logger.info("First player's turn: " + (this.currentPlayer != null ? this.currentPlayer.getName() : "None"));
-        Logger.debug("onGameStart: Schrödinger state reset.");
 
 
         if (activeView instanceof SnakeLadderGameScene scene) {
+            Logger.debug("onGameStart: Schrödinger state reset.");
             scene.initializeView();
             scene.hideSchrodingerChoice();
             if (this.currentPlayer != null) {
@@ -144,11 +147,15 @@ public class GameController implements BoardGameObserver {
 
         Player playerWhoActed = this.currentPlayer;
 
-        awaitingSchrodingerChoice = false;
-        playerMakingSchrodingerChoice = null;
-        currentSchrodingerAction = null; // Reset before checking new actions
-        if(activeView instanceof SnakeLadderGameScene scene) scene.hideSchrodingerChoice();
-        Logger.debug("onRoundPlayed: Schrödinger choice state reset before tile action check.");
+        if(activeView instanceof SnakeLadderGameScene scene) {
+            awaitingSchrodingerChoice = false;
+            playerMakingSchrodingerChoice = null;
+            currentSchrodingerAction = null; // Reset before checking new actions
+            scene.hideSchrodingerChoice();
+            Logger.debug("onRoundPlayed: Schrödinger choice state reset before tile action check.");
+
+        }
+
 
 
         if (playerWhoActed != null && playerWhoActed.getCurrentTile() != null) {
@@ -157,16 +164,15 @@ public class GameController implements BoardGameObserver {
                 ". Action: " +
                 (landedTile.getAction() != null ? landedTile.getAction().getClass().getSimpleName() : "None"));
 
-            if (landedTile.getAction() instanceof SchrodingerBoxAction schrodingerActionInstance) {
-                this.currentSchrodingerAction = schrodingerActionInstance; // Store the action
-                awaitingSchrodingerChoice = true;
-                playerMakingSchrodingerChoice = playerWhoActed;
-                // The action's perform() method was already called by gameModel.playTurn -> player.move -> tile.landOn -> action.perform
-                // Logger.info from action's perform() method should have already fired.
-                // Here, we set up the controller state to await UI input.
-                Logger.info("Controller detected landing on Schrödinger Box. Setting up for player choice.");
-
-                if (activeView instanceof SnakeLadderGameScene scene) {
+            if(activeView instanceof SnakeLadderGameScene scene) {
+                if (landedTile.getAction() instanceof SchrodingerBoxAction schrodingerActionInstance) {
+                    this.currentSchrodingerAction = schrodingerActionInstance; // Store the action
+                    awaitingSchrodingerChoice = true;
+                    playerMakingSchrodingerChoice = playerWhoActed;
+                    // The action's perform() method was already called by gameModel.playTurn -> player.move -> tile.landOn -> action.perform
+                    // Logger.info from action's perform() method should have already fired.
+                    // Here, we set up the controller state to await UI input.
+                    Logger.info("Controller detected landing on Schrödinger Box. Setting up for player choice.");
                     // Pass the action instance so UI can get description, etc.
                     scene.showSchrodingerChoice(playerWhoActed, this.currentSchrodingerAction);
                     scene.setRollButtonEnabled(false);
@@ -175,10 +181,9 @@ public class GameController implements BoardGameObserver {
                     scene.getBoardView().refresh();
                     scene.updatePlayerStatusDisplay();
                     Logger.debug("Schrödinger choice UI shown for " + playerWhoActed.getName());
+                    return; // Await player choice
                 }
-                return; // Await player choice
             }
-
             if (activeView instanceof MonopolyGameScene mScene) {
                 mScene.updatePlayerStatusDisplay();
                 mScene.getBoardView().refresh();
@@ -186,6 +191,30 @@ public class GameController implements BoardGameObserver {
                     Logger.debug("Player " + playerWhoActed.getName() + " landed on Monopoly property: " + pa.getName() + ". Handling property action.");
                     handleLandedOnProperty(playerWhoActed, pa, mScene);
                 }
+                if (landedTile.getAction() instanceof ChanceAction chanceAction) {
+                    Logger.info("Player " + playerWhoActed.getName() + " landed on a Chance tile. Action would already be executed by model, showing alert.");
+                    mScene.showAlert("Chance!", "Chance Tile",
+                        "You landed on a Chance tile! " + chanceAction.getDescription(),
+                        Alert.AlertType.INFORMATION);
+
+                } else if (landedTile.getAction() instanceof CommunityChestAction ca) {
+                    mScene.showAlert("Community Chest!", "Community Chest Tile",
+                        "You landed on a Community Chest tile! " + ca.getDescription(),
+                        Alert.AlertType.INFORMATION);
+                } else if (landedTile.getAction() instanceof TaxAction ta) {
+                    mScene.showAlert("Taxes!", "Death, Taxes, and Taxes",
+                        "You must pay " + ta.getTaxAmount() + "$ in taxes!",
+                        Alert.AlertType.INFORMATION);
+                } else if (landedTile.getAction() instanceof GoToJailAction ga) {
+                    mScene.showAlert("Go to jail!", "Community Chest Tile",
+                        "You must go to jail! For you are poor!",
+                        Alert.AlertType.WARNING);
+                }
+
+                mScene.updatePlayerStatusDisplay();
+                mScene.getBoardView().refresh();
+                Logger.debug("MonopolyGameScene UI updated after property action handling.");
+
             }
         } else {
             Logger.warning("onRoundPlayed: playerWhoActed or their current tile is null. Player: " +
@@ -212,6 +241,12 @@ public class GameController implements BoardGameObserver {
                 scene.updatePlayerStatusDisplay();
                 Logger.debug("SnakeLadderGameScene UI updated for final game state.");
             }
+            if (activeView instanceof MonopolyGameScene scene) {
+                if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) scene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
+                scene.getBoardView().refresh();
+                scene.updatePlayerStatusDisplay();
+                Logger.debug("MonopolyGameScene UI updated for final game state.");
+            }
             return;
         }
 
@@ -228,6 +263,7 @@ public class GameController implements BoardGameObserver {
             Logger.debug("SnakeLadderGameScene UI updated for the next turn.");
         } else if (activeView instanceof MonopolyGameScene mScene) {
             // ... (Monopoly UI updates)
+            if (rollsIfApplicable != null && !rollsIfApplicable.isEmpty()) mScene.updateDiceLabel(String.valueOf(rollsIfApplicable.getFirst()));
             Logger.debug("MonopolyGameScene UI updated for the next turn (placeholder).");
         }
     }

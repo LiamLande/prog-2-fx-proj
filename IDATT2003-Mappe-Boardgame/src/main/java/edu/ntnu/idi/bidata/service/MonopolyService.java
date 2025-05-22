@@ -4,9 +4,12 @@ import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.BoardGame;
 import edu.ntnu.idi.bidata.model.Card;
 import edu.ntnu.idi.bidata.model.Player;
+import edu.ntnu.idi.bidata.model.Tile;
+import edu.ntnu.idi.bidata.model.actions.TileAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.PropertyAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.RailroadAction;
 import edu.ntnu.idi.bidata.model.actions.monopoly.UtilityAction;
+import edu.ntnu.idi.bidata.util.Logger;
 
 
 import java.util.ArrayList;
@@ -69,29 +72,36 @@ public class MonopolyService implements GameService {
             this.currentPlayerIndex = newIndex; // Sync if controller is authoritative on who is passed
         }
 
-        // ... (existing jail logic, dice roll, player.move()) ...
-        // Roll the dice
-        int roll1 = this.game.getDice().rollDie(); // Assuming Dice has rollDie() for single die
-        int roll2 = this.game.getDice().rollDie(); // And Monopoly dice has 2
-        int totalRoll = roll1 + roll2;
-        boolean rolledDoubles = (roll1 == roll2);
 
-        // TODO: Handle doubles logic (another turn, or go to jail on 3rd double)
+        // Roll the dice
+        int totalRoll = this.game.getDice().rollDie();
+        Logger.debug("Total roll: " + totalRoll);
+        // We do not include doubles checking
+
+        if (isInJail(player)) {
+            // Check if player has Get Out of Jail Free card
+            if (hasGetOutOfJailFreeCard(player)) {
+                Logger.info(player.getName() + " uses Get Out of Jail Free card to get out of jail!");
+                // Use the card (decrease count by 1)
+                getOutOfJailFreeCards.put(player, getOutOfJailFreeCards.get(player) - 1);
+                // Remove player from jail
+                jailedPlayers.remove(player);
+                // Player now gets to roll and move normally
+            } else {
+                Logger.info(player.getName() + " is in jail and cannot roll.");
+                handleJailTurn(player);
+
+                // If still in jail after handling, skip turn
+                if (isInJail(player)) {
+                    currentPlayerIndex = (currentPlayerIndex + 1) % this.game.getPlayers().size();
+                    return 0; // Player cannot move
+                }
+            }
+        }
 
         player.move(totalRoll); // This should trigger tile actions
-        System.out.println(player.getName() + " (Money: $" + player.getMoney() + ") rolled " + roll1 + "+" + roll2 + "=" + totalRoll + (rolledDoubles ? " (Doubles!)" : ""));
-
-
-        // Advance to the next player for the *next* turn
-        // UNLESS player rolled doubles and isn't jailed for it (Monopoly rule)
-        if (!rolledDoubles || /* condition for going to jail on 3rd double */ false) {
-            if (!isFinished(this.game) && !this.game.getPlayers().isEmpty()) {
-                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.game.getPlayers().size();
-            }
-        } else {
-            // Player rolled doubles, gets another turn (currentPlayerIndex remains the same)
-            System.out.println(player.getName() + " rolled doubles, gets another turn!");
-        }
+        Logger.info(player.getName() + " (Money: $" + player.getMoney() + ") rolled " + totalRoll);
+        currentPlayerIndex = (currentPlayerIndex + 1) % this.game.getPlayers().size();
 
         return totalRoll; // Or return individual rolls if controller needs them
     }
@@ -209,19 +219,6 @@ public class MonopolyService implements GameService {
         }
     }
 
-    // You might also need a method for when a player cannot pay rent and becomes bankrupt
-    public boolean handleBankruptcy(Player player) {
-        if (player.getMoney() < 0) { // Or if they couldn't pay a required fee
-            System.out.println(player.getName() + " is bankrupt!");
-            // TODO: Logic to remove player from game, return their properties to the bank, etc.
-            // For now, just a marker.
-            // game.getPlayers().remove(player); // This would need BoardGame to have a removePlayer method
-            // And this would also need to be careful about modifying list while iterating.
-            return true;
-        }
-        return false;
-    }
-
     public void addProperty(Player player, PropertyAction property) {
         playerProperties.computeIfAbsent(player, p -> new ArrayList<>()).add(property);
     }
@@ -266,21 +263,118 @@ public class MonopolyService implements GameService {
     }
 
     private void executeCardAction(Card card, Player player) {
-        System.out.println("Card: " + card.getDescription());
+        Logger.info(player.getName() + " drew: " + card.getDescription());
 
         switch (card.getType()) {
+            // Movement cards
             case "AdvanceToGo":
-                player.setCurrentTile(game.getBoard().getTile(0)); // Go tile
+                player.setCurrentTile(game.getBoard().getTile(0));
+                player.increaseMoney(200); // Collect $200 for passing GO
+                Logger.info(player.getName() + " advances to GO and collects $200");
                 break;
+            case "AdvanceToIllinoisAve":
+                // Find Illinois Avenue position
+               game.getBoard().getTiles().forEach((key,tile) -> {
+                   if (tile.getAction() instanceof PropertyAction pa) {
+                       if (pa.getName().equals("Illinois Avenue")) {
+                           player.setCurrentTile(tile);
+                           Logger.info(player.getName() + " advanced to Illinois Avenue");
+                       }
+                   }
+               });
+                break;
+            case "GoBack":
+                int spaces = card.getIntProperty("spaces", 3);
+                player.move(-spaces);
+                Logger.info(player.getName() + " moved back " + spaces + " spaces");
+                break;
+
+            // Special cards
             case "GetOutOfJailFree":
                 giveGetOutOfJailFreeCard(player);
+                Logger.info(player.getName() + " received a Get Out of Jail Free card");
                 break;
             case "GoToJail":
                 sendToJail(player);
+                Logger.info(player.getName() + " was sent to Jail");
                 break;
-            // Implement other card types
+
+            // Money-related cards (player pays)
+            case "PayTax":
+            case "PayPoorTax":
+            case "HospitalFees":
+            case "SchoolFees":
+            case "DoctorFees":
+                int amount = card.getIntProperty("amount", 0);
+                if (player.getMoney() >= amount) {
+                    player.decreaseMoney(amount);
+                    Logger.info(player.getName() + " paid $" + amount);
+                } else {
+                    Logger.info(player.getName() + " cannot afford to pay $" + amount);
+                    // Handle player bankruptcy
+                }
+                break;
+
+            // Money-related cards (player receives)
+            case "BankPaysYou":
+            case "BankErrorInYourFavor":
+            case "BuildingLoanMatures":
+            case "CrosswordCompetition":
+            case "SaleOfStock":
+            case "HolidayFundMatures":
+            case "IncomeTaxRefund":
+            case "LifeInsuranceMatures":
+            case "ReceiveConsultancyFee":
+            case "BeautyContest":
+                int receiveAmount = card.getIntProperty("amount", 0);
+                player.increaseMoney(receiveAmount);
+                Logger.info(player.getName() + " received $" + receiveAmount);
+                break;
+
+            // Money-related cards (player & other players)
+            case "ChairmanOfBoard":
+                int payAmount = card.getIntProperty("amount", 50);
+                int totalPaid = 0;
+                for (Player otherPlayer : game.getPlayers()) {
+                    if (!otherPlayer.equals(player)) {
+                        if (otherPlayer.getMoney() >= payAmount) {
+                            otherPlayer.decreaseMoney(payAmount);
+                            totalPaid += payAmount;
+                        } else {
+                            // Handle player bankruptcy
+                            totalPaid += otherPlayer.getMoney();
+                            otherPlayer.decreaseMoney(otherPlayer.getMoney());
+                        }
+                    }
+                }
+                player.increaseMoney(totalPaid);
+                Logger.info(player.getName() + " paid $" + payAmount + " to each player as Chairman of the Board");
+                break;
+            case "GrandOperaNight":
+            case "ItsYourBirthday":
+                int collectAmount = card.getIntProperty("amount", 10);
+                int totalCollected = 0;
+                for (Player otherPlayer : game.getPlayers()) {
+                    if (!otherPlayer.equals(player)) {
+                        if (otherPlayer.getMoney() >= collectAmount) {
+                            otherPlayer.decreaseMoney(collectAmount);
+                            totalCollected += collectAmount;
+                        } else {
+                            // Handle player bankruptcy
+                            totalCollected += otherPlayer.getMoney();
+                            otherPlayer.decreaseMoney(otherPlayer.getMoney());
+                        }
+                    }
+                }
+                player.increaseMoney(totalCollected);
+                Logger.info(player.getName() + " collected $" + collectAmount + " from each player");
+                break;
+
             default:
-                System.out.println("Card type not implemented: " + card.getType());
+                Logger.warning("Card type not implemented: " + card.getType());
+
         }
+
     }
+
 }

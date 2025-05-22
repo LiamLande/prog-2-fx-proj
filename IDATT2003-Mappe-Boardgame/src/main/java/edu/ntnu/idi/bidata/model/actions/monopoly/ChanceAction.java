@@ -12,6 +12,10 @@ public class ChanceAction implements TileAction {
         this.description = description;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     // In ChanceAction.java
     @Override
     public void perform(Player player) {

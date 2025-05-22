@@ -114,6 +114,10 @@ public class SceneManager {
     currentController = nextController;
   }
 
+  public Object getCurrentController() {
+    return currentController;
+  }
+
   /**
    * MODIFIED: Interface for scene controllers managed by SceneManager.
    */
