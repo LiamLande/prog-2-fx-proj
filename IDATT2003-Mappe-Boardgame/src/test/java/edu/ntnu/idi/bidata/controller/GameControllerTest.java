@@ -9,7 +9,6 @@ import edu.ntnu.idi.bidata.ui.monopoly.MonopolyBoardView;
 import edu.ntnu.idi.bidata.ui.monopoly.MonopolyGameScene;
 import edu.ntnu.idi.bidata.ui.sl.SnakeLadderBoardView;
 import edu.ntnu.idi.bidata.ui.sl.SnakeLadderGameScene;
-import edu.ntnu.idi.bidata.util.Logger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

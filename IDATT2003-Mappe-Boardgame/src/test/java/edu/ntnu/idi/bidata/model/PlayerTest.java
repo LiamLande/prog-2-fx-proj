@@ -1,21 +1,16 @@
 package edu.ntnu.idi.bidata.model;
 
 import edu.ntnu.idi.bidata.exception.InvalidParameterException;
-import edu.ntnu.idi.bidata.model.actions.TileAction; // Assuming this import might be needed if TileAction was used directly
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-// If you decide to use lenient stubs for a specific nested class:
-// import org.mockito.junit.jupiter.MockitoSettings;
-// import org.mockito.quality.Strictness;
 
 
 import static org.junit.jupiter.api.Assertions.*;
