@@ -1,48 +1,59 @@
 package edu.ntnu.idi.bidata.model;
 
+
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
 import edu.ntnu.idi.bidata.model.actions.TileAction;
 
+/**
+ * A board tile linked to next/previous and optional action on landing.
+ */
 public class Tile {
-  private final int tileId;
-  private Tile nextTile;
-  private TileAction landAction;
-  private Tile previousTile;
+  private final int id;
+  private Tile next;
+  private Tile previous;
+  private TileAction action;
 
-  public Tile(int tileId) {
-    this.tileId = tileId;
-  }
-
-  public void landPlayer(Player player) {
-    if (landAction != null) {
-      landAction.perform(player);
+  public Tile(int id) {
+    if (id < 0) {
+      throw new InvalidParameterException("Tile id must be non‐negative");
     }
+    this.id = id;
   }
 
-  public void setLandAction(TileAction landAction) {
-    this.landAction = landAction;
+  public int getId() {
+    return id;
   }
 
-  public void leavePlayer(Player player) {
-    // Implement logic for when a player leaves the tile (if needed)
+  public Tile getNext() {
+    return next;
   }
 
-  public void setPreviousTile(Tile previousTile) {
-    this.previousTile = previousTile;
+  public void setNext(Tile next) {
+    this.next = next;
   }
 
-  public Tile getPreviousTile() {
-    return previousTile;
+  public Tile getPrevious() {
+    return previous;
   }
 
-  public void setNextTile(Tile nextTile) {
-    this.nextTile = nextTile;
+  public void setPrevious(Tile previous) {
+    this.previous = previous;
   }
 
-  public Tile getNextTile() {
-    return nextTile;
+  public void setAction(TileAction action) {
+    this.action = action;
   }
 
-  public int getTileId() {
-    return tileId;
+  public TileAction getAction() {
+    return action;
+  }
+
+  /**
+   * Called when a player lands here: triggers the action if present.
+   */
+  public void land(Player player) {
+    if (action != null) {
+      action.perform(player);
+    }
   }
 }

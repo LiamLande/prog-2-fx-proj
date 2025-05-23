@@ -1,97 +1,213 @@
 package edu.ntnu.idi.bidata.model;
 
-import edu.ntnu.idi.bidata.model.actions.LadderAction;
-import edu.ntnu.idi.bidata.model.actions.SnakeAction;
+import edu.ntnu.idi.bidata.exception.InvalidParameterException;
+import edu.ntnu.idi.bidata.service.GameService;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Facade for game setup and play.
+ * Delegates to a GameService implementation and notifies observers.
+ */
 public class BoardGame {
   private Board board;
-  private Player currentPlayer;
-  private List<Player> players = new ArrayList<>();
   private Dice dice;
+  private final List<Player> players = new ArrayList<>();
+  private GameService service;
+  private final List<BoardGameObserver> observers = new ArrayList<>();
+  private boolean gameInitialized = false;
 
+  /**
+   * Adds an observer to be notified of game events.
+   *
+   * @param observer The observer to add.
+   * @throws InvalidParameterException if the observer is null.
+   */
+  public void addObserver(BoardGameObserver observer) {
+    if (observer == null) {
+      throw new InvalidParameterException("Observer cannot be null");
+    }
+    observers.add(observer);
+  }
+
+  /**
+   * Initializes the game. This method must be called after setting the board, dice, players, and game service.
+   * It sets up the game through the game service and notifies observers that the game has started.
+   *
+   * @throws IllegalStateException if the board, dice, players, or game service are not set before initialization.
+   */
+  public void init() {
+    if (board == null) throw new IllegalStateException("Board must be set before init()");
+    if (dice == null) throw new IllegalStateException("Dice must be set before init()");
+    if (players.isEmpty()) throw new IllegalStateException("At least one player must be added before init()");
+    if (service == null) throw new IllegalStateException("GameService must be set before init()");
+
+    service.setup(this);
+    this.gameInitialized = true;
+    notifyGameStart(); // Notify observers that the game is ready
+  }
+
+  /**
+   * Plays exactly one roll/move for the given player.
+   * The service will handle moving the player and calling tile.land(player).
+   * After this, notifyRoundPlayed is called.
+   *
+   * @param player The player whose turn it is.
+   * @throws IllegalStateException if the game is not initialized.
+   * @throws IllegalArgumentException if the player is not part of this game.
+   */
+  public void playTurn(Player player) {
+    requireInitialized();
+    if (!players.contains(player)) {
+      throw new IllegalArgumentException("Player is not part of this game");
+    }
+
+    int roll = service.playTurn(this, player); // Service handles dice, move, and tile.land()
+
+    notifyRoundPlayed(List.of(roll));
+  }
+
+  /**
+   * Checks if the game has finished.
+   * Delegated to the GameService.
+   *
+   * @return true if the game has finished, false otherwise.
+   * @throws IllegalStateException if the game is not initialized.
+   */
+  public boolean isFinished() {
+    requireInitialized();
+    return service.isFinished(this);
+  }
+
+  /**
+   * Checks if the game has been initialized and started.
+   *
+   * @return true if the game has started, false otherwise.
+   */
+  public boolean isGameStarted() {
+    return this.gameInitialized;
+  }
+
+  /**
+   * Gets the winner of the game.
+   * Delegated to the GameService.
+   *
+   * @return The winning Player, or null if there is no winner yet.
+   * @throws IllegalStateException if the game is not initialized.
+   */
+  public Player getWinner() {
+    requireInitialized();
+    return service.getWinner(this);
+  }
+
+  /**
+   * Sets the game board.
+   *
+   * @param board The game board.
+   * @throws InvalidParameterException if the board is null.
+   */
+  public void setBoard(Board board) {
+    if (board == null) throw new InvalidParameterException("Board cannot be null");
+    this.board = board;
+  }
+
+  /**
+   * Sets the dice for the game.
+   *
+   * @param dice The dice to be used.
+   * @throws InvalidParameterException if the dice are null.
+   */
+  public void setDice(Dice dice) {
+    if (dice == null) throw new InvalidParameterException("Dice cannot be null");
+    this.dice = dice;
+  }
+
+  /**
+   * Adds a player to the game.
+   *
+   * @param player The player to add.
+   * @throws InvalidParameterException if the player is null.
+   */
   public void addPlayer(Player player) {
+    if (player == null) throw new InvalidParameterException("Player cannot be null");
     players.add(player);
   }
 
-  public void createBoard() {
-    board = new Board();
-    // Create 100 tiles for the board
-    for (int i = 0; i < 100; i++) {
-      board.addTile(new Tile(i));
-    }
-
-    setupLaddersAndSnakes();
+  /**
+   * Sets the game service that will manage the game logic.
+   *
+   * @param service The game service.
+   * @throws InvalidParameterException if the service is null.
+   */
+  public void setGameService(GameService service) {
+    if (service == null) throw new InvalidParameterException("GameService cannot be null");
+    this.service = service;
   }
 
-  private void setupLaddersAndSnakes() {
-    // Ensure all tiles are linked correctly
-    for (int i = 0; i < 100; i++) {
-      board.getTile(i).setNextTile(board.getTile(i + 1));
-      if (i < 99) {
-        board.getTile(i + 1).setPreviousTile(board.getTile(i));
-      }
-    }
+  /**
+   * Gets the game board.
+   *
+   * @return The game board.
+   */
+  public Board getBoard() { return board; }
 
-    // Ladders (Move Forward)
-    board.getTile(3).setLandAction(new LadderAction("Ladder to 22!", 19)); // 3 -> 22
-    board.getTile(8).setLandAction(new LadderAction("Ladder to 30!", 22)); // 8 -> 30
-    board.getTile(28).setLandAction(new LadderAction("Ladder to 84!", 56)); // 28 -> 84
-    board.getTile(58).setLandAction(new LadderAction("Ladder to 77!", 19)); // 58 -> 77
+  /**
+   * Gets the dice used in the game.
+   *
+   * @return The dice.
+   */
+  public Dice getDice()   { return dice; }
 
-    // Snakes (Move Backward)
-    board.getTile(16).setLandAction(new SnakeAction("Snake down to 6!", 10)); // 16 -> 6
-    board.getTile(47).setLandAction(new SnakeAction("Snake down to 26!", 21)); // 47 -> 26
-    board.getTile(62).setLandAction(new SnakeAction("Snake down to 18!", 44)); // 62 -> 18
-    board.getTile(87).setLandAction(new SnakeAction("Snake down to 24!", 63)); // 87 -> 24
+  /**
+   * Gets a list of players in the game.
+   * Returns a defensive copy of the list.
+   *
+   * @return A list of players.
+   */
+  public List<Player> getPlayers() {
+    return new ArrayList<>(players); // Defensive copy
   }
 
-
-  public void createDice() {
-    dice = new Dice(1);
+  /**
+   * Gets the current player whose turn it is.
+   * Delegated to the GameService.
+   * @return The current Player, or null if not applicable or game not started.
+   */
+  public Player getCurrentPlayer() {
+    if (!isGameStarted() || service == null) {
+      return null;
+    }
+    return service.getCurrentPlayer(this);
   }
 
-  public void play() {
-    while (!gameOver()) {
-      for (Player player : players) {
-        currentPlayer = player;
-        int steps = dice.roll();
-        System.out.println(player.getName() + " rolled a " + steps);
-        player.move(steps);
-        System.out.println(player.getName() + " is now on tile " + player.getCurrentTile().getTileId());
-        if (player.getCurrentTile().getTileId() >= 99) {
-          System.out.println(player.getName() + " wins!");
-          return;
-        }
-      }
+  /**
+   * Ensures that the game has been initialized before certain operations are performed.
+   *
+   * @throws IllegalStateException if the game is not initialized or the service is not set.
+   */
+  private void requireInitialized() {
+    if (!gameInitialized || service == null) {
+      throw new IllegalStateException("Game not fully initialized; call init() first and ensure service is set.");
     }
   }
 
-  public boolean gameOver() {
-    for (Player player : players) {
-      if (player.getCurrentTile().getTileId() >= 99) {
-        return true;
-      }
+  /**
+   * Notifies all registered observers that the game has started.
+   */
+  private void notifyGameStart() {
+    for (var obs : observers) {
+      obs.onGameStart(getPlayers());
     }
-    return false;
   }
 
-  public Player getWinner() {
-    for (Player player : players) {
-      if (player.getCurrentTile().getTileId() == 99) {
-        return player;
-      }
+  /**
+   * Notifies all registered observers that a round has been played.
+   *
+   * @param rolls The list of dice rolls in the round.
+   */
+  private void notifyRoundPlayed(List<Integer> rolls) {
+    for (var obs : observers) {
+      obs.onRoundPlayed(rolls, getPlayers());
     }
-    return null;
-  }
-
-    public static String[] generateExampleGame(){
-        return new String[]{"Round 1: John Doe rolled 5 and 6", "Round 2: Jane Doe rolled 2 and 3", "Round 3: John Doe rolled 1 and 4", "Round 4: Jane Doe rolled 2 and 2", "Round 5: John Doe rolled 3 and 6", "Round 6: Jane Doe rolled 1 and 5", "Round 7: John Doe rolled 4 and 6", "Round 8: Jane Doe rolled 1 and 3", "Round 9: John Doe rolled 2 and 5", "Round 10: Jane Doe rolled 1 and 6"};
-    }
-
-
-  public Board getBoard() {
-    return board;
   }
 }

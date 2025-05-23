@@ -1,0 +1,457 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "nextId": 1
+    },
+    {
+      "id": 1,
+      "nextId": 2
+    },
+    {
+      "id": 2,
+      "nextId": 3,
+      "action": {
+        "type": "LadderAction",
+        "description": "Ladder to 23!",
+        "steps": 21
+      }
+    },
+    {
+      "id": 3,
+      "nextId": 4
+    },
+    {
+      "id": 4,
+      "nextId": 5
+    },
+    {
+      "id": 5,
+      "nextId": 6
+    },
+    {
+      "id": 6,
+      "nextId": 7,
+      "action": {
+        "type": "LadderAction",
+        "description": "Ladder to 45!",
+        "steps": 39
+      }
+    },
+    {
+      "id": 7,
+      "nextId": 8
+    },
+    {
+      "id": 8,
+      "nextId": 9
+    },
+    {
+      "id": 9,
+      "nextId": 10
+    },
+    {
+      "id": 10,
+      "nextId": 11
+    },
+    {
+      "id": 11,
+      "nextId": 12
+    },
+    {
+      "id": 12,
+      "nextId": 13
+    },
+    {
+      "id": 13,
+      "nextId": 14
+    },
+    {
+      "id": 14,
+      "nextId": 15
+    },
+    {
+      "id": 15,
+      "nextId": 16
+    },
+    {
+      "id": 16,
+      "nextId": 17
+    },
+    {
+      "id": 17,
+      "nextId": 18
+    },
+    {
+      "id": 18,
+      "nextId": 19
+    },
+    {
+      "id": 19,
+      "nextId": 20
+    },
+    {
+      "id": 20,
+      "nextId": 21,
+      "action": {
+        "type": "LadderAction",
+        "description": "Ladder to 39!",
+        "steps": 19
+      }
+    },
+    {
+      "id": 21,
+      "nextId": 22
+    },
+    {
+      "id": 22,
+      "nextId": 23
+    },
+    {
+      "id": 23,
+      "nextId": 24
+    },
+    {
+      "id": 24,
+      "nextId": 25
+    },
+    {
+      "id": 25,
+      "nextId": 26
+    },
+    {
+      "id": 26,
+      "nextId": 27
+    },
+    {
+      "id": 27,
+      "nextId": 28
+    },
+    {
+      "id": 28,
+      "nextId": 29
+    },
+    {
+      "id": 29,
+      "nextId": 30
+    },
+    {
+      "id": 30,
+      "nextId": 31
+    },
+    {
+      "id": 31,
+      "nextId": 32,
+      "action": {
+        "type": "SnakeAction",
+        "description": "Snake to 3!",
+        "steps": 28
+      }
+    },
+    {
+      "id": 32,
+      "nextId": 33
+    },
+    {
+      "id": 33,
+      "nextId": 34
+    },
+    {
+      "id": 34,
+      "nextId": 35
+    },
+    {
+      "id": 35,
+      "nextId": 36
+    },
+    {
+      "id": 36,
+      "nextId": 37
+    },
+    {
+      "id": 37,
+      "nextId": 38
+    },
+    {
+      "id": 38,
+      "nextId": 39
+    },
+    {
+      "id": 39,
+      "nextId": 40
+    },
+    {
+      "id": 40,
+      "nextId": 41
+    },
+    {
+      "id": 41,
+      "nextId": 42
+    },
+    {
+      "id": 42,
+      "nextId": 43,
+      "action": {
+        "type": "SchrodingerBoxAction",
+        "description": "A peculiar, pulsating box appears!"
+      }
+    },
+    {
+      "id": 43,
+      "nextId": 44,
+      "action": {
+        "type": "SnakeAction",
+        "description": "Snake to 22!",
+        "steps": 21
+      }
+    },
+    {
+      "id": 44,
+      "nextId": 45
+    },
+    {
+      "id": 45,
+      "nextId": 46
+    },
+    {
+      "id": 46,
+      "nextId": 47
+    },
+    {
+      "id": 47,
+      "nextId": 48
+    },
+    {
+      "id": 48,
+      "nextId": 49
+    },
+    {
+      "id": 49,
+      "nextId": 50
+    },
+    {
+      "id": 50,
+      "nextId": 51
+    },
+    {
+      "id": 51,
+      "nextId": 52
+    },
+    {
+      "id": 52,
+      "nextId": 53,
+      "action": {
+        "type": "LadderAction",
+        "description": "Ladder to 72!",
+        "steps": 20
+      }
+    },
+    {
+      "id": 53,
+      "nextId": 54
+    },
+    {
+      "id": 54,
+      "nextId": 55
+    },
+    {
+      "id": 55,
+      "nextId": 56
+    },
+    {
+      "id": 56,
+      "nextId": 57
+    },
+    {
+      "id": 57,
+      "nextId": 58,
+      "action": {
+        "type": "SnakeAction",
+        "description": "Snake to 40!",
+        "steps": 17
+      }
+    },
+    {
+      "id": 58,
+      "nextId": 59
+    },
+    {
+      "id": 59,
+      "nextId": 60
+    },
+    {
+      "id": 60,
+      "nextId": 61
+    },
+    {
+      "id": 61,
+      "nextId": 62
+    },
+    {
+      "id": 62,
+      "nextId": 63
+    },
+    {
+      "id": 63,
+      "nextId": 64
+    },
+    {
+      "id": 64,
+      "nextId": 65
+    },
+    {
+      "id": 65,
+      "nextId": 66
+    },
+    {
+      "id": 66,
+      "nextId": 67
+    },
+    {
+      "id": 67,
+      "nextId": 68
+    },
+    {
+      "id": 68,
+      "nextId": 69
+    },
+    {
+      "id": 69,
+      "nextId": 70
+    },
+    {
+      "id": 70,
+      "nextId": 71
+    },
+    {
+      "id": 71,
+      "nextId": 72,
+      "action": {
+        "type": "LadderAction",
+        "description": "Ladder to 92!",
+        "steps": 21
+      }
+    },
+    {
+      "id": 72,
+      "nextId": 73
+    },
+    {
+      "id": 73,
+      "nextId": 74
+    },
+    {
+      "id": 74,
+      "nextId": 75
+    },
+    {
+      "id": 75,
+      "nextId": 76
+    },
+    {
+      "id": 76,
+      "nextId": 77
+    },
+    {
+      "id": 77,
+      "nextId": 78
+    },
+    {
+      "id": 78,
+      "nextId": 79
+    },
+    {
+      "id": 79,
+      "nextId": 80
+    },
+    {
+      "id": 80,
+      "nextId": 81
+    },
+    {
+      "id": 81,
+      "nextId": 82
+    },
+    {
+      "id": 82,
+      "nextId": 83
+    },
+    {
+      "id": 83,
+      "nextId": 84
+    },
+    {
+      "id": 84,
+      "nextId": 85
+    },
+    {
+      "id": 85,
+      "nextId": 86
+    },
+    {
+      "id": 86,
+      "nextId": 87,
+      "action": {
+        "type": "SnakeAction",
+        "description": "Snake to 59!",
+        "steps": 27
+      }
+    },
+    {
+      "id": 87,
+      "nextId": 88
+    },
+    {
+      "id": 88,
+      "nextId": 89
+    },
+    {
+      "id": 89,
+      "nextId": 90
+    },
+    {
+      "id": 90,
+      "nextId": 91
+    },
+    {
+      "id": 91,
+      "nextId": 92
+    },
+    {
+      "id": 92,
+      "nextId": 93
+    },
+    {
+      "id": 93,
+      "nextId": 94
+    },
+    {
+      "id": 94,
+      "nextId": 95
+    },
+    {
+      "id": 95,
+      "nextId": 96
+    },
+    {
+      "id": 96,
+      "nextId": 97
+    },
+    {
+      "id": 97,
+      "nextId": 98
+    },
+    {
+      "id": 98,
+      "nextId": 99,
+      "action": {
+        "type": "SnakeAction",
+        "description": "Snake to 79!",
+        "steps": 19
+      }
+    },
+    {
+      "id": 99
+    }
+  ]
+}
